@@ -120,6 +120,8 @@ iseq_mark(void *ptr)
 	    RUBY_MARK_UNLESS_NULL(compile_data->err_info);
 	    RUBY_MARK_UNLESS_NULL(compile_data->catch_table_ary);
 	}
+
+        RUBY_MARK_UNLESS_NULL((VALUE)iseq->node);
     }
     RUBY_MARK_LEAVE("iseq");
 }
