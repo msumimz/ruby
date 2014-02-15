@@ -2,7 +2,7 @@
 
   object.c -
 
-  $Author$
+  $Author: tmm1 $
   created at: Thu Jul 15 12:01:24 JST 1993
 
   Copyright (C) 1993-2007 Yukihiro Matsumoto
@@ -3213,6 +3213,13 @@ rb_f_hash(VALUE obj, VALUE arg)
  *  <code>:name</code>).
  */
 
+static VALUE
+debugbreak(int argc, VALUE *argv, VALUE obj)
+{
+  __asm { int 3 }
+  return Qnil;
+}
+
 void
 Init_Object(void)
 {
@@ -3434,4 +3441,6 @@ Init_Object(void)
     for (i=0; conv_method_names[i].method; i++) {
 	conv_method_names[i].id = rb_intern(conv_method_names[i].method);
     }
+
+   rb_define_method(rb_cObject, "debugbreak", debugbreak, 0);
 }
