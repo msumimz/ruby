@@ -70,7 +70,7 @@ typedef struct rb_method_cfunc_struct {
 
 typedef struct rb_method_attr_struct {
     ID id;
-    const VALUE location;
+    VALUE location;
 } rb_method_attr_t;
 
 typedef struct rb_iseq_struct rb_iseq_t;
