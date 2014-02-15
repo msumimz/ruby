@@ -1,0 +1,17 @@
+*.obj
+*.pdb
+*.rc
+*.res
+*.lib
+*.dll
+*.exe
+*.exp
+*.def
+*.sdf
+*.opensdf
+*.suo
+*.vcxproj.user
+Debug/
+Release/
+ipch/
+rbjit/temp/
