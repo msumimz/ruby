@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="rbjit">
+      <UniqueIdentifier>{5cd131eb-8b6d-411e-bf66-5f80744832b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\main.c">
@@ -258,6 +261,9 @@
     <ClCompile Include="..\..\..\enc\us_ascii.c">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\setup.cpp">
+      <Filter>rbjit</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -266,5 +272,10 @@
     <None Include="..\..\..\parse.y">
       <Filter>ソース ファイル</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\rbjit\common.h">
+      <Filter>rbjit</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
