@@ -263,5 +263,8 @@
     <None Include="..\..\..\insns.def">
       <Filter>ソース ファイル</Filter>
     </None>
+    <None Include="..\..\..\parse.y">
+      <Filter>ソース ファイル</Filter>
+    </None>
   </ItemGroup>
 </Project>

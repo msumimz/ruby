@@ -169,6 +169,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def" />
+    <None Include="..\..\..\parse.y" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
