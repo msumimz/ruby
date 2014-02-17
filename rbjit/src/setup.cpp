@@ -1,3 +1,5 @@
+#include <intrin.h> // supress warning in ruby_atomic.h
+
 extern "C" {
 #include "ruby/ruby.h"
 #include "method.h" // rb_method_entry_t, rb_method_definition_t
