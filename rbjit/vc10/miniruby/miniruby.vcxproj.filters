@@ -1,281 +1,327 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="ソース ファイル">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="ヘッダー ファイル">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="リソース ファイル">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="rbjit">
       <UniqueIdentifier>{5cd131eb-8b6d-411e-bf66-5f80744832b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rbjit\Source Files">
+      <UniqueIdentifier>{dc903c12-2c1f-4b06-be22-443a8c5324bc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rbjit\Header Files">
+      <UniqueIdentifier>{be49a702-41d3-4d39-a083-1afcd5649f1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ruby">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\main.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\dmydln.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\miniinit.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\miniprelude.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\array.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\bignum.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\class.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\compar.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\complex.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\dir.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\dln_find.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\encoding.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\enum.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\enumerator.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\error.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\eval.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\load.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\proc.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\file.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\gc.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\hash.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\inits.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\io.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\marshal.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\math.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\node.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\numeric.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\object.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\pack.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\parse.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\process.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\random.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\range.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\rational.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\re.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\regcomp.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\regenc.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\regerror.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\regexec.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\regparse.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\regsyntax.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\ruby.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\safe.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\signal.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\sprintf.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\st.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\strftime.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\string.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\struct.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\time.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\transcode.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\util.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\variable.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\version.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\compile.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\debug.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\iseq.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\vm.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\vm_dump.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\vm_backtrace.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\vm_trace.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\thread.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\cont.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\newline.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\crypt.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\lgamma_r.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\strlcat.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\strlcpy.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\win32\win32.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\win32\file.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\setproctitle.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\acosh.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\cbrt.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\erf.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\tgamma.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\dmyext.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\missing\ffs.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\enc\utf_8.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\enc\ascii.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\enc\unicode.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\enc\us_ascii.c">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\cfgbuilder.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\controlflowgraph.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\definfo.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\methodinfo.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\nativecompiler.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\opcode.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\opcodefactory.cpp">
+      <Filter>rbjit\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\setup.cpp">
-      <Filter>rbjit</Filter>
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\variable.cpp">
+      <Filter>rbjit\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </None>
     <None Include="..\..\..\parse.y">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ruby</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\rbjit\cfgbuilder.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\rbjit\common.h">
-      <Filter>rbjit</Filter>
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\definfo.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\opcodefactory.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\variable.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\opcode.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\methodinfo.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\nativecompiler.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\controlflowgraph.h">
+      <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

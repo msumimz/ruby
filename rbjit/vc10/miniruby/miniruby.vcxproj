@@ -19,12 +19,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -38,48 +41,59 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\missing;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)..\..\..\..;$(ProjectDir)..\..\..\..\missing;$(SourcePath)</SourcePath>
+    <IncludePath>C:\llvm\llvm-3.4\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\missing;$(IncludePath)</IncludePath>
+    <SourcePath>C:\llvm\llvm-3.4-Debug\lib;$(ProjectDir)..\..\..\..;$(ProjectDir)..\..\..\..\missing;$(SourcePath)</SourcePath>
+    <LibraryPath>C:\llvm\llvm-3.4-Debug\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <SourcePath>$(ProjectDir)..\..\..\..;$(ProjectDir)..\..\..\..\missing;$(SourcePath)</SourcePath>
-    <IncludePath>$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\missing;$(IncludePath)</IncludePath>
+    <SourcePath>C:\llvm\llvm-3.4\lib;$(ProjectDir)..\..\..\..;$(ProjectDir)..\..\..\..\missing;$(SourcePath)</SourcePath>
+    <IncludePath>C:\llvm\llvm-3.4\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\missing;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\llvm\llvm-3.4\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level2</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS=1;RBJIT_DEBUG;RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_100;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <DisableSpecificWarnings>4355</DisableSpecificWarnings>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level2</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS=1;RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_100;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>
+      </PrecompiledHeaderFile>
+      <DisableSpecificWarnings>4355</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -164,16 +178,60 @@
     <ClCompile Include="..\..\..\vm_trace.c" />
     <ClCompile Include="..\..\..\win32\file.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)_win32</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)_win32</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\win32\win32.c" />
-    <ClCompile Include="..\..\src\setup.cpp" />
+    <ClCompile Include="..\..\src\cfgbuilder.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\controlflowgraph.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\definfo.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\methodinfo.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\nativecompiler.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\opcode.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\opcodefactory.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\setup.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\variable.cpp">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def" />
     <None Include="..\..\..\parse.y" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\include\rbjit\cfgbuilder.h" />
     <ClInclude Include="..\..\include\rbjit\common.h" />
+    <ClInclude Include="..\..\include\rbjit\controlflowgraph.h" />
+    <ClInclude Include="..\..\include\rbjit\definfo.h" />
+    <ClInclude Include="..\..\include\rbjit\methodinfo.h" />
+    <ClInclude Include="..\..\include\rbjit\nativecompiler.h" />
+    <ClInclude Include="..\..\include\rbjit\opcode.h" />
+    <ClInclude Include="..\..\include\rbjit\opcodefactory.h" />
+    <ClInclude Include="..\..\include\rbjit\variable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

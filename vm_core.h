@@ -322,8 +322,11 @@ struct rb_iseq_struct {
     /* used at compile time */
     struct iseq_compile_data *compile_data;
 
-    // preserved for jit compilation
+    // rbjit: preserved for jit compilation
     NODE* node;
+
+    // rbjit: holds info for jit compilation
+    void* jit_method_info;
 };
 
 enum ruby_special_exceptions {
