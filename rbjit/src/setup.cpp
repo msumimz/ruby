@@ -21,7 +21,7 @@ void Init_rbjit();
 static VALUE
 debugbreak(int argc, VALUE *argv, VALUE obj)
 {
-  __asm { int 3 }
+  DebugBreak();
   return Qnil;
 }
 
