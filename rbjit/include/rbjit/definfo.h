@@ -41,18 +41,20 @@ public:
     : defSite_(defBlock, 0), defCount_(1) {}
 
   const DefSite* defSite() const { return &defSite_; }
-  int defCount() const { return defCount_; }
-
   void addDefSite(BlockHeader* block);
+
+  int defCount() const { return defCount_; }
+  void increaseDefCount() { ++defCount_; }
+  void decreaseDefCount() { --defCount_; }
 
 private:
 
-  // The block where the variable is defined
-  // Used to judge whether the variable is local
+  // The block where the variable is defined.
+  // Used to judge whether the variable is local.
   DefSite defSite_;
 
-  // The number of definition sites to be used to judge whether renaming is necessary
-  // Each definition in the same block should be counted
+  // The number of definition sites.
+  // Used to judge whether renaming is necessary.
   int defCount_;
 };
 

@@ -1,0 +1,70 @@
+#include <cstdlib>
+#include "rbjit/domtree.h"
+#include "rbjit/controlflowgraph.h"
+#include "rbjit/opcode.h"
+
+RBJIT_NAMESPACE_BEGIN
+
+DomTree::DomTree(ControlFlowGraph* cfg)
+  : size_(cfg->blocks()->size()), nodes_((Node*)calloc(size_, sizeof(Node)))
+{
+  buildTree(cfg);
+}
+
+DomTree::~DomTree()
+{
+  free(nodes_);
+}
+
+DomTree::Node*
+DomTree::nodeOf(BlockHeader* block) const
+{
+  return nodes_ + block->index();
+}
+
+size_t
+DomTree::blockIndexOf(Node* node) const
+{
+  return node - nodes_;
+}
+
+void
+DomTree::addChild(BlockHeader* parent, BlockHeader* child)
+{
+  Node* p = nodeOf(parent);
+  Node* c = nodeOf(child);
+  c->nextSibling_ = p->firstChild_;
+  p->firstChild_ = c;
+}
+
+void
+DomTree::buildTree(ControlFlowGraph* cfg)
+{
+  for (unsigned i = 0; i < size_; ++i) {
+    BlockHeader* b = cfg->blocks()->at(i);
+    if (b == cfg->entry() || b == cfg->exit()) {
+      continue;
+    }
+    addChild(b->idom(), b);
+  }
+}
+
+std::string
+DomTree::debugPrint() const
+{
+  char buf[256];
+  sprintf(buf, "[DomTree: %x]\n", this);
+  std::string result(buf);
+
+  for (size_t i = 0; i < size_; ++i) {
+    Node* n = nodes_ + i;
+    sprintf(buf, "%3d: %x(%d) firstChild=%x(%d) nextSibling=%x(%d)\n",
+      i, n, blockIndexOf(n), n->firstChild_, blockIndexOf(n->firstChild_),
+      n->nextSibling_, blockIndexOf(n->nextSibling_));
+    result += buf;
+  }
+
+  return result;
+}
+
+RBJIT_NAMESPACE_END

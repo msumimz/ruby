@@ -1205,7 +1205,9 @@ Init_signal(void)
 # ifdef USE_SIGALTSTACK
 	rb_register_sigaltstack(GET_THREAD());
 # endif
+#ifndef RBJIT_DEBUG
 	install_sighandler(SIGSEGV, (sighandler_t)sigsegv);
+#endif
 #endif
     }
 #ifdef SIGPIPE

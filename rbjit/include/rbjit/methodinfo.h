@@ -8,8 +8,8 @@ class ControlFlowGraph;
 class MethodInfo {
 public:
 
-  MethodInfo(RNode* node)
-    : node_(node), cfg_(0), methodBody_(0)
+  MethodInfo(RNode* node, const char* methodName)
+    : node_(node), methodName_(methodName), cfg_(0), methodBody_(0)
   {}
 
   void* methodBody() { return methodBody_; }
@@ -19,7 +19,9 @@ public:
 private:
 
   RNode* node_;
+  const char* methodName_;
   ControlFlowGraph* cfg_;
+
   void* methodBody_;
 
 };

@@ -2,6 +2,8 @@
 #include "rbjit/cfgbuilder.h"
 #include "rbjit/nativecompiler.h"
 #include "rbjit/controlflowgraph.h"
+#include "rbjit/ssatranslator.h"
+#include "rbjit/debugprint.h"
 
 extern "C" {
 struct RNode;
@@ -14,11 +16,17 @@ MethodInfo::compile()
 {
   CfgBuilder builder;
   cfg_ = builder.buildMethod(node_);
-#ifdef RBJIT_NDEBUG
-  fprintf(stderr, cfg_->debugDump().c_str());
-#endif
 
-  methodBody_ = NativeCompiler::instance()->compileMethod(cfg_);
+  RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintVariables());
+
+  SsaTranslator ssa(cfg_, true);
+  ssa.translate();
+
+  RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintVariables());
+
+  methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, methodName_);
 }
 
 RBJIT_NAMESPACE_END

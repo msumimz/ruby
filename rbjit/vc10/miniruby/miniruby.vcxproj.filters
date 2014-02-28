@@ -286,6 +286,15 @@
     <ClCompile Include="..\..\src\variable.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\domtree.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ssatranslator.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\debugprint.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -321,6 +330,15 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\controlflowgraph.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\domtree.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\ssatranslator.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\debugprint.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

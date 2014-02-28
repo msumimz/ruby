@@ -9,11 +9,12 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 
-#ifndef _NDEBUG
+#ifdef RBJIT_DEBUG
 #include "llvm/Support/raw_ostream.h"
 #endif
 
@@ -21,6 +22,9 @@
 #include "rbjit/opcode.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/variable.h"
+#include "rbjit/debugprint.h"
+
+#include "ruby.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -87,9 +91,10 @@ NativeCompiler::~NativeCompiler()
 }
 
 void*
-NativeCompiler::compileMethod(ControlFlowGraph* cfg)
+NativeCompiler::compileMethod(ControlFlowGraph* cfg, const char* name)
 {
   cfg_ = cfg;
+  funcName_ = name;
   translateToBitcode();
   return ee_->getPointerToFunction(func_);
 }
@@ -100,31 +105,41 @@ NativeCompiler::translateToBitcode()
   std::vector<llvm::Type*> argTypes;
   llvm::FunctionType *ft = llvm::FunctionType::get(valueType_, argTypes, false);
 
-  func_ = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, "f", module_);
+  std::string name = getUniqueName(funcName_);
+  func_ = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module_);
 
-  // create basic blocks
+  // Create basic blocks in advance
   size_t blockCount = cfg_->blocks()->size();
-  llvmBlocks_.resize(blockCount, 0);
+  llvmBlocks_.assign(blockCount, 0);
   for (size_t i = 0; i < blockCount; ++i) {
     llvmBlocks_[i] = llvm::BasicBlock::Create(*ctx_, "", func_);
   }
 
-  // states list
-  states_.resize(blockCount, WAITING);
-
-  // prepare value vector
+  // Value vector
   size_t varCount = cfg_->variables()->size();
-  llvmValues_.resize(varCount, 0);
+  llvmValues_.assign(varCount, 0);
 
-  // suspend translating the exit block
+  // States list
+  states_.assign(blockCount, WAITING);
+
+#ifdef RBJIT_DEBUG
+  // Add debugtrap
+  // declare void @llvm.debugtrap() nounwind
+  llvm::Function* debugtrapFunc = llvm::Intrinsic::getDeclaration(module_, llvm::Intrinsic::debugtrap, llvm::None);
+  llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
+  builder_->SetInsertPoint(bb);
+  builder_->CreateCall(debugtrapFunc);
+#endif
+
+  // Suspend translating the exit block
   BlockHeader* exitBlock = cfg_->exit();
   states_[exitBlock->index()] = WORKING;
 
-  // translate each block to bitcode
+  // Translate each block to bitcode
   translateBlocks();
 
-  // create exit block
-  // exit block is always empty and its bitcode should consist of a single ret
+  // Create the exit block
+  // The exit block is always empty and its bitcode should consist of a single ret
   visitOpcode(exitBlock);
   builder_->CreateRet(llvmValues_[cfg_->output()->index()]);
   states_[exitBlock->index()] = DONE;
@@ -133,12 +148,26 @@ NativeCompiler::translateToBitcode()
   std::string bitcode;
   llvm::raw_string_ostream out(bitcode);
   func_->print(out);
-  fprintf(stderr, "%s\n", out.str().c_str());
+  RBJIT_DPRINTLN(out.str());
   llvm::verifyFunction(*func_);
 #endif
 
-  // optimize
+  // Optimize
   fpm_->run(*func_);
+}
+
+std::string
+NativeCompiler::getUniqueName(const char* baseName)
+{
+  std::string n = baseName;
+  int count = 1;
+  while (nameList_.find(n) != nameList_.end()) {
+    n = baseName;
+    n += '_';
+    n += count;
+  }
+
+  return n;
 }
 
 void
@@ -184,8 +213,12 @@ NativeCompiler::visitOpcode(OpcodeJump* op)
 bool
 NativeCompiler::visitOpcode(OpcodeJumpIf* op)
 {
-  // RTEST
-  llvm::Value* cond = builder_->CreateAnd(llvmValues_[op->cond()->index()], llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, ~Qnil)));
+  // In ruby/ruby.h
+  // #define RTEST(v) !(((VALUE)(v) & ~Qnil) == 0)
+  llvm::Value* rtest = builder_->CreateAnd(llvmValues_[op->cond()->index()],
+    llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, ~Qnil)));
+  llvm::Value* cond = builder_->CreateICmpNE(rtest,
+    llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, 0)));
   builder_->CreateCondBr(cond,
     llvmBlocks_[op->ifTrue()->index()],
     llvmBlocks_[op->ifFalse()->index()]);
@@ -203,12 +236,18 @@ NativeCompiler::visitOpcode(OpcodeImmediate* op)
 bool
 NativeCompiler::visitOpcode(OpcodeCall* op)
 {
+  assert(!"unimplemented");
   return true;
 }
 
 bool
 NativeCompiler::visitOpcode(OpcodePhi* op)
 {
+  llvm::PHINode* phi = builder_->CreatePHI(valueType_, op->rhsCount());
+  for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
+    phi->addIncoming(llvmValues_[(*i)->index()], llvmBlocks_[(*i)->defBlock()->index()]);
+  }
+  llvmValues_[op->lhs()->index()] = phi;
   return true;
 }
 

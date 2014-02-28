@@ -1,3 +1,4 @@
+#include <cassert>
 #include "rbjit/opcodefactory.h"
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
@@ -87,6 +88,7 @@ OpcodeFactory::addCopy(Variable* lhs, Variable* rhs)
 {
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
   ++cfg_->opcodeCount_;
+  lhs->defInfo()->addDefSite(lastBlock_);
 
   lastOpcode_ = op;
 
@@ -96,8 +98,12 @@ OpcodeFactory::addCopy(Variable* lhs, Variable* rhs)
 void
 OpcodeFactory::addJump(BlockHeader* dest)
 {
+  assert(dest);
+
   OpcodeJump* op = new OpcodeJump(file_, line_, lastOpcode_, dest);
   ++cfg_->opcodeCount_;
+
+  dest->addBackedge(lastBlock_);
 
   lastBlock_->setFooter(op);
 
@@ -120,8 +126,11 @@ OpcodeFactory::addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFal
     nextBlock = ifTrue;
   }
 
-  OpcodeJumpIf* op = new OpcodeJumpIf(file_, line_, cond, ifTrue, ifFalse);
+  OpcodeJumpIf* op = new OpcodeJumpIf(file_, line_, lastOpcode_, cond, ifTrue, ifFalse);
   ++cfg_->opcodeCount_;
+
+  ifTrue->addBackedge(lastBlock_);
+  ifFalse->addBackedge(lastBlock_);
 
   lastBlock_->setFooter(op);
 
@@ -236,6 +245,7 @@ OpcodeFactory::createEntryExitBlocks()
 {
   // entry block
   cfg_->entry_ = addBlockHeader();
+  cfg_->undefined_ = addImmediate(0, true);
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);

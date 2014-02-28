@@ -28,7 +28,7 @@ BlockHeader::addBackedge(BlockHeader* block)
   }
 }
 
-unsigned
+int
 BlockHeader::backedgeSize() const
 {
   if (backedge_.block_ == 0) {

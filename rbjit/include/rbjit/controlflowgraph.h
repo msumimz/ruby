@@ -9,41 +9,55 @@ class Opcode;
 class BlockHeader;
 class Variable;
 class BlockVisitor;
+class DomTree;
 
 // Single-entry and single-exit control flow graph
 class ControlFlowGraph {
 public:
 
-  enum {
-    UNKNOWN = 0,
-    YES = 1,
-    NO = 2
-  };
+  enum { UNKNOWN = 0, YES = 1, NO = 2 };
 
   ControlFlowGraph()
     : hasEvals_(UNKNOWN), hasDefs_(UNKNOWN), hasBindings_(UNKNOWN),
-      opcodeCount_(0), entry_(0), exit_(0), output_(0)
+      opcodeCount_(0), entry_(0), exit_(0),
+      output_(0), undefined_(0),
+      domTree_(0)
   {}
+
+  ControlFlowGraph* copy() const;
+
+  // Accessors
+
+  int opcodeCount() const { return opcodeCount_; }
+  void setOpcodeCount(int count) { opcodeCount_ = count; }
 
   BlockHeader* entry() const { return entry_; }
   BlockHeader* exit() const { return exit_; }
-  int opcodeCount() const { return opcodeCount_; }
 
   Variable* output() const {  return output_; }
+  Variable* undefined() const { return undefined_; }
+
+  DomTree* domTree();
+
+  // Blocks
 
   const std::vector<BlockHeader*>* blocks() const { return &blocks_; }
   std::vector<BlockHeader*>* blocks() { return &blocks_; }
 
+  // Variables
+
   const std::vector<Variable*>* variables() const { return &variables_; }
   std::vector<Variable*>* variables() { return &variables_; }
+  Variable* copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source);
+  void removeVariables(const std::vector<Variable*>* toBeRemoved);
 
-  void setOpcodeCount(int count) { opcodeCount_ = count; }
+  // Modifiers
 
+  void removeOpcodeAfter(Opcode* prev);
   void inlineAnotherCFG(Opcode* where, ControlFlowGraph* cfg);
 
-  ControlFlowGraph* copy() const;
-
-  std::string debugDump() const;
+  std::string debugPrint() const;
+  std::string debugPrintVariables() const;
 
 private:
 
@@ -62,7 +76,7 @@ private:
   // Basic blocks
   std::vector<BlockHeader*> blocks_;
 
-  // Loop headers
+  // Loop preheaders
   std::vector<BlockHeader*> loops_;
 
   // Variables used in the CFG, including input_ and output_
@@ -73,6 +87,11 @@ private:
 
   // Return value
   Variable* output_;
+
+  // Undefined value that is used in the process of SSA translating
+  Variable* undefined_;
+
+  DomTree* domTree_;
 };
 
 // Block visitor interface

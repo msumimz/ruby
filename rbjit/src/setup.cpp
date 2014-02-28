@@ -50,7 +50,7 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
     rb_raise(rb_eArgError, "method does not have iseq");
   }
 
-  rbjit::MethodInfo* mi = new rbjit::MethodInfo(def->body.iseq->node);
+  rbjit::MethodInfo* mi = new rbjit::MethodInfo(def->body.iseq->node, rb_id2name(SYM2ID(methodName)));
   def->body.iseq->jit_method_info = mi;
 
   mi->compile();

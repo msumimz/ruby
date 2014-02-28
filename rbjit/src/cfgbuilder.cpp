@@ -78,6 +78,18 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildImmediate(factory, node, useResult);
     break;
 
+  case NODE_TRUE:
+    v = buildTrue(factory, node, useResult);
+    break;
+
+  case NODE_FALSE:
+    v = buildFalse(factory, node, useResult);
+    break;
+
+  case NODE_NIL:
+    v = buildNil(factory, node, useResult);
+    break;
+
   case NODE_IF:
     v = buildIf(factory, node, useResult);
     break;
@@ -112,6 +124,24 @@ CfgBuilder::buildImmediate(OpcodeFactory* factory, const RNode* node, bool useRe
 }
 
 Variable*
+CfgBuilder::buildTrue(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  return factory->addImmediate(Qtrue, useResult);
+}
+
+Variable*
+CfgBuilder::buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  return factory->addImmediate(Qfalse, useResult);
+}
+
+Variable*
+CfgBuilder::buildNil(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  return factory->addImmediate(Qnil, useResult);
+}
+
+Variable*
 CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_IF);
@@ -119,14 +149,16 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // condition
   Variable* cond = buildNode(factory, node->nd_cond, true);
 
+  BlockHeader* idom = factory->lastBlock();
+
   // true block
   OpcodeFactory trueFactory(*factory);
-  BlockHeader* trueBlock = trueFactory.addBlockHeader();
+  BlockHeader* trueBlock = trueFactory.addFreeBlockHeader(idom);
   Variable* trueValue = buildNode(&trueFactory, node->nd_body, useResult);
 
   // false block
   OpcodeFactory falseFactory(*factory);
-  BlockHeader* falseBlock = falseFactory.addBlockHeader();
+  BlockHeader* falseBlock = falseFactory.addFreeBlockHeader(idom);
   Variable* falseValue = buildNode(&falseFactory, node->nd_else, useResult);
 
   // branch
@@ -135,7 +167,7 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // join block
   if (trueFactory.continues()) {
     if (falseFactory.continues()) {
-      BlockHeader* join = factory->addFreeBlockHeader(factory->lastBlock());
+      BlockHeader* join = factory->addFreeBlockHeader(idom);
       Variable* value = factory->createTemporary(useResult);
       trueFactory.addCopy(value, trueValue);
       trueFactory.addJump(join);
@@ -154,6 +186,7 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
     }
   }
 
+  // Both route have been stopped
   factory->halt();
   return 0;
 }

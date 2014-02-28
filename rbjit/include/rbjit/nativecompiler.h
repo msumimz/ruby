@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 #include "rbjit/opcode.h"
 
@@ -30,7 +31,7 @@ public:
   static void setup();
   static NativeCompiler* instance() { return nativeCompiler_; }
 
-  void* compileMethod(ControlFlowGraph* cfg);
+  void* compileMethod(ControlFlowGraph* cfg, const char* name);
 
   // compile
   bool visitOpcode(BlockHeader* opcode);
@@ -43,11 +44,15 @@ public:
 
 private:
 
-  // bit size of VALUE
-  static const int VALUE_BITSIZE = sizeof(intptr_t) * CHAR_BIT;
+  // bit size of the MRI's VALUE type
+  static const int VALUE_BITSIZE = sizeof(size_t) * CHAR_BIT;
+
+  std::string getUniqueName(const char* baseName);
 
   void translateToBitcode();
   void translateBlocks();
+
+  // Shared with every compilation session
 
   llvm::LLVMContext* ctx_;
   IRBuilder* builder_;
@@ -55,15 +60,23 @@ private:
   llvm::FunctionPassManager* fpm_;
   llvm::Type* valueType_;
   llvm::ExecutionEngine* ee_;
-  llvm::Function* func_;
   std::string errorMessage_;
 
+  std::unordered_set<std::string> nameList_;
+
+  // Updated with each compilation session
+
   ControlFlowGraph* cfg_;
+  const char* funcName_;
+
+  llvm::Function* func_;
   std::vector<llvm::BasicBlock*> llvmBlocks_;
   std::vector<llvm::Value*> llvmValues_;
 
   enum { WAITING, WORKING, DONE };
   std::vector<int> states_;
+
+  // Singleton
 
   static bool initialized_;
   static NativeCompiler* nativeCompiler_;

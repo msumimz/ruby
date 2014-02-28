@@ -17,13 +17,13 @@ class OpcodePhi;
 
 class OpcodeVisitor {
 public:
-  virtual bool visitOpcode(BlockHeader* op) { return true; }
-  virtual bool visitOpcode(OpcodeCopy* op) { return true; }
-  virtual bool visitOpcode(OpcodeJump* op) { return true; }
-  virtual bool visitOpcode(OpcodeJumpIf* op) { return true; }
-  virtual bool visitOpcode(OpcodeImmediate* op) { return true; }
-  virtual bool visitOpcode(OpcodeCall* op) { return true; }
-  virtual bool visitOpcode(OpcodePhi* op) { return true; }
+  virtual bool visitOpcode(BlockHeader* op) = 0;
+  virtual bool visitOpcode(OpcodeCopy* op) = 0;
+  virtual bool visitOpcode(OpcodeJump* op) = 0;
+  virtual bool visitOpcode(OpcodeJumpIf* op) = 0;
+  virtual bool visitOpcode(OpcodeImmediate* op) = 0;
+  virtual bool visitOpcode(OpcodeCall* op) = 0;
+  virtual bool visitOpcode(OpcodePhi* op) = 0;
 };
 
 ////////////////////////////////////////////////////////////
@@ -32,11 +32,11 @@ public:
 class Opcode {
 public:
 
-  Opcode() : file_(0), line_(0), next_(0) {}
   Opcode(int file, int line, Opcode* prev)
     : file_(file), line_(line), next_(0)
   {
     if (prev) {
+      next_ = prev->next_;
       prev->next_ = this;
     }
   }
@@ -44,6 +44,7 @@ public:
   virtual ~Opcode() {}
 
   Opcode* next() const { return next_; }
+  void removeNextOpcode() { next_ = next_->next_; }
 
   // Obtain variables
   virtual Variable* lhs() const { return 0; }
@@ -51,6 +52,8 @@ public:
   virtual Variable*const* rhsEnd() const { return 0; }
   virtual Variable** rhsBegin() { return 0; }
   virtual Variable** rhsEnd() { return 0; }
+  virtual BlockHeader* nextBlock() const { return 0; }
+  virtual BlockHeader* nextAltBlock() const { return 0; }
 
   int rhsCount() const { return rhsEnd() - rhsBegin(); }
   bool hasRhs() const { return rhsCount() > 0; }
@@ -141,6 +144,10 @@ public:
   ~OpcodeVa() { delete rhs_; }
 
   Variable* rhs() const { return rhs_[0]; }
+  Variable* rhs(int i) const { return rhs_[i]; }
+
+  void setRhs(int i, Variable* v) { rhs_[i] = v; }
+
   Variable*const* rhsBegin() const { return rhs_; }
   Variable*const* rhsEnd() const { return rhs_ + rhsSize_; }
   Variable** rhsBegin() { return rhs_; }
@@ -167,25 +174,36 @@ public:
 
   int index() const { return index_; }
   int depth() const { return depth_; }
-  Opcode* idom() const { return idom_; }
+  BlockHeader* idom() const { return idom_; }
 
   Opcode* footer() const { return footer_; }
   void setFooter(Opcode* footer) { footer_ = footer; }
 
   // backedges
 
-  struct Backedge {
-    BlockHeader* block_;
-    Backedge* next_;
+  class Backedge {
+  public:
+
     Backedge(BlockHeader* block, Backedge* next)
       : block_(block), next_(next)
     {}
+
+    BlockHeader* block() const { return block_; }
+    Backedge* next() const { return next_; }
+
+  private:
+
+    friend class BlockHeader;
+    BlockHeader* block_;
+    Backedge* next_;
   };
+
+  Backedge* backedge() { return &backedge_; }
 
   void addBackedge(BlockHeader* block);
   bool hasBackedge() const { return backedge_.block_ != 0; }
   bool hasMultipleBackedges() const { return backedge_.next_ != 0; }
-  unsigned backedgeSize() const;
+  int backedgeSize() const;
   const Backedge* backedgeAt(int n) const;
 
   // visitor
@@ -223,6 +241,7 @@ public:
   { next_ = dest; }
 
   BlockHeader* dest() const { return static_cast<BlockHeader*>(next()); }
+  BlockHeader* nextBlock() const { return dest(); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
@@ -231,13 +250,19 @@ public:
 class OpcodeJumpIf : public OpcodeR<1> {
 public:
 
-  OpcodeJumpIf(int file, int line, Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse)
-    : OpcodeR<1>(file, line, ifTrue), ifFalse_(ifFalse)
-  { setRhs(0, cond); }
+  OpcodeJumpIf(int file, int line, Opcode* prev, Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse)
+    : OpcodeR<1>(file, line, prev), ifFalse_(ifFalse)
+  {
+    next_ = ifTrue;
+    setRhs(0, cond);
+  }
 
   Variable* cond() const { return rhs(); }
   BlockHeader* ifTrue() const { return static_cast<BlockHeader*>(next()); }
   BlockHeader* ifFalse() const { return ifFalse_; }
+
+  BlockHeader* nextBlock() const { return ifTrue(); }
+  BlockHeader* nextAltBlock() const { return ifFalse(); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
