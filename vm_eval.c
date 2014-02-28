@@ -290,7 +290,7 @@ stack_check(void)
 
 static inline rb_method_entry_t *
     rb_search_method_entry(VALUE recv, ID mid, VALUE *defined_class_ptr);
-static inline int rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
+int rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
 #define NOEX_OK NOEX_NOSUPER
 
 /*!
@@ -524,7 +524,7 @@ rb_search_method_entry(VALUE recv, ID mid, VALUE *defined_class_ptr)
     return rb_method_entry(klass, mid, defined_class_ptr);
 }
 
-static inline int
+int
 rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self)
 {
     VALUE klass;
@@ -566,7 +566,6 @@ rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type sc
     }
     return NOEX_OK;
 }
-
 
 /*!
  * \internal

@@ -259,6 +259,8 @@
     <ClCompile Include="..\..\..\vm.c" />
     <ClCompile Include="..\..\..\vm_backtrace.c" />
     <ClCompile Include="..\..\..\vm_dump.c" />
+    <ClInclude Include="..\..\..\vm_eval.c" />
+    <ClInclude Include="..\..\..\vm_exec.c" />
     <ClCompile Include="..\..\..\vm_trace.c" />
     <ClCompile Include="..\..\..\win32\file.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)_win32</ObjectFileName>
@@ -311,6 +313,8 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\rubymethod.cpp" />
+    <ClCompile Include="..\..\src\rubyobject.cpp" />
     <ClCompile Include="..\..\src\setup.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
@@ -340,6 +344,8 @@
     <ClInclude Include="..\..\include\rbjit\nativecompiler.h" />
     <ClInclude Include="..\..\include\rbjit\opcode.h" />
     <ClInclude Include="..\..\include\rbjit\opcodefactory.h" />
+    <ClInclude Include="..\..\include\rbjit\rubymethod.h" />
+    <ClInclude Include="..\..\include\rbjit\rubyobject.h" />
     <ClInclude Include="..\..\include\rbjit\ssatranslator.h" />
     <ClInclude Include="..\..\include\rbjit\variable.h" />
   </ItemGroup>

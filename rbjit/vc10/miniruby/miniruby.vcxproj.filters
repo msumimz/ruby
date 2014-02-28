@@ -295,6 +295,12 @@
     <ClCompile Include="..\..\src\debugprint.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\rubyobject.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rubymethod.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -339,6 +345,18 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\debugprint.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\vm_eval.c">
+      <Filter>ruby</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\vm_exec.c">
+      <Filter>ruby</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\rubyobject.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\rubymethod.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

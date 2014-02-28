@@ -3,11 +3,12 @@
 
 #include "rbjit/methodinfo.h"
 #include "rbjit/nativecompiler.h"
+#include "rbjit/rubymethod.h"
 
 extern "C" {
-#include "ruby/ruby.h"
-#include "method.h" // rb_method_entry_t, rb_method_definition_t
-#include "vm_core.h" // rb_iseq_t
+#include "ruby.h"
+//#include "method.h" // rb_method_entry_t, rb_method_definition_t
+//#include "vm_core.h" // rb_iseq_t
 #include "node.h" // rb_parser_dump_tree
 }
 
@@ -28,39 +29,37 @@ debugbreak(int argc, VALUE *argv, VALUE obj)
 static VALUE
 dumptree(VALUE self, VALUE cls, VALUE methodName)
 {
-  rb_method_entry_t* me = rb_method_entry(cls, SYM2ID(methodName), 0);
+  rbjit::mri::MethodEntry me(rbjit::mri::Class(cls), rbjit::mri::Symbol(methodName).id());
+  rbjit::mri::MethodDefinition def = me.methodDefinition();
 
-  rb_method_definition_t* def = me->def;
-  if (def->type != VM_METHOD_TYPE_ISEQ) {
+  if (!def.hasAstNode()) {
     rb_raise(rb_eArgError, "method does not have iseq");
   }
 
-  NODE* node = def->body.iseq->node;
-
-  return rb_parser_dump_tree(node, 0);
+  return rb_parser_dump_tree(def.astNode(), 0);
 }
 
 static VALUE
 precompile(VALUE self, VALUE cls, VALUE methodName)
 {
-  rb_method_entry_t* me = rb_method_entry(cls, SYM2ID(methodName), 0);
+  rbjit::mri::MethodEntry me(rbjit::mri::Class(cls), rbjit::mri::Symbol(methodName).id());
+  rbjit::mri::MethodDefinition def = me.methodDefinition();
 
-  rb_method_definition_t* def = me->def;
-  if (def->type != VM_METHOD_TYPE_ISEQ) {
+  if (!def.hasAstNode()) {
     rb_raise(rb_eArgError, "method does not have iseq");
   }
 
-  rbjit::MethodInfo* mi = new rbjit::MethodInfo(def->body.iseq->node, rb_id2name(SYM2ID(methodName)));
-  def->body.iseq->jit_method_info = mi;
+  rbjit::MethodInfo* mi = new rbjit::MethodInfo(def.astNode(), rbjit::mri::Symbol(methodName).name());
+  def.setMethodInfo(mi);
 
   mi->compile();
   void* func = mi->methodBody();
 
-  const char* oldName = rb_id2name(SYM2ID(methodName));
+  const char* oldName = rbjit::mri::Symbol(methodName).name();
   std::string newName(oldName);
   newName += "_orig";
   rb_define_alias(cls, newName.c_str(), oldName);
-  rb_define_method(cls, oldName, (VALUE (*)(...))func, def->body.iseq->argc);
+  rb_define_method(cls, oldName, (VALUE (*)(...))func, def.argc());
 
   return Qnil;
 }
