@@ -35,7 +35,7 @@ dumptree(VALUE self, VALUE cls, VALUE methodName)
   rbjit::mri::MethodDefinition def = me.methodDefinition();
 
   if (!def.hasAstNode()) {
-    rb_raise(rb_eArgError, "method does not have iseq");
+    rb_raise(rb_eArgError, "method does not have the source code to be compiled");
   }
 
   return rb_parser_dump_tree(def.astNode(), 0);
@@ -48,7 +48,7 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
   rbjit::mri::MethodDefinition def = me.methodDefinition();
 
   if (!def.hasAstNode()) {
-    rb_raise(rb_eArgError, "method does not have iseq");
+    rb_raise(rb_eArgError, "method does not have the source code to be compiled");
   }
 
   rbjit::MethodInfo* mi = new rbjit::MethodInfo(def.astNode(), rbjit::mri::Symbol(methodName).name());
