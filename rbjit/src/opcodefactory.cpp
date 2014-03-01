@@ -3,6 +3,7 @@
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
 #include "rbjit/controlflowgraph.h"
+#include "rbjit/rubyobject.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -235,7 +236,7 @@ OpcodeFactory::createEntryExitBlocks()
 {
   // entry block
   cfg_->entry_ = addBlockHeader();
-  cfg_->undefined_ = addImmediate(0, true);
+  cfg_->undefined_ = addImmediate(mri::Object::nilValue(), true);
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);

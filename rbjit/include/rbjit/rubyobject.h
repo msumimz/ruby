@@ -20,6 +20,11 @@ public:
 
   operator VALUE() const { return value_; }
 
+  static VALUE trueValue();
+  static VALUE falseValue();
+  static VALUE nilValue();
+  static VALUE undefValue();
+
 protected:
 
   VALUE value_;

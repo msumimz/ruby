@@ -11,6 +11,13 @@ RBJIT_NAMESPACE_BEGIN
 ////////////////////////////////////////////////////////////
 // ControlFlowGraph
 
+ControlFlowGraph::ControlFlowGraph()
+  : hasEvals_(UNKNOWN), hasDefs_(UNKNOWN), hasBindings_(UNKNOWN),
+    opcodeCount_(0), entry_(0), exit_(0),
+    output_(0), undefined_(0),
+    domTree_(0)
+{}
+
 DomTree*
 ControlFlowGraph::domTree()
 {

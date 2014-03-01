@@ -20,3 +20,14 @@ end
 
 precompile Object, :m2
 assert(m2 == 10)
+
+def m3
+  if false
+    a = 10
+  else
+  end
+  a
+end
+
+#precompile Object, :m3
+assert(m3 == nil)

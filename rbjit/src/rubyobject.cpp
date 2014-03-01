@@ -9,6 +9,33 @@ namespace mri {
 ////////////////////////////////////////////////////////////
 // Symbol
 
+VALUE
+Object::trueValue()
+{
+  return Qtrue;
+}
+
+VALUE
+Object::falseValue()
+{
+  return Qfalse;
+}
+
+VALUE
+Object::nilValue()
+{
+  return Qnil;
+}
+
+VALUE
+Object::undefValue()
+{
+  return Qundef;
+}
+
+////////////////////////////////////////////////////////////
+// Symbol
+
 const char*
 Symbol::name() const
 {
