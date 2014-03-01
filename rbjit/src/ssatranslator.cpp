@@ -189,7 +189,7 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
             lhs->defInfo()->decreaseDefCount();
           }
           cfg_->removeOpcodeAfter(prev);
-          op = prev->next();
+          op = prev;
         }
         else {
           if (lhs->defCount() > 1) {
