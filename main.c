@@ -29,10 +29,19 @@ main(int argc, char **argv)
     setlocale(LC_CTYPE, "");
 #endif
 
+    int result;
     ruby_sysinit(&argc, &argv);
     {
 	RUBY_INIT_STACK;
 	ruby_init();
-	return ruby_run_node(ruby_options(argc, argv));
+	result = ruby_run_node(ruby_options(argc, argv));
     }
+
+#ifdef _MSC_VER
+    if (IsDebuggerPresent()) {
+      DebugBreak();
+    }
+#endif
+
+    return result;
 }
