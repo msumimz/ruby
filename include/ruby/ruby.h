@@ -78,6 +78,13 @@ void *alloca();
 # endif	/* HAVE_ALLOCA_H */
 #endif /* __GNUC__ */
 
+#ifdef RBJIT_ENABLED
+// Moved the definitions of VALUE and ID to a different file.
+#include "rbjit/rubytypes.h"
+#define SIGNED_VALUE size_t
+#define SIZEOF_VALUE SIZEOF_VOIDP
+#define PRI_VALUE_PREFIX "l"
+#else
 #if defined HAVE_UINTPTR_T && 0
 typedef uintptr_t VALUE;
 typedef uintptr_t ID;
@@ -99,6 +106,7 @@ typedef unsigned LONG_LONG ID;
 # define PRI_VALUE_PREFIX PRI_LL_PREFIX
 #else
 # error ---->> ruby requires sizeof(void*) == sizeof(long) or sizeof(LONG_LONG) to be compiled. <<----
+#endif
 #endif
 
 typedef char ruby_check_sizeof_int[SIZEOF_INT == sizeof(int) ? 1 : -1];
