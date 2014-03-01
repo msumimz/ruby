@@ -42,7 +42,7 @@ Variable::debugPrint() const
   char buf[256];
   std::string result;
 
-  sprintf(buf, "%Ix defBlock=%Ix defOpcode=%Ix name=%s original=%Ix index=%d ",
+  sprintf(buf, "%Ix defBlock=%Ix defOpcode=%Ix name='%s' original=%Ix index=%d ",
     this, defBlock_, defOpcode_, rb_id2name((ID)name_), original_, index_);
   result = buf;
 
