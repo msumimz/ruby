@@ -907,7 +907,7 @@ rb_equal_opt(VALUE obj1, VALUE obj2)
     return opt_eq_func(obj1, obj2, &ci);
 }
 
-static VALUE
+VALUE
 vm_call0(rb_thread_t*, VALUE, ID, int, const VALUE*, const rb_method_entry_t*, VALUE);
 
 static VALUE

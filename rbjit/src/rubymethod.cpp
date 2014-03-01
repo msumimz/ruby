@@ -1,4 +1,4 @@
-#include <intrin.h> // suppress warning in ruby.h
+#include <intrin.h> // suppress warning in ruby_atomic.h
 #include "rbjit/rubymethod.h"
 
 extern "C" {
@@ -14,33 +14,37 @@ typedef enum call_type {
     CALL_TYPE_MAX
 } call_type;
 
-extern int rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
-//#include "vm_eval.c"
+// defined in vm_eval.c
+extern int
+rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
+
+// defined in vm_insnhelper.c
+extern VALUE
+vm_call0(rb_thread_t* th, VALUE recv, ID id, int argc, const VALUE *argv,
+         const rb_method_entry_t *me, VALUE defined_class);
 }
 
 RBJIT_NAMESPACE_BEGIN
-
-class MethodInfo;
 
 namespace mri {
 
 MethodEntry::MethodEntry(Class cls, Id id)
 {
   ::VALUE c;
-  rb_method_entry_t* me = rb_method_entry(cls.value(), id.id(), (::VALUE*)&c);
+  rb_method_entry_t* me = rb_method_entry(cls.value(), id.id(), (VALUE*)&c);
   me_ = me;
 }
 
 MethodDefinition
 MethodEntry::methodDefinition() const
 {
-  return ((rb_method_entry_t*)me_)->def;
+  return me_->def;
 }
 
 Id
 MethodEntry::methodName() const
 {
-  return ((rb_method_entry_t*)me_)->called_id;
+  return me_->called_id;
 }
 
 bool
@@ -49,8 +53,17 @@ MethodEntry::canCall(CallType callType, Object self)
   static const int NOEX_OK = NOEX_NOSUPER;
 
   rb_thread_t *th = GET_THREAD();
-  int call_status = rb_method_call_status(th, (const rb_method_entry_t*)me_, (call_type)callType, self.value());
+  int call_status = rb_method_call_status(th, me_, (call_type)callType, self.value());
   return call_status == NOEX_OK;
+}
+
+Object
+MethodEntry::call(Object receiver, Id methodName, Id id, int argc, const Object* argv, Class defClass)
+{
+  rb_thread_t *th = GET_THREAD();
+  VALUE result = vm_call0(th, receiver.value(), id.id(), argc, (VALUE*)argv, me_, defClass.value());
+
+  return Object(result);
 }
 
 ////////////////////////////////////////////////////////////
@@ -59,25 +72,25 @@ MethodEntry::canCall(CallType callType, Object self)
 bool
 MethodDefinition::hasAstNode() const
 {
-  return ((rb_method_definition_t*)def_)->type == VM_METHOD_TYPE_ISEQ;
+  return def_->type == VM_METHOD_TYPE_ISEQ;
 }
 
 RNode*
 MethodDefinition::astNode() const
 {
-  return ((rb_method_definition_t*)def_)->body.iseq->node;
+  return def_->body.iseq->node;
 }
 
 int
 MethodDefinition::argc() const
 {
-  return ((rb_method_definition_t*)def_)->body.iseq->argc;
+  return def_->body.iseq->argc;
 }
 
 void
 MethodDefinition::setMethodInfo(MethodInfo* mi)
 {
-  ((rb_method_definition_t*)def_)->body.iseq->jit_method_info = mi;
+  def_->body.iseq->jit_method_info = mi;
 }
 
 } // namespace mri

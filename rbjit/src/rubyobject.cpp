@@ -12,7 +12,7 @@ namespace mri {
 const char*
 Symbol::name() const
 {
-  return rb_id2name(SYM2ID((::VALUE)value_));
+  return rb_id2name(SYM2ID((VALUE)value_));
 }
 
 std::string
@@ -24,7 +24,7 @@ Symbol::stringName() const
 Id
 Symbol::id() const
 {
-  return Id((::ID)SYM2ID((::VALUE)value_));
+  return Id((ID)SYM2ID((VALUE)value_));
 }
 
 ////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ Symbol::id() const
 const char*
 Id::name() const
 {
-  return rb_id2name((::ID)id_);
+  return rb_id2name((ID)id_);
 }
 
 std::string

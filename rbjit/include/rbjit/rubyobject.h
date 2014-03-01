@@ -2,18 +2,11 @@
 
 #include <string>
 #include "rbjit/common.h"
-
-extern "C" {
-struct RNode;
-}
+#include "rbjit/rubytypes.h"
 
 RBJIT_NAMESPACE_BEGIN
 
 namespace mri {
-
-// placeholders
-typedef size_t VALUE;
-typedef size_t ID;
 
 class Id;
 
@@ -61,6 +54,7 @@ public:
   ID id() const { return id_; }
 
   ID operator()() const { return id_; }
+
 private:
 
   ID id_;

@@ -3,7 +3,8 @@
 #include "rbjit/rubyobject.h"
 
 extern "C" {
-struct RNode;
+typedef struct rb_method_entry_struct rb_method_entry_t;
+typedef struct rb_method_definition_struct rb_method_definition_t;
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -14,8 +15,10 @@ namespace mri {
 
 class MethodDefinition;
 
+////////////////////////////////////////////////////////////
+// MethodEntry
 // Wrapper for the MRI's method_entry_t
-//
+
 // In method.h:
 // typedef struct rb_method_entry_struct {
 //     rb_method_flag_t flag;
@@ -25,13 +28,14 @@ class MethodDefinition;
 //     VALUE klass;                    /* should be mark */
 // } rb_method_entry_t;
 //
-// In vm_eval.c
+// In vm_eval.c:
 // typedef enum call_type {
 //     CALL_PUBLIC,
 //     CALL_FCALL,
 //     CALL_VCALL,
 //     CALL_TYPE_MAX
 // } call_type;
+
 class MethodEntry {
 public:
 
@@ -46,7 +50,7 @@ public:
   MethodEntry(Class cls, Id id);
 
   // Copy contructor
-  MethodEntry(void* me) : me_(me) {}
+  MethodEntry(rb_method_entry_t* me) : me_(me) {}
 
   // Accessors
   MethodDefinition methodDefinition() const;
@@ -54,13 +58,17 @@ public:
 
   bool canCall(CallType callType, Object self);
 
+  Object call(Object receiver, Id methodName, Id id, int argc, const Object* argv, Class defClass);
+
 private:
 
-  void* me_;
+  rb_method_entry_t* me_;
 };
 
-// Wrapper for rb_method_definition_t
-//
+////////////////////////////////////////////////////////////
+// MethodDefinition
+// Wrapper for the MRI's rb_method_definition_t
+
 // In method.h:
 // typedef struct rb_method_definition_struct {
 //     rb_method_type_t type; /* method type */
@@ -80,10 +88,11 @@ private:
 //     } body;
 //     int alias_count;
 // } rb_method_definition_t;
+
 class MethodDefinition {
 public:
 
-  MethodDefinition(void* def) : def_(def) {}
+  MethodDefinition(rb_method_definition_t* def) : def_(def) {}
 
   bool hasAstNode() const;
   RNode* astNode() const;
@@ -93,7 +102,7 @@ public:
 
 private:
 
-  void* def_;
+  rb_method_definition_t* def_;
 };
 
 } // namespace mri
