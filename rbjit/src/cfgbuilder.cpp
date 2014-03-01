@@ -169,9 +169,11 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
     if (falseFactory.continues()) {
       BlockHeader* join = factory->addFreeBlockHeader(idom);
       Variable* value = factory->createTemporary(useResult);
-      trueFactory.addCopy(value, trueValue);
+      if (useResult) {
+        trueFactory.addCopy(value, trueValue);
+        falseFactory.addCopy(value, falseValue);
+      }
       trueFactory.addJump(join);
-      falseFactory.addCopy(value, falseValue);
       falseFactory.addJump(join);
       return value;
     }
