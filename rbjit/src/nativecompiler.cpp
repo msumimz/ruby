@@ -258,10 +258,7 @@ NativeCompiler::visitOpcode(BlockHeader* block)
 bool
 NativeCompiler::visitOpcode(OpcodeCopy* op)
 {
-  while (llvmValues_[op->rhs()->index()] == 0) {
-    translateBlocks();
-  }
-  llvmValues_[op->lhs()->index()] = llvmValues_[op->rhs()->index()];
+  updateValue(op, getValue(op->rhs()));
   return true;
 }
 
@@ -278,10 +275,8 @@ NativeCompiler::visitOpcode(OpcodeJumpIf* op)
 {
   // In ruby/ruby.h
   // #define RTEST(v) !(((VALUE)(v) & ~Qnil) == 0)
-  llvm::Value* rtest = builder_->CreateAnd(llvmValues_[op->cond()->index()],
-    llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, ~Qnil)));
-  llvm::Value* cond = builder_->CreateICmpNE(rtest,
-    llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, 0)));
+  llvm::Value* rtest = builder_->CreateAnd(getValue(op->cond()), getInt(~Qnil));
+  llvm::Value* cond = builder_->CreateICmpNE(rtest, getInt(0));
   builder_->CreateCondBr(cond,
     llvmBlocks_[op->ifTrue()->index()],
     llvmBlocks_[op->ifFalse()->index()]);
@@ -291,8 +286,7 @@ NativeCompiler::visitOpcode(OpcodeJumpIf* op)
 bool
 NativeCompiler::visitOpcode(OpcodeImmediate* op)
 {
-  llvm::Value* value = llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, op->value()));
-  llvmValues_[op->lhs()->index()] = value;
+  updateValue(op, getInt(op->value()));
   return true;
 }
 
@@ -319,7 +313,7 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 
   // arguments
   for (; i < rhsEnd; ++i) {
-    args[count++] = llvmValues_[(*i)->index()];
+    args[count++] = getValue(*i);
   }
 
   // call instruction
@@ -335,9 +329,9 @@ NativeCompiler::visitOpcode(OpcodePhi* op)
 {
   llvm::PHINode* phi = builder_->CreatePHI(valueType_, op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
-    phi->addIncoming(llvmValues_[(*i)->index()], llvmBlocks_[(*i)->defBlock()->index()]);
+    phi->addIncoming(getValue(*i), llvmBlocks_[(*i)->defBlock()->index()]);
   }
-  llvmValues_[op->lhs()->index()] = phi;
+  updateValue(op, phi);
   return true;
 }
 
