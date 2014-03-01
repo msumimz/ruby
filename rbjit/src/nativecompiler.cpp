@@ -124,11 +124,13 @@ NativeCompiler::translateToBitcode()
 
 #ifdef RBJIT_DEBUG
   // Add debugtrap
-  // declare void @llvm.debugtrap() nounwind
-  llvm::Function* debugtrapFunc = llvm::Intrinsic::getDeclaration(module_, llvm::Intrinsic::debugtrap, llvm::None);
-  llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
-  builder_->SetInsertPoint(bb);
-  builder_->CreateCall(debugtrapFunc);
+  if (IsDebuggerPresent()) {
+    // declare void @llvm.debugtrap() nounwind
+    llvm::Function* debugtrapFunc = llvm::Intrinsic::getDeclaration(module_, llvm::Intrinsic::debugtrap, llvm::None);
+    llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
+    builder_->SetInsertPoint(bb);
+    builder_->CreateCall(debugtrapFunc);
+  }
 #endif
 
   // Suspend translating the exit block
