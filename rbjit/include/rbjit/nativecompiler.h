@@ -39,6 +39,7 @@ public:
   bool visitOpcode(OpcodeJump* opcode);
   bool visitOpcode(OpcodeJumpIf* opcode);
   bool visitOpcode(OpcodeImmediate* opcode);
+  bool visitOpcode(OpcodeLookup* opcode);
   bool visitOpcode(OpcodeCall* opcode);
   bool visitOpcode(OpcodePhi* opcode);
 
@@ -47,10 +48,18 @@ private:
   // bit size of the MRI's VALUE type
   static const int VALUE_BITSIZE = sizeof(size_t) * CHAR_BIT;
 
-  std::string getUniqueName(const char* baseName);
+  // Helper methods
+
+  std::string getUniqueName(const char* baseName) const;
+  llvm::Type* getValueType() const;
+  llvm::Value* getInt(size_t value) const;
+  llvm::Value* getValue(Variable* v);
+  void updateValue(OpcodeL* op, llvm::Value* value);
 
   void translateToBitcode();
   void translateBlocks();
+
+  void declareRuntimeFunctions();
 
   // Shared with every compilation session
 
@@ -75,6 +84,14 @@ private:
 
   enum { WAITING, WORKING, DONE };
   std::vector<int> states_;
+
+  // Runtime functions
+  enum {
+    RF_lookupMethod,
+    RF_callMethod,
+    RUNTIME_FUNCTION_COUNT
+  };
+  llvm::Value* runtime_[RUNTIME_FUNCTION_COUNT];
 
   // Singleton
 

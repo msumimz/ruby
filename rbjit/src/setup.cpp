@@ -31,7 +31,7 @@ debugbreak(int argc, VALUE *argv, VALUE obj)
 static VALUE
 dumptree(VALUE self, VALUE cls, VALUE methodName)
 {
-  rbjit::mri::MethodEntry me(rbjit::mri::Class(cls), rbjit::mri::Symbol(methodName).id());
+  rbjit::mri::MethodEntry me(cls, rbjit::mri::Symbol(methodName).id());
   rbjit::mri::MethodDefinition def = me.methodDefinition();
 
   if (!def.hasAstNode()) {

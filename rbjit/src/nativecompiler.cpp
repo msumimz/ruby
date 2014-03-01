@@ -23,6 +23,7 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/variable.h"
 #include "rbjit/debugprint.h"
+#include "rbjit/runtime_methodcall.h"
 
 #include "ruby.h"
 
@@ -49,7 +50,7 @@ NativeCompiler::NativeCompiler()
     module_(new llvm::Module("precompiled method", *ctx_)),
     builder_(static_cast<IRBuilder*>(new llvm::IRBuilder<false>(*ctx_))),
     fpm_(new llvm::FunctionPassManager(module_)),
-    valueType_(llvm::Type::getIntNTy(*ctx_, VALUE_BITSIZE))
+    valueType_(getValueType())
 {
   assert(initialized_);
 
@@ -89,6 +90,56 @@ NativeCompiler::~NativeCompiler()
   delete module_;
   delete ctx_;
 }
+
+////////////////////////////////////////////////////////////
+// Helper methods
+
+llvm::Type*
+NativeCompiler::getValueType() const
+{
+  return llvm::Type::getIntNTy(*ctx_, VALUE_BITSIZE);
+}
+
+std::string
+NativeCompiler::getUniqueName(const char* baseName) const
+{
+  std::string n = baseName;
+  int count = 1;
+  while (nameList_.find(n) != nameList_.end()) {
+    n = baseName;
+    n += '_';
+    n += count;
+  }
+
+  return n;
+}
+
+llvm::Value*
+NativeCompiler::getInt(size_t value) const
+{
+  return llvm::ConstantInt::get(*ctx_, llvm::APInt(VALUE_BITSIZE, value));
+}
+
+llvm::Value*
+NativeCompiler::getValue(Variable* v)
+{
+  int i = v->index();
+  llvm::Value* value;
+  while ((value = llvmValues_[i]) == 0) {
+    translateBlocks();
+  }
+  return value;
+}
+
+void
+NativeCompiler::updateValue(OpcodeL* op, llvm::Value* value)
+{
+  assert(llvmValues_[op->lhs()->index()] == 0);
+  llvmValues_[op->lhs()->index()] = value;
+}
+
+////////////////////////////////////////////////////////////
+// Translating blocks
 
 void*
 NativeCompiler::compileMethod(ControlFlowGraph* cfg, const char* name)
@@ -133,6 +184,11 @@ NativeCompiler::translateToBitcode()
   }
 #endif
 
+  // Declare runtime functions in the entry block
+  llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
+  builder_->SetInsertPoint(bb);
+  declareRuntimeFunctions();
+
   // Suspend translating the exit block
   BlockHeader* exitBlock = cfg_->exit();
   states_[exitBlock->index()] = WORKING;
@@ -158,18 +214,20 @@ NativeCompiler::translateToBitcode()
   fpm_->run(*func_);
 }
 
-std::string
-NativeCompiler::getUniqueName(const char* baseName)
+void
+NativeCompiler::declareRuntimeFunctions()
 {
-  std::string n = baseName;
-  int count = 1;
-  while (nameList_.find(n) != nameList_.end()) {
-    n = baseName;
-    n += '_';
-    n += count;
-  }
+  // rb_method_entry_t* rbjit_lookupMethod(VALUE receiver, ID methodName)
+  std::vector<llvm::Type*> paramTypes(2, valueType_);
+  llvm::FunctionType* ft = llvm::FunctionType::get(valueType_, paramTypes, false);
+  runtime_[RF_lookupMethod] = builder_->CreateIntToPtr(
+    getInt((size_t)rbjit_lookupMethod), ft->getPointerTo(0), "");
 
-  return n;
+  // VALUE rbjit_callMethod(rb_method_entry_t* me, VALUE receiver, int argc, ...)
+  paramTypes.assign(3, valueType_);
+  ft = llvm::FunctionType::get(valueType_, paramTypes, true);
+  runtime_[RF_callMethod] = builder_->CreateIntToPtr(
+    getInt((size_t)rbjit_callMethod), ft->getPointerTo(0), "");
 }
 
 void
@@ -185,6 +243,9 @@ NativeCompiler::translateBlocks()
     }
   }
 }
+
+////////////////////////////////////////////////////////////
+// Translating opcodes
 
 bool
 NativeCompiler::visitOpcode(BlockHeader* block)
@@ -236,9 +297,36 @@ NativeCompiler::visitOpcode(OpcodeImmediate* op)
 }
 
 bool
+NativeCompiler::visitOpcode(OpcodeLookup* op)
+{
+  llvm::Value* value = builder_->CreateCall2(runtime_[RF_lookupMethod],
+    getValue(op->rhs()), getInt(op->methodName()), "");
+  updateValue(op, value);
+  return true;
+}
+
+bool
 NativeCompiler::visitOpcode(OpcodeCall* op)
 {
-  assert(!"unimplemented");
+  std::vector<llvm::Value*> args(op->rhsCount() + 2);
+  int count = 0;
+  Variable*const* i = op->rhsBegin();
+  Variable*const* rhsEnd = op->rhsEnd();
+
+  args[count++] = getValue(op->methodEntry()); // methoEntry
+  args[count++] = getValue(*i++);              // receiver
+  args[count++] = getInt(op->rhsCount() - 1);  // argc
+
+  // arguments
+  for (; i < rhsEnd; ++i) {
+    args[count++] = llvmValues_[(*i)->index()];
+  }
+
+  // call instruction
+  llvm::CallInst* value = builder_->CreateCall(runtime_[RF_callMethod], args, "");
+  value->setCallingConv(llvm::CallingConv::C);
+  updateValue(op, value);
+
   return true;
 }
 

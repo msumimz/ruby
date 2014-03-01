@@ -10,6 +10,7 @@ class OpcodeCopy;
 class OpcodeJump;
 class OpcodeJumpIf;
 class OpcodeImmediate;
+class OpcodeLookup;
 class OpcodeCall;
 class OpcodePhi;
 
@@ -23,6 +24,7 @@ public:
   virtual bool visitOpcode(OpcodeJump* op) = 0;
   virtual bool visitOpcode(OpcodeJumpIf* op) = 0;
   virtual bool visitOpcode(OpcodeImmediate* op) = 0;
+  virtual bool visitOpcode(OpcodeLookup* op) = 0;
   virtual bool visitOpcode(OpcodeCall* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
 };
@@ -287,28 +289,16 @@ private:
   VALUE value_;
 };
 
-/*
-template <int N>
-class OpcodeCall : public OpcodeLR<N> {
+class OpcodeLookup : public OpcodeLR<1> {
 public:
 
-  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, ID methodName)
-    : OpcodeLR<N>(file, line, prev, lhs), methodName_(methodName) {}
+  OpcodeLookup(int file, int line, Opcode* prev, Variable* lhs, Variable* receiver, ID methodName)
+    : OpcodeLR<1>(file, line, prev, lhs), methodName_(methodName)
+  {
+    setRhs(0, receiver);
+  }
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
-
-private:
-
-  ID methodName_;
-};
-*/
-
-class OpcodeCall : public OpcodeVa {
-public:
-
-  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, ID methodName, int rhsSize)
-    : OpcodeVa(file, line, prev, lhs, rhsSize), methodName_(methodName) {}
-
+  Variable* receiver() const { return rhs(); }
   ID methodName() const { return methodName_; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
@@ -318,18 +308,21 @@ private:
   ID methodName_;
 };
 
-/*
-template <int N>
-class OpcodePhi : public OpcodeLR<N> {
+class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodePhi(int file, int line, Opcode* prev, Variable* lhs)
-    : OpcodeLR<N>(file, line, prev, lhs) {}
+  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* methodEntry, int rhsSize)
+    : OpcodeVa(file, line, prev, lhs, rhsSize), methodEntry_(methodEntry) {}
+
+  Variable* methodEntry() const { return methodEntry_; }
+  Variable* receiver() const { return rhs(0); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
+private:
+
+  Variable* methodEntry_;
 };
-*/
 
 class OpcodePhi : public OpcodeVa {
 public:

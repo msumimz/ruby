@@ -47,18 +47,20 @@ public:
   };
 
   // Look up a method and retrieve a method entry
-  MethodEntry(Class cls, Id id);
+  MethodEntry(VALUE cls, ID id);
 
   // Copy contructor
   MethodEntry(rb_method_entry_t* me) : me_(me) {}
 
   // Accessors
+  rb_method_entry_t* methodEntry() const { return me_; }
   MethodDefinition methodDefinition() const;
-  Id methodName() const;
+  ID methodName() const;
 
   bool canCall(CallType callType, Object self);
 
-  Object call(Object receiver, Id methodName, Id id, int argc, const Object* argv, Class defClass);
+  VALUE call(VALUE receiver, ID methodName, int argc, const VALUE* argv, VALUE defClass);
+  VALUE call(VALUE receiver, int argc, const VALUE* argv);
 
 private:
 

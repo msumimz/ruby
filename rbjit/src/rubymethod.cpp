@@ -28,10 +28,10 @@ RBJIT_NAMESPACE_BEGIN
 
 namespace mri {
 
-MethodEntry::MethodEntry(Class cls, Id id)
+MethodEntry::MethodEntry(VALUE cls, ID id)
 {
-  ::VALUE c;
-  rb_method_entry_t* me = rb_method_entry(cls, id, (VALUE*)&c);
+  VALUE c;
+  rb_method_entry_t* me = rb_method_entry(cls, id, &c);
   me_ = me;
 }
 
@@ -41,7 +41,7 @@ MethodEntry::methodDefinition() const
   return me_->def;
 }
 
-Id
+ID
 MethodEntry::methodName() const
 {
   return me_->called_id;
@@ -57,13 +57,22 @@ MethodEntry::canCall(CallType callType, Object self)
   return call_status == NOEX_OK;
 }
 
-Object
-MethodEntry::call(Object receiver, Id methodName, Id id, int argc, const Object* argv, Class defClass)
+VALUE
+MethodEntry::call(VALUE receiver, ID methodName, int argc, const VALUE* argv, VALUE defClass)
 {
   rb_thread_t *th = GET_THREAD();
-  VALUE result = vm_call0(th, receiver, id, argc, (const VALUE*)argv, me_, defClass);
+  VALUE result = vm_call0(th, receiver, methodName, argc, argv, me_, defClass);
 
   return Object(result);
+}
+
+VALUE
+MethodEntry::call(VALUE receiver, int argc, const VALUE* argv)
+{
+  rb_thread_t *th = GET_THREAD();
+  VALUE result = vm_call0(th, receiver, me_->called_id, argc, argv, me_, me_->klass);
+
+  return result;
 }
 
 ////////////////////////////////////////////////////////////

@@ -99,6 +99,10 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildIf(factory, node, useResult);
     break;
 
+  case NODE_CALL:
+    v = buildCall(factory, node, useResult);
+    break;
+
   default:
     assert(!"node type not implemented");
   }
@@ -208,6 +212,30 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // Both route have been stopped
   factory->halt();
   return 0;
+}
+
+Variable*
+CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  // Receiver
+  Variable* receiver = buildNode(factory, node->nd_recv, true);
+
+  // Arguments
+  int argCount = node->nd_args->nd_alen + 1; // includes receiver
+  Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
+  Variable** a = args;
+  *a++ = receiver;
+  for (RNode* n = node->nd_args; n; n = n->nd_next) {
+    *a++ = buildNode(factory, n->nd_head, true);
+  }
+
+  // Find a method
+  Variable* methodEntry = factory->addLookup(receiver, node->nd_mid);
+
+  // Call a method
+  Variable* value = factory->addCall(methodEntry, args, args + argCount, useResult);
+
+  return value;
 }
 
 RBJIT_NAMESPACE_END

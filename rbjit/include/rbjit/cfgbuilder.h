@@ -55,6 +55,7 @@ private:
   Variable* buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNil(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildIf(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildCall(OpcodeFactory* factory, const RNode* node, bool useResult);
 
   ControlFlowGraph* cfg_;
 

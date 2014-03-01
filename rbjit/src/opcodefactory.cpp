@@ -156,22 +156,24 @@ OpcodeFactory::addImmediate(VALUE value, bool useResult)
 }
 
 Variable*
-OpcodeFactory::addCall(ID methodName, Variable* self, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
+OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 {
-  int n = 1 + (argsEnd - argsBegin);
+  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName);
+  ++cfg_->opcodeCount_;
+  lastOpcode_ = op;
 
-  /*
-  OpcodeL* op;
-  switch (n) {
-  case 1:  op = new OpcodeCall<1>(file_, line_, lastOpcode_, 0, selector); break;
-  case 2:  op = new OpcodeCall<2>(file_, line_, lastOpcode_, 0, selector); break;
-  case 3:  op = new OpcodeCall<3>(file_, line_, lastOpcode_, 0, selector); break;
-  case 4:  op = new OpcodeCall<4>(file_, line_, lastOpcode_, 0, selector); break;
-  case 5:  op = new OpcodeCall<5>(file_, line_, lastOpcode_, 0, selector); break;
-  default: op = new OpcodeCallVa(file_, line_, lastOpcode_, 0, selector, n);
-  }
-  */
-  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodName, n);
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
+{
+  int n = argsEnd - argsBegin;
+
+  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n);
   ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
@@ -179,7 +181,6 @@ OpcodeFactory::addCall(ID methodName, Variable* self, Variable*const* argsBegin,
   op->setLhs(lhs);
 
   Variable** v = op->rhsBegin();
-  *v++ = self;
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
     *v++ = *arg;
   }
@@ -196,17 +197,6 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
 
   int n = 1 + (rhsEnd - rhsBegin);
 
-  /*
-  OpcodeL* op;
-  switch (n) {
-  case 1:  op = new OpcodePhi<1>(file_, line_, lastOpcode_, 0); break;
-  case 2:  op = new OpcodePhi<2>(file_, line_, lastOpcode_, 0); break;
-  case 3:  op = new OpcodePhi<3>(file_, line_, lastOpcode_, 0); break;
-  case 4:  op = new OpcodePhi<4>(file_, line_, lastOpcode_, 0); break;
-  case 5:  op = new OpcodePhi<5>(file_, line_, lastOpcode_, 0); break;
-  default: op = new OpcodePhiVa(file_, line_, lastOpcode_, 0, n);
-  }
-  */
   OpcodePhi* op = new OpcodePhi(file_, line_, lastOpcode_, 0, n);
   ++cfg_->opcodeCount_;
   lastOpcode_ = op;

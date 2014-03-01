@@ -301,6 +301,9 @@
     <ClCompile Include="..\..\src\rubymethod.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\runtime_methodcall.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -357,6 +360,9 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\rubymethod.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\runtime_methodcall.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/domtree.h"
 #include "rbjit/variable.h"
+#include "rbjit/rubyobject.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -73,6 +74,7 @@ public:
   bool visitOpcode(OpcodeJump* op);
   bool visitOpcode(OpcodeJumpIf* op);
   bool visitOpcode(OpcodeImmediate* op);
+  bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
   bool visitOpcode(OpcodePhi* op);
 
@@ -153,11 +155,20 @@ Dumper::visitOpcode(OpcodeImmediate* op)
 }
 
 bool
+Dumper::visitOpcode(OpcodeLookup* op)
+{
+  putCommonOutput(op);
+  put("lhs=%Ix receiver=%Ix methodName='%s'\n",
+      op->lhs(), op->receiver(), mri::Id(op->methodName()).name());
+  return true;
+}
+
+bool
 Dumper::visitOpcode(OpcodeCall* op)
 {
   putCommonOutput(op);
-  put("lhs=%Ix methodName=%Ix (%d)",
-    op->lhs(), op->methodName(), op->rhsCount());
+  put("lhs=%Ix methodEntry=%Ix (%d)",
+    op->lhs(), op->methodEntry(), op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
