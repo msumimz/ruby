@@ -1,4 +1,4 @@
-#include <intrin.h> // supress warning in ruby_atomic.h
+#include <intrin.h> // suppress warning in ruby_atomic.h
 #include <string>
 
 #include "rbjit/methodinfo.h"
@@ -7,8 +7,6 @@
 
 extern "C" {
 #include "ruby.h"
-//#include "method.h" // rb_method_entry_t, rb_method_definition_t
-//#include "vm_core.h" // rb_iseq_t
 #include "node.h" // rb_parser_dump_tree
 }
 
@@ -22,7 +20,11 @@ void Init_rbjit();
 static VALUE
 debugbreak(int argc, VALUE *argv, VALUE obj)
 {
-  DebugBreak();
+#ifdef _WIN32
+  if (IsDebuggerPresent()) {
+    DebugBreak();
+  }
+#endif
   return Qnil;
 }
 
