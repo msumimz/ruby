@@ -35,4 +35,9 @@ private:
 
 RBJIT_NAMESPACE_END
 
+#else
+
+#define RBJIT_DPRINT(msg)
+#define RBJIT_DPRINTLN(msg)
+
 #endif // RBJIT_DEBUG
