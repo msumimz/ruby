@@ -18,7 +18,7 @@ public:
 
   VALUE value() const { return value_; }
 
-  VALUE operator()() const { return value_; }
+  operator VALUE() const { return value_; }
 
 protected:
 
@@ -53,7 +53,7 @@ public:
 
   ID id() const { return id_; }
 
-  ID operator()() const { return id_; }
+  operator ID() const { return id_; }
 
 private:
 

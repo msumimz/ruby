@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "rbjit/common.h"
+#include "rbjit/rubytypes.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -36,8 +37,8 @@ public:
   Variable* addCopy(Variable* lhs, Variable* rhs);
   void addJump(BlockHeader* dest);
   void addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse);
-  Variable* addImmediate(mri::VALUE value, bool useResult);
-  Variable* addCall(mri::ID methodName, Variable* self, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
+  Variable* addImmediate(VALUE value, bool useResult);
+  Variable* addCall(ID methodName, Variable* self, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
 
   void addJumpToReturnBlock(Variable* returnValue);
@@ -47,7 +48,7 @@ public:
 
   void createEntryExitBlocks();
 
-  Variable* createNamedVariable(mri::ID name);
+  Variable* createNamedVariable(ID name);
   Variable* createTemporary(bool useResult);
   BlockHeader* createFreeBlockHeader(BlockHeader* idom);
 

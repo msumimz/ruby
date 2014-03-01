@@ -27,7 +27,7 @@ OpcodeFactory::createFreeBlockHeader(BlockHeader* idom)
 }
 
 Variable*
-OpcodeFactory::createNamedVariable(mri::ID name)
+OpcodeFactory::createNamedVariable(ID name)
 {
   Variable* v = Variable::createNamed(lastBlock_, lastOpcode_, cfg_->variables_.size(), name);
   cfg_->variables_.push_back(v);
@@ -139,7 +139,7 @@ OpcodeFactory::addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFal
 }
 
 Variable*
-OpcodeFactory::addImmediate(mri::VALUE value, bool useResult)
+OpcodeFactory::addImmediate(VALUE value, bool useResult)
 {
   if (!useResult) {
     return 0;
@@ -156,7 +156,7 @@ OpcodeFactory::addImmediate(mri::VALUE value, bool useResult)
 }
 
 Variable*
-OpcodeFactory::addCall(mri::ID methodName, Variable* self, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
+OpcodeFactory::addCall(ID methodName, Variable* self, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
 {
   int n = 1 + (argsEnd - argsBegin);
 

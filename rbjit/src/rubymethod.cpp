@@ -31,7 +31,7 @@ namespace mri {
 MethodEntry::MethodEntry(Class cls, Id id)
 {
   ::VALUE c;
-  rb_method_entry_t* me = rb_method_entry(cls.value(), id.id(), (VALUE*)&c);
+  rb_method_entry_t* me = rb_method_entry(cls, id, (VALUE*)&c);
   me_ = me;
 }
 
@@ -53,7 +53,7 @@ MethodEntry::canCall(CallType callType, Object self)
   static const int NOEX_OK = NOEX_NOSUPER;
 
   rb_thread_t *th = GET_THREAD();
-  int call_status = rb_method_call_status(th, me_, (call_type)callType, self.value());
+  int call_status = rb_method_call_status(th, me_, (call_type)callType, self);
   return call_status == NOEX_OK;
 }
 
@@ -61,7 +61,7 @@ Object
 MethodEntry::call(Object receiver, Id methodName, Id id, int argc, const Object* argv, Class defClass)
 {
   rb_thread_t *th = GET_THREAD();
-  VALUE result = vm_call0(th, receiver.value(), id.id(), argc, (VALUE*)argv, me_, defClass.value());
+  VALUE result = vm_call0(th, receiver, id, argc, (const VALUE*)argv, me_, defClass);
 
   return Object(result);
 }

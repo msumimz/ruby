@@ -12,9 +12,9 @@ extern "C" {
 RBJIT_NAMESPACE_BEGIN
 
 Variable*
-CfgBuilder::getNamedVariable(OpcodeFactory* factory, mri::ID name)
+CfgBuilder::getNamedVariable(OpcodeFactory* factory, ID name)
 {
-  std::unordered_map<mri::ID, Variable*>::const_iterator i = namedVariables_.find(name);
+  std::unordered_map<ID, Variable*>::const_iterator i = namedVariables_.find(name);
   if (i != namedVariables_.end()) {
     return i->second;
   }

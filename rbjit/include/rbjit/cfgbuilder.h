@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include "rbjit/common.h"
+#include "rbjit/rubytypes.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -18,17 +19,17 @@ class OpcodeFactory;
 class IdTable {
 public:
 
-  IdTable(mri::ID* tbl)
+  IdTable(ID* tbl)
     : size_(tbl ? (size_t)*tbl++ : 0), table_(tbl)
     {}
 
   size_t size() const { return size_; }
-  mri::ID id(size_t i) const { return table_[i]; }
+  ID id(size_t i) const { return table_[i]; }
 
 private:
 
   size_t size_;
-  mri::ID* table_;
+  ID* table_;
 };
 
 ////////////////////////////////////////////////////////////
@@ -43,7 +44,7 @@ public:
 
 private:
 
-  Variable* getNamedVariable(OpcodeFactory* factory, mri::ID name);
+  Variable* getNamedVariable(OpcodeFactory* factory, ID name);
 
   void buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNode(OpcodeFactory* factory, const RNode* node, bool useResult);
@@ -56,7 +57,7 @@ private:
 
   ControlFlowGraph* cfg_;
 
-  std::unordered_map<mri::ID, Variable*> namedVariables_;
+  std::unordered_map<ID, Variable*> namedVariables_;
 
 /*
   struct ExitPoint {

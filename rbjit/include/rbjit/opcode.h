@@ -1,5 +1,6 @@
 #pragma once
 #include "rbjit/common.h"
+#include "rbjit/rubytypes.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -274,16 +275,16 @@ private:
 class OpcodeImmediate : public OpcodeL {
 public:
 
-  OpcodeImmediate(int file, int line, Opcode* prev, Variable* lhs, mri::VALUE value)
+  OpcodeImmediate(int file, int line, Opcode* prev, Variable* lhs, VALUE value)
     : OpcodeL(file, line, prev, lhs), value_(value) {}
 
-  mri::VALUE value() const { return value_; }
+  VALUE value() const { return value_; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
-  mri::VALUE value_;
+  VALUE value_;
 };
 
 /*
@@ -305,16 +306,16 @@ private:
 class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, mri::ID methodName, int rhsSize)
+  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, ID methodName, int rhsSize)
     : OpcodeVa(file, line, prev, lhs, rhsSize), methodName_(methodName) {}
 
-  mri::ID methodName() const { return methodName_; }
+  ID methodName() const { return methodName_; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
-  mri::ID methodName_;
+  ID methodName_;
 };
 
 /*

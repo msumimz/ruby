@@ -1,5 +1,6 @@
 #pragma once
 #include "rbjit/common.h"
+#include "rbjit/rubytypes.h"
 
 RBJIT_NAMESPACE_BEGIN
 

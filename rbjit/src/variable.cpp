@@ -3,13 +3,13 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, mri::ID name, Variable* original, int index, DefInfo* defInfo)
+Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo)
   : defBlock_(defBlock), defOpcode_(defOpcode), name_(name),
     original_(original == 0 ? this : original), index_(index), defInfo_(defInfo)
 {}
 
 Variable*
-Variable::createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, mri::ID name)
+Variable::createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name)
 {
   return new Variable(defBlock, defOpcode, name, 0, index, new DefInfo(defBlock));
 }

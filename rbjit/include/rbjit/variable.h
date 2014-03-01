@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "rbjit/definfo.h"
+#include "rbjit/rubytypes.h"
 
 namespace llvm {
 class Value;
@@ -15,7 +16,7 @@ class Variable {
 public:
 
   // factory methods
-  static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, mri::ID name);
+  static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name);
   static Variable* createUnnamed(BlockHeader* defBlock, Opcode* defOpcode, int index);
   static Variable* createUnnamedSsa(BlockHeader* defBlock, Opcode* defOpcode, int index);
   static Variable* copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v);
@@ -24,7 +25,7 @@ public:
 
   BlockHeader* defBlock() const { return defBlock_; }
   Opcode* defOpcode() const { return defOpcode_; }
-  mri::ID name() const { return name_; }
+  ID name() const { return name_; }
   Variable* original() const { return original_; }
   int index() const { return index_; }
   void setIndex(int i) { index_ = i; }
@@ -40,14 +41,14 @@ public:
 private:
 
   // constructor indirectly called through factory methods
-  Variable(BlockHeader* defBlock, Opcode* defOpcode, mri::ID name, Variable* original, int index, DefInfo* defInfo);
+  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo);
 
   // location where this variable is defined
   BlockHeader* defBlock_;
   Opcode* defOpcode_;
 
   // variable name
-  mri::ID name_;
+  ID name_;
 
   // original variable when this variable is created by renaming the existing one
   Variable* original_;
