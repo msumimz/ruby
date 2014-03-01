@@ -49,6 +49,7 @@ private:
   void buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNode(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildAssignment(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildImmediate(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildTrue(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult);

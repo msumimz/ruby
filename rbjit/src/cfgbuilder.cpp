@@ -71,7 +71,12 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     break;
 
   case NODE_DASGN_CURR:
+  case NODE_LASGN:
     v = buildAssignment(factory, node, useResult);
+    break;
+
+  case NODE_LVAR:
+    v = buildLocalVariable(factory, node, useResult);
     break;
 
   case NODE_LIT:
@@ -104,7 +109,7 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
 Variable*
 CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
-  assert(nd_type(node) == NODE_DASGN_CURR);
+  assert(nd_type(node) == NODE_DASGN_CURR || nd_type(node) == NODE_LASGN);
 
   Variable* rhs = buildNode(factory, node->nd_value, true);
   Variable* lhs = getNamedVariable(factory, node->nd_vid);
@@ -115,6 +120,18 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
     return 0;
   }
   return lhs;
+}
+
+Variable*
+CfgBuilder::buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  assert(nd_type(node) == NODE_LVAR);
+
+  if (!useResult) {
+    return 0;
+  }
+
+  return getNamedVariable(factory, node->nd_vid);
 }
 
 Variable*
