@@ -30,7 +30,6 @@ public:
   void addDepth(int n) { depth_ += n; }
   void setDepth(int depth) { depth_ = depth; }
 
-  BlockHeader* addBlockHeader();
   BlockHeader* addFreeBlockHeader(BlockHeader* idom);
 
   Variable* addCopy(Variable* rhs, bool useResult);
@@ -55,8 +54,6 @@ public:
   BlockHeader* createFreeBlockHeader(BlockHeader* idom);
 
 private:
-
-  BlockHeader* createBlockHeader();
 
   ControlFlowGraph* cfg_;
 

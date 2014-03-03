@@ -8,16 +8,6 @@
 RBJIT_NAMESPACE_BEGIN
 
 BlockHeader*
-OpcodeFactory::createBlockHeader()
-{
-  BlockHeader* block = new BlockHeader(file_, line_, lastOpcode_, lastBlock_, cfg_->blocks()->size(), depth_, lastBlock_);
-  cfg_->blocks_.push_back(block);
-  ++cfg_->opcodeCount_;
-
-  return block;
-}
-
-BlockHeader*
 OpcodeFactory::createFreeBlockHeader(BlockHeader* idom)
 {
   BlockHeader* block = new BlockHeader(file_, line_, 0, 0, cfg_->blocks()->size(), depth_, idom);
@@ -45,16 +35,6 @@ OpcodeFactory::createTemporary(bool useResult)
   Variable* v = Variable::createUnnamedSsa(lastBlock_, lastOpcode_, cfg_->variables_.size());
   cfg_->variables_.push_back(v);
   return v;
-}
-
-BlockHeader*
-OpcodeFactory::addBlockHeader()
-{
-  BlockHeader* block = createBlockHeader();
-  lastOpcode_ = block;
-  lastBlock_ = block;
-
-  return block;
 }
 
 BlockHeader*
@@ -118,12 +98,12 @@ OpcodeFactory::addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFal
   BlockHeader* nextBlock = ifTrue;
 
   if (!ifFalse) {
-    ifFalse = createBlockHeader();
+    ifFalse = createFreeBlockHeader(lastBlock_);
     nextBlock = ifFalse;
   }
 
   if (!ifTrue) {
-    ifTrue = createBlockHeader();
+    ifTrue = createFreeBlockHeader(lastBlock_);
     nextBlock = ifTrue;
   }
 
@@ -235,7 +215,7 @@ void
 OpcodeFactory::createEntryExitBlocks()
 {
   // entry block
-  cfg_->entry_ = addBlockHeader();
+  cfg_->entry_ = addFreeBlockHeader(0);
   cfg_->undefined_ = addImmediate(mri::Object::nilValue(), true);
 
   // exit block
