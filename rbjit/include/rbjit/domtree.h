@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "rbjit/common.h"
 
 RBJIT_NAMESPACE_BEGIN
@@ -25,7 +26,7 @@ public:
     Node* nextSibling_;
   };
 
-  DomTree(ControlFlowGraph* cfg);
+  DomTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms);
   ~DomTree();
 
   Node* nodeOf(BlockHeader* block) const;
@@ -36,7 +37,7 @@ public:
 private:
 
   void addChild(BlockHeader* parent, BlockHeader* child);
-  void buildTree(ControlFlowGraph* cfg);
+  void buildTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms);
 
   size_t size_;
   Node* nodes_;

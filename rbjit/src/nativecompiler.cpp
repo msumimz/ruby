@@ -335,4 +335,10 @@ NativeCompiler::visitOpcode(OpcodePhi* op)
   return true;
 }
 
+bool
+NativeCompiler::visitOpcode(OpcodeExit* op)
+{
+  return true;
+}
+
 RBJIT_NAMESPACE_END

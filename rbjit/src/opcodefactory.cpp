@@ -235,7 +235,8 @@ OpcodeFactory::createEntryExitBlocks()
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);
-  exit->setFooter(exit);
+  OpcodeExit* op = new OpcodeExit(0, 0, exit);
+  exit->setFooter(op);
   cfg_->exit_ = exit;
 }
 

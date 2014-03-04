@@ -282,6 +282,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\cooperdominatorfinder.cpp" />
     <ClCompile Include="..\..\src\debugprint.cpp" />
     <ClCompile Include="..\..\src\definfo.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
@@ -289,7 +290,9 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\dominatorfinder.cpp" />
     <ClCompile Include="..\..\src\domtree.cpp" />
+    <ClCompile Include="..\..\src\ltdominatorfinder.cpp" />
     <ClCompile Include="..\..\src\methodinfo.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
@@ -339,9 +342,12 @@
     <ClInclude Include="..\..\include\rbjit\cfgbuilder.h" />
     <ClInclude Include="..\..\include\rbjit\common.h" />
     <ClInclude Include="..\..\include\rbjit\controlflowgraph.h" />
+    <ClInclude Include="..\..\include\rbjit\cooperdominatorfinder.h" />
     <ClInclude Include="..\..\include\rbjit\debugprint.h" />
     <ClInclude Include="..\..\include\rbjit\definfo.h" />
+    <ClInclude Include="..\..\include\rbjit\dominatorfinder.h" />
     <ClInclude Include="..\..\include\rbjit\domtree.h" />
+    <ClInclude Include="..\..\include\rbjit\ltdominatorfinder.h" />
     <ClInclude Include="..\..\include\rbjit\methodinfo.h" />
     <ClInclude Include="..\..\include\rbjit\nativecompiler.h" />
     <ClInclude Include="..\..\include\rbjit\opcode.h" />

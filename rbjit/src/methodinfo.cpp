@@ -4,6 +4,11 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/ssatranslator.h"
 #include "rbjit/debugprint.h"
+#include "rbjit/ltdominatorfinder.h"
+
+#ifdef RBJIT_DEBUG
+#include "rbjit/domtree.h"
+#endif
 
 extern "C" {
 struct RNode;
@@ -19,6 +24,7 @@ MethodInfo::compile()
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
+  RBJIT_DPRINT(cfg_->domTree()->debugPrint());
 
   SsaTranslator ssa(cfg_, true);
   ssa.translate();

@@ -42,6 +42,7 @@ public:
   bool visitOpcode(OpcodeLookup* opcode);
   bool visitOpcode(OpcodeCall* opcode);
   bool visitOpcode(OpcodePhi* opcode);
+  bool visitOpcode(OpcodeExit* opcode);
 
 private:
 

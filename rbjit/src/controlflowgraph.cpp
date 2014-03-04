@@ -5,6 +5,7 @@
 #include "rbjit/domtree.h"
 #include "rbjit/variable.h"
 #include "rbjit/rubyobject.h"
+#include "rbjit/ltdominatorfinder.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -22,7 +23,8 @@ DomTree*
 ControlFlowGraph::domTree()
 {
   if (!domTree_) {
-    domTree_ = new DomTree(this);
+    LTDominatorFinder df(this);
+    domTree_ = new DomTree(this, &df.dominators());
   }
   return domTree_;
 }
@@ -84,6 +86,7 @@ public:
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
   bool visitOpcode(OpcodePhi* op);
+  bool visitOpcode(OpcodeExit* op);
 
   void dumpCfgInfo(const ControlFlowGraph* cfg);
   void dumpBlockHeader(BlockHeader* b);
@@ -192,6 +195,14 @@ Dumper::visitOpcode(OpcodePhi* op)
     put(" %Ix", *i);
   }
   out_ += '\n';
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeExit* op)
+{
+  putCommonOutput(op);
+  put("\n");
   return true;
 }
 

@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cassert>
 #include "rbjit/common.h"
 #include "rbjit/rubytypes.h"
 
@@ -13,6 +15,7 @@ class OpcodeImmediate;
 class OpcodeLookup;
 class OpcodeCall;
 class OpcodePhi;
+class OpcodeExit;
 
 ////////////////////////////////////////////////////////////
 // Visitor interface
@@ -27,6 +30,7 @@ public:
   virtual bool visitOpcode(OpcodeLookup* op) = 0;
   virtual bool visitOpcode(OpcodeCall* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
+  virtual bool visitOpcode(OpcodeExit* op) = 0;
 };
 
 ////////////////////////////////////////////////////////////
@@ -182,8 +186,8 @@ public:
   Opcode* footer() const { return footer_; }
   void setFooter(Opcode* footer) { footer_ = footer; }
 
-  BlockHeader* nextBlock() const { return footer()->nextBlock(); }
-  BlockHeader* nextAltBlock() const { return footer()->nextAltBlock(); }
+  BlockHeader* nextBlock() const { assert(footer()); return footer()->nextBlock(); }
+  BlockHeader* nextAltBlock() const { assert(footer()); return footer()->nextAltBlock(); }
 
   // backedges
 
@@ -332,6 +336,16 @@ public:
 
   OpcodePhi(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
     : OpcodeVa(file, line, prev, lhs, rhsSize) {}
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+};
+
+class OpcodeExit : public Opcode {
+public:
+
+  OpcodeExit(int file, int line, Opcode* prev)
+    : Opcode(file, line, prev) {}
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 

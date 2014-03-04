@@ -304,6 +304,15 @@
     <ClCompile Include="..\..\src\runtime_methodcall.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\cooperdominatorfinder.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dominatorfinder.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ltdominatorfinder.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -363,6 +372,15 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\runtime_methodcall.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\cooperdominatorfinder.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\dominatorfinder.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\ltdominatorfinder.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

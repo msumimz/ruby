@@ -5,10 +5,10 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-DomTree::DomTree(ControlFlowGraph* cfg)
+DomTree::DomTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms)
   : size_(cfg->blocks()->size()), nodes_((Node*)calloc(size_, sizeof(Node)))
 {
-  buildTree(cfg);
+  buildTree(cfg, idoms);
 }
 
 DomTree::~DomTree()
@@ -38,14 +38,14 @@ DomTree::addChild(BlockHeader* parent, BlockHeader* child)
 }
 
 void
-DomTree::buildTree(ControlFlowGraph* cfg)
+DomTree::buildTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms)
 {
   for (unsigned i = 0; i < size_; ++i) {
-    BlockHeader* b = cfg->blocks()->at(i);
-    if (b == cfg->entry() || b == cfg->exit()) {
+    BlockHeader* b = (*cfg->blocks())[i];
+    if (b == cfg->entry()) {
       continue;
     }
-    addChild(b->idom(), b);
+    addChild((*idoms)[b->index()], b);
   }
 }
 
@@ -53,12 +53,12 @@ std::string
 DomTree::debugPrint() const
 {
   char buf[256];
-  sprintf(buf, "[DomTree: %x]\n", this);
+  sprintf(buf, "[DomTree: %Ix]\n", this);
   std::string result(buf);
 
   for (size_t i = 0; i < size_; ++i) {
     Node* n = nodes_ + i;
-    sprintf(buf, "%3d: %x(%d) firstChild=%x(%d) nextSibling=%x(%d)\n",
+    sprintf(buf, "%3d: %Ix(%d) firstChild=%Ix(%d) nextSibling=%Ix(%d)\n",
       i, n, blockIndexOf(n), n->firstChild_, blockIndexOf(n->firstChild_),
       n->nextSibling_, blockIndexOf(n->nextSibling_));
     result += buf;
