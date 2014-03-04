@@ -15,9 +15,10 @@ class Variable;
 class OpcodeFactory {
 public:
 
-  OpcodeFactory(ControlFlowGraph* cfg)
-    : cfg_(cfg), lastBlock_(0), lastOpcode_(0),
-      file_(0), line_(0), depth_(0), halted_(false) {}
+  OpcodeFactory(ControlFlowGraph* cfg);
+
+  // Inherits the internal state of factory and initiates a basic block
+  OpcodeFactory(OpcodeFactory& factory, BlockHeader* idom);
 
   BlockHeader* lastBlock() const { return lastBlock_; }
   Opcode* lastOpcode() const { return lastOpcode_; }
@@ -34,7 +35,7 @@ public:
 
   Variable* addCopy(Variable* rhs, bool useResult);
   Variable* addCopy(Variable* lhs, Variable* rhs);
-  void addJump(BlockHeader* dest);
+  void addJump(BlockHeader* dest = 0);
   void addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse);
   Variable* addImmediate(VALUE value, bool useResult);
   Variable* addLookup(Variable* receiver, ID methodName);

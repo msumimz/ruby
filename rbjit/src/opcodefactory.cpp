@@ -7,6 +7,19 @@
 
 RBJIT_NAMESPACE_BEGIN
 
+OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg)
+  : cfg_(cfg), lastBlock_(0), lastOpcode_(0),
+    file_(0), line_(0), depth_(0), halted_(false)
+{}
+
+OpcodeFactory::OpcodeFactory(OpcodeFactory& factory, BlockHeader* idom)
+  : cfg_(factory.cfg_), file_(factory.file_), line_(factory.line_),
+    depth_(factory.depth_), halted_(false)
+{
+  lastBlock_ = createFreeBlockHeader(idom);
+  lastOpcode_ = lastBlock_;
+}
+
 BlockHeader*
 OpcodeFactory::createFreeBlockHeader(BlockHeader* idom)
 {
@@ -79,7 +92,9 @@ OpcodeFactory::addCopy(Variable* lhs, Variable* rhs)
 void
 OpcodeFactory::addJump(BlockHeader* dest)
 {
-  assert(dest);
+  if (!dest) {
+    dest = createFreeBlockHeader(lastBlock_);
+  }
 
   OpcodeJump* op = new OpcodeJump(file_, line_, lastOpcode_, dest);
   ++cfg_->opcodeCount_;
