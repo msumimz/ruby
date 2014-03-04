@@ -182,6 +182,9 @@ public:
   Opcode* footer() const { return footer_; }
   void setFooter(Opcode* footer) { footer_ = footer; }
 
+  BlockHeader* nextBlock() const { return footer()->nextBlock(); }
+  BlockHeader* nextAltBlock() const { return footer()->nextAltBlock(); }
+
   // backedges
 
   class Backedge {
