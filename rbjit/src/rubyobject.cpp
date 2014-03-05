@@ -10,25 +10,25 @@ namespace mri {
 // Symbol
 
 VALUE
-Object::trueValue()
+Object::trueObject()
 {
   return Qtrue;
 }
 
 VALUE
-Object::falseValue()
+Object::falseObject()
 {
   return Qfalse;
 }
 
 VALUE
-Object::nilValue()
+Object::nilObject()
 {
   return Qnil;
 }
 
 VALUE
-Object::undefValue()
+Object::undefObject()
 {
   return Qundef;
 }

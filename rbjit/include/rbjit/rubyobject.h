@@ -20,10 +20,10 @@ public:
 
   operator VALUE() const { return value_; }
 
-  static VALUE trueValue();
-  static VALUE falseValue();
-  static VALUE nilValue();
-  static VALUE undefValue();
+  static VALUE trueObject();
+  static VALUE falseObject();
+  static VALUE nilObject();
+  static VALUE undefObject();
 
 protected:
 
