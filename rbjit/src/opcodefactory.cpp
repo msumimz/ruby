@@ -80,17 +80,13 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
 Variable*
 OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
-  if (!useResult) {
-    return 0;
-  }
-
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
   ++cfg_->opcodeCount_;
   lhs->defInfo()->addDefSite(lastBlock_);
 
   lastOpcode_ = op;
 
-  return lhs;
+  return useResult ? lhs : 0;
 }
 
 void

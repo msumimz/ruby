@@ -123,29 +123,22 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
   Variable* rhs = buildNode(factory, node->nd_value, true);
   Variable* lhs = getNamedVariable(factory, node->nd_vid);
 
-  factory->addCopy(lhs, rhs);
+  Variable* value = factory->addCopy(lhs, rhs, useResult);
 
-  if (useResult) {
-    return 0;
-  }
-  return lhs;
+  return value;
 }
 
 Variable*
 CfgBuilder::buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_LVAR);
-
-  if (!useResult) {
-    return 0;
-  }
-
   return getNamedVariable(factory, node->nd_vid);
 }
 
 Variable*
 CfgBuilder::buildImmediate(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
+  assert(nd_type(node) == NODE_LIT);
   return factory->addImmediate((VALUE)node->nd_lit, useResult);
 }
 
