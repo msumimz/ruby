@@ -7,6 +7,14 @@
 #include "rbjit/rubyobject.h"
 #include "rbjit/ltdominatorfinder.h"
 
+#ifdef _x64
+# define PTRF "% 16Ix"
+# define SPCF "                "
+#else
+# define PTRF "% 8Ix"
+# define SPCF "        "
+#endif
+
 RBJIT_NAMESPACE_BEGIN
 
 ////////////////////////////////////////////////////////////
@@ -103,9 +111,27 @@ private:
 void
 Dumper::putCommonOutput(Opcode* op)
 {
-  int skip = strlen("const rbjit::"); // hopefully optimized out
-  sprintf(buf_, "  %Ix %Ix %d:%d %s ",
-    op, op->next(), op->file(), op->line(), typeid(*op).name() + skip);
+  const char* opname;
+  if (typeid(*op) == typeid(BlockHeader)) {
+    opname = "Block";
+  }
+  else if (typeid(*op) == typeid(OpcodeImmediate)) {
+    opname = "Imm";
+  }
+  else {
+    int skip = strlen("const rbjit::Opcode"); // hopefully optimized out
+    opname = typeid(*op).name() + skip;
+  }
+
+  sprintf(buf_, "  " PTRF " " PTRF " %d:%d ",
+    op, op->next(), op->file(), op->line());
+  out_ += buf_;
+  if (op->lhs()) {
+    sprintf(buf_, PTRF " %-7s", op->lhs(), opname);
+  }
+  else {
+    sprintf(buf_, SPCF " %-7s", opname);
+  }
   out_ += buf_;
 }
 
@@ -122,11 +148,6 @@ bool
 Dumper::visitOpcode(BlockHeader* op)
 {
   putCommonOutput(op);
-  put("index=%d depth=%d idom=%Ix footer=%Ix backedges=",
-    op->index(), op->depth(), op->idom(), op->footer());
-  for (BlockHeader::Backedge* e = op->backedge(); e; e = e->next()) {
-    put("%Ix ", e->block());
-  }
   out_ += '\n';
   return true;
 }
@@ -135,7 +156,7 @@ bool
 Dumper::visitOpcode(OpcodeCopy* op)
 {
   putCommonOutput(op);
-  put("lhs=%Ix rhs=%Ix\n", op->lhs(), op->rhs());
+  put("%Ix\n", op->rhs());
   return true;
 }
 
@@ -143,7 +164,7 @@ bool
 Dumper::visitOpcode(OpcodeJump* op)
 {
   putCommonOutput(op);
-  put("dest=%Ix\n", op->dest());
+  put("%Ix\n", op->dest());
   return true;
 }
 
@@ -151,7 +172,7 @@ bool
 Dumper::visitOpcode(OpcodeJumpIf* op)
 {
   putCommonOutput(op);
-  put("cond=%Ix ifTrue=%Ix ifFalse=%Ix\n",
+  put("%Ix %Ix %Ix\n",
     op->cond(), op->ifTrue(), op->ifFalse());
   return true;
 }
@@ -160,7 +181,7 @@ bool
 Dumper::visitOpcode(OpcodeImmediate* op)
 {
   putCommonOutput(op);
-  put("lhs=%Ix value=%Ix\n", op->lhs(), op->value());
+  put("%Ix\n", op->value());
   return true;
 }
 
@@ -168,8 +189,8 @@ bool
 Dumper::visitOpcode(OpcodeLookup* op)
 {
   putCommonOutput(op);
-  put("lhs=%Ix receiver=%Ix methodName='%s'\n",
-      op->lhs(), op->receiver(), mri::Id(op->methodName()).name());
+  put("%Ix '%s'\n",
+    op->receiver(), mri::Id(op->methodName()).name());
   return true;
 }
 
@@ -177,8 +198,8 @@ bool
 Dumper::visitOpcode(OpcodeCall* op)
 {
   putCommonOutput(op);
-  put("lhs=%Ix methodEntry=%Ix (%d)",
-    op->lhs(), op->methodEntry(), op->rhsCount());
+  put("%Ix (%d)",
+    op->methodEntry(), op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
@@ -190,7 +211,7 @@ bool
 Dumper::visitOpcode(OpcodePhi* op)
 {
   putCommonOutput(op);
-  put("lhs=%Ix (%d)", op->lhs(), op->rhsCount());
+  put("(%d)", op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
@@ -217,6 +238,11 @@ void
 Dumper::dumpBlockHeader(BlockHeader* b)
 {
   put("BLOCK %d: %Ix\n", b->index(), b);
+  put("depth=%d footer=%Ix backedges=", b->depth(), b->footer());
+  for (BlockHeader::Backedge* e = b->backedge(); e; e = e->next()) {
+    put("%Ix ", e->block());
+  }
+  out_ += '\n';
   b->visitEachOpcode(this);
 }
 
