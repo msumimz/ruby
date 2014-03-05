@@ -34,7 +34,7 @@ public:
   BlockHeader* addFreeBlockHeader(BlockHeader* idom);
 
   Variable* addCopy(Variable* rhs, bool useResult);
-  Variable* addCopy(Variable* lhs, Variable* rhs);
+  Variable* addCopy(Variable* lhs, Variable* rhs, bool useResult);
   void addJump(BlockHeader* dest = 0);
   void addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse);
   Variable* addImmediate(VALUE value, bool useResult);

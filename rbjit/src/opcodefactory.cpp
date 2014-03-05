@@ -78,8 +78,12 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
 }
 
 Variable*
-OpcodeFactory::addCopy(Variable* lhs, Variable* rhs)
+OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
+  if (!useResult) {
+    return 0;
+  }
+
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
   ++cfg_->opcodeCount_;
   lhs->defInfo()->addDefSite(lastBlock_);
@@ -231,7 +235,7 @@ OpcodeFactory::createEntryExitBlocks()
 {
   // entry block
   cfg_->entry_ = addFreeBlockHeader(0);
-  cfg_->undefined_ = addImmediate(mri::Object::nilValue(), true);
+  cfg_->undefined_ = addImmediate(mri::Object::nilObject(), true);
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);

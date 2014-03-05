@@ -55,34 +55,38 @@ private:
   Variable* buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNil(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildIf(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildCall(OpcodeFactory* factory, const RNode* node, bool useResult);
 
   ControlFlowGraph* cfg_;
 
   std::unordered_map<ID, Variable*> namedVariables_;
 
-/*
-  struct ExitPoint {
+  class ExitPoint {
+  public:
+    ExitPoint(OpcodeFactory* cond, OpcodeFactory* block, OpcodeFactory* exit, Variable* result)
+      : cond_(cond), block_(block), exit_(exit), result_(result)
+    {}
+
+    OpcodeFactory* cond() const { return cond_; }
+    OpcodeFactory* block() const { return block_; }
+    OpcodeFactory* exit() const { return exit_; }
+    Variable* result() const { return result_; }
+
+  private:
+
     OpcodeFactory* cond_;
     OpcodeFactory* block_;
     OpcodeFactory* exit_;
     Variable* result_;
-
-    ExitPoint(OpcodeFactory* cond, OpcodeFactory* block, OpcodeFactory* exit, Variable* result)
-      : cond_(cond), block_(block), exit_(exit), result_(result)
-    {}
   };
 
   std::vector<ExitPoint> exits_;
+  /*
   std::vector<OpcodeFactory*> rescueBlocks_;
   std::vector<const AstNode*> ensureNodes_;
   std::vector<OpcodeFactory*> retryBlocks_;
-  std::vector<BlockHeader*> idomUnknown_;
 
-  std::vector<BlockHeader*> lastSingleEntries_;
-  BlockHeader* lastSingleEntry_;
-  BlockHeader* exitIdom_;
-  BlockHeader* condIdom_;
   OpcodeFactory exitBlock_;
 
   int* dfsOrder_;

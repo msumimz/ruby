@@ -3,6 +3,7 @@
 #include "rbjit/opcodefactory.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/cfgbuilder.h"
+#include "rbjit/rubyobject.h"
 
 extern "C" {
 #include "ruby.h"
@@ -97,6 +98,10 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
 
   case NODE_IF:
     v = buildIf(factory, node, useResult);
+    break;
+
+  case NODE_WHILE:
+    v = buildWhile(factory, node, useResult);
     break;
 
   case NODE_CALL:
@@ -212,6 +217,86 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // Both route have been stopped
   factory->halt();
   return 0;
+}
+
+Variable*
+CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  //     <while>         <begin-while>
+  //  +-----------+      +-----------+
+  //  | PREHEADER |      | PREHEADER |
+  //  +-----------+      +-----------+
+  //        |    +------+      |
+  //        |    |      v      v
+  //        |    |   +-----------------+
+  //        |    |   | BODY            |
+  //        |    |   |                 |
+  //        |    |   |  if             |
+  //        |    |   |     break-----------------+
+  //        |    |   |                 |         |
+  //        |    |   |  if             |         |
+  //        |    |   |     next-----------+      |
+  //        |    |   |                 |  |      |
+  //        |    |   +-----------------+  |      |
+  //        |    |        |               |      |
+  //        |    |        |  +------------+      |
+  //        |    |        |  |                   |
+  //        |    |        v  v                   |
+  //        |    |      +------+                 |
+  //        |    +------| COND |                 |
+  //        +---------->|      |                 |
+  //                    +------+                 |
+  //                       |                     |
+  //                       v                     v
+  //                +-------------+          +------+
+  //                | PREEXIT     |--------->| EXIT |
+  //                |  result=nil |          +------+
+  //                +-------------+              |
+  //                                             v
+  //
+
+  assert(nd_type(node) == NODE_WHILE || nd_type(node) == NODE_UNTIL);
+
+  // Result value
+  Variable* value = factory->createTemporary(useResult);
+
+  // Create blocks
+  OpcodeFactory preheaderFactory(*factory, 0);
+  OpcodeFactory condFactory(*factory, 0);
+  OpcodeFactory bodyFactory(*factory, 0);
+  OpcodeFactory preexitFactory(*factory, 0);
+  OpcodeFactory exitFactory(*factory, 0);
+
+  // Preheader block
+  factory->addJump(preheaderFactory.lastBlock());
+
+  if (node->nd_state == 0) {
+    // begin-end-while
+    preheaderFactory.addJump(bodyFactory.lastBlock());
+  }
+  else {
+    // while
+    preheaderFactory.addJump(condFactory.lastBlock());
+  }
+
+  // Condition block
+  Variable* cond = buildNode(&condFactory, node->nd_cond, true);
+  condFactory.addJumpIf(cond, bodyFactory.lastBlock(), preexitFactory.lastBlock());
+
+  // Preexit block
+  Variable* nil = preexitFactory.addImmediate(mri::Object::nilObject(), useResult);
+  preexitFactory.addCopy(value, nil);
+  preexitFactory.addJump(exitFactory.lastBlock());
+
+  // Body blcok
+  exits_.push_back(ExitPoint(&condFactory, &bodyFactory, &exitFactory, value));
+  buildNode(&bodyFactory, node->nd_body, false);
+  bodyFactory.addJump(condFactory.lastBlock());
+  exits_.pop_back();
+
+  *factory = exitFactory;
+
+  return value;
 }
 
 Variable*
