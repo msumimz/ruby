@@ -280,6 +280,7 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
   }
 
   // Condition block
+  BlockHeader* condBlock = condFactory.lastBlock();
   Variable* cond = buildNode(&condFactory, node->nd_cond, true);
   condFactory.addJumpIf(cond, bodyFactory.lastBlock(), preexitFactory.lastBlock());
 
@@ -291,7 +292,7 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
   // Body blcok
   exits_.push_back(ExitPoint(&condFactory, &bodyFactory, &exitFactory, value));
   buildNode(&bodyFactory, node->nd_body, false);
-  bodyFactory.addJump(condFactory.lastBlock());
+  bodyFactory.addJump(condBlock);
   exits_.pop_back();
 
   *factory = exitFactory;
