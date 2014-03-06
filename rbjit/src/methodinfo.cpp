@@ -24,6 +24,10 @@ MethodInfo::compile()
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
+
+  LTDominatorFinder domFinder(cfg_);
+  domFinder.setDominatorsToCfg();
+
   RBJIT_DPRINT(cfg_->domTree()->debugPrint());
 
   SsaTranslator ssa(cfg_, true);

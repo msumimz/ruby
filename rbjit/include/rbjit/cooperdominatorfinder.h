@@ -9,6 +9,8 @@ public:
 
   CooperDominatorFinder(ControlFlowGraph* cfg);
 
+  std::vector<BlockHeader*> dominators();
+
 private:
 
   void findDominators();
@@ -16,6 +18,7 @@ private:
   BlockHeader* findIntersect(BlockHeader* b1, BlockHeader* b2);
 
   std::vector<int> dfnums_;
+  std::vector<BlockHeader*> idoms_;
 
 };
 

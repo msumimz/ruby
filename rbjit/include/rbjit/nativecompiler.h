@@ -14,6 +14,7 @@ class ExecutionEngine;
 class Function;
 class BasicBlock;
 class Value;
+class PHINode;
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -82,6 +83,16 @@ private:
   llvm::Function* func_;
   std::vector<llvm::BasicBlock*> llvmBlocks_;
   std::vector<llvm::Value*> llvmValues_;
+
+  class Phi {
+  public:
+    Phi(OpcodePhi* opcode, llvm::PHINode* bitcode)
+      : opcode_(opcode), bitcode_(bitcode)
+    {}
+    OpcodePhi* opcode_;
+    llvm::PHINode* bitcode_;
+  };
+  std::vector<Phi> phis_;
 
   enum { WAITING, WORKING, DONE };
   std::vector<int> states_;

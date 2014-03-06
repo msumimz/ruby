@@ -166,11 +166,14 @@ NativeCompiler::translateToBitcode()
     llvmBlocks_[i] = llvm::BasicBlock::Create(*ctx_, "", func_);
   }
 
-  // Value vector
+  // Set up a value vector
   size_t varCount = cfg_->variables()->size();
   llvmValues_.assign(varCount, 0);
 
-  // States list
+  // Set up a phi list
+  phis_.clear();
+
+  // Set up a states list
   states_.assign(blockCount, WAITING);
 
 #ifdef RBJIT_DEBUG
@@ -195,6 +198,16 @@ NativeCompiler::translateToBitcode()
 
   // Translate each block to bitcode
   translateBlocks();
+
+  // Fill arguments in phi nodes
+  std::for_each(phis_.cbegin(), phis_.cend(), [this](Phi phi) {
+    BlockHeader::Backedge* e = phi.opcode_->block()->backedge();
+    for (Variable*const* i = phi.opcode_->rhsBegin(); i < phi.opcode_->rhsEnd(); ++i) {
+      assert(e && e->block());
+      phi.bitcode_->addIncoming(getValue(*i), llvmBlocks_[e->block()->index()]);
+      e = e->next();
+    }
+  });
 
   // Create the exit block
   // The exit block is always empty and its bitcode should consist of a single ret
@@ -273,7 +286,8 @@ NativeCompiler::visitOpcode(OpcodeJump* op)
 bool
 NativeCompiler::visitOpcode(OpcodeJumpIf* op)
 {
-  // In ruby/ruby.h
+  // Represent RTEST in bitcode
+  // In ruby/ruby.h:
   // #define RTEST(v) !(((VALUE)(v) & ~Qnil) == 0)
   llvm::Value* rtest = builder_->CreateAnd(getValue(op->cond()), getInt(~Qnil));
   llvm::Value* cond = builder_->CreateICmpNE(rtest, getInt(0));
@@ -328,10 +342,11 @@ bool
 NativeCompiler::visitOpcode(OpcodePhi* op)
 {
   llvm::PHINode* phi = builder_->CreatePHI(valueType_, op->rhsCount());
-  for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
-    phi->addIncoming(getValue(*i), llvmBlocks_[(*i)->defBlock()->index()]);
-  }
   updateValue(op, phi);
+
+  // Left hand size arguments will be filled later, saving the phi node information here
+  phis_.push_back(Phi(op, phi));
+
   return true;
 }
 

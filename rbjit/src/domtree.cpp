@@ -5,10 +5,10 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-DomTree::DomTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms)
+DomTree::DomTree(ControlFlowGraph* cfg)
   : size_(cfg->blocks()->size()), nodes_((Node*)calloc(size_, sizeof(Node)))
 {
-  buildTree(cfg, idoms);
+  buildTree(cfg);
 }
 
 DomTree::~DomTree()
@@ -38,14 +38,14 @@ DomTree::addChild(BlockHeader* parent, BlockHeader* child)
 }
 
 void
-DomTree::buildTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms)
+DomTree::buildTree(ControlFlowGraph* cfg)
 {
   for (unsigned i = 0; i < size_; ++i) {
     BlockHeader* b = (*cfg->blocks())[i];
     if (b == cfg->entry()) {
       continue;
     }
-    addChild((*idoms)[b->index()], b);
+    addChild(b->idom(), b);
   }
 }
 

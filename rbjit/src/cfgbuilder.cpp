@@ -171,13 +171,13 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   BlockHeader* idom = factory->lastBlock();
 
   // true block
-  OpcodeFactory trueFactory(*factory);
-  BlockHeader* trueBlock = trueFactory.addFreeBlockHeader(idom);
+  OpcodeFactory trueFactory(*factory, 0);
+  BlockHeader* trueBlock = trueFactory.lastBlock();
   Variable* trueValue = buildNode(&trueFactory, node->nd_body, useResult);
 
   // false block
-  OpcodeFactory falseFactory(*factory);
-  BlockHeader* falseBlock = falseFactory.addFreeBlockHeader(idom);
+  OpcodeFactory falseFactory(*factory, 0);
+  BlockHeader* falseBlock = falseFactory.lastBlock();
   Variable* falseValue = buildNode(&falseFactory, node->nd_else, useResult);
 
   // branch
@@ -186,11 +186,11 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // join block
   if (trueFactory.continues()) {
     if (falseFactory.continues()) {
-      BlockHeader* join = factory->addFreeBlockHeader(idom);
+      BlockHeader* join = factory->addFreeBlockHeader(0);
       Variable* value = factory->createTemporary(useResult);
       if (useResult) {
-        trueFactory.addCopy(value, trueValue);
-        falseFactory.addCopy(value, falseValue);
+        trueFactory.addCopy(value, trueValue, useResult);
+        falseFactory.addCopy(value, falseValue, useResult);
       }
       trueFactory.addJump(join);
       falseFactory.addJump(join);

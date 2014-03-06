@@ -193,7 +193,7 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
 
   int n = 1 + (rhsEnd - rhsBegin);
 
-  OpcodePhi* op = new OpcodePhi(file_, line_, lastOpcode_, 0, n);
+  OpcodePhi* op = new OpcodePhi(file_, line_, lastOpcode_, 0, n, lastBlock_);
   ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 

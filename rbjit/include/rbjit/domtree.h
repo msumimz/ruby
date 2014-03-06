@@ -26,7 +26,7 @@ public:
     Node* nextSibling_;
   };
 
-  DomTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms);
+  DomTree(ControlFlowGraph* cfg);
   ~DomTree();
 
   Node* nodeOf(BlockHeader* block) const;
@@ -37,7 +37,7 @@ public:
 private:
 
   void addChild(BlockHeader* parent, BlockHeader* child);
-  void buildTree(ControlFlowGraph* cfg, std::vector<BlockHeader*>* idoms);
+  void buildTree(ControlFlowGraph* cfg);
 
   size_t size_;
   Node* nodes_;

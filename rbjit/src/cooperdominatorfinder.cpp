@@ -7,8 +7,16 @@ RBJIT_NAMESPACE_BEGIN
 
 CooperDominatorFinder::CooperDominatorFinder(ControlFlowGraph* cfg)
   : DominatorFinder(cfg),
-    dfnums_(blocks_->size(), 0)
+    dfnums_(blocks_->size(), 0),
+    idoms_(blocks_->size(), 0)
 {}
+
+std::vector<BlockHeader*>
+CooperDominatorFinder::dominators()
+{
+  findDominators();
+  return idoms_;
+}
 
 void
 CooperDominatorFinder::findDominators()

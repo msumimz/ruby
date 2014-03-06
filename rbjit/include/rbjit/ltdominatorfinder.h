@@ -9,14 +9,22 @@ class ControlFlowGraph;
 class BlockHeader;
 
 // Lengauer-Tarjan dominator finding algorithm
+// cf.
+// Thomas Lengauer and Robert Endre Tarjan, "A Fast Algorithm for Finding
+// Dominators in a Flowgraph"
 class LTDominatorFinder : public DominatorFinder {
 public:
 
   LTDominatorFinder(ControlFlowGraph* cfg);
 
-  std::vector<BlockHeader*>& dominators();
+  std::vector<BlockHeader*> dominators();
+  void setDominatorsToCfg();
 
 private:
+
+#ifdef RBJIT_DEBUG
+  void debugVerify(std::vector<BlockHeader*>& doms);
+#endif
 
   void findDominators();
 
@@ -33,8 +41,10 @@ private:
   std::vector<int> semi_;
   std::vector<int> size_;
   std::vector<int> dom_;
+  std::vector<std::vector<int> > pred_;
   std::vector<std::vector<int> > bucket_;
 
+  bool computed_;
 };
 
 RBJIT_NAMESPACE_END

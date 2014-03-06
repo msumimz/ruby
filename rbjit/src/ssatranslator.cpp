@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include "rbjit/ssatranslator.h"
 #include "rbjit/controlflowgraph.h"
@@ -45,13 +46,16 @@ SsaTranslator::translate()
 void
 SsaTranslator::computeDf()
 {
+  for (int i = 0; i < cfg_->blocks()->size(); ++i) {
+    df_[i].assign(cfg_->blocks()->size(), false);
+  }
+
   auto i = cfg_->blocks()->begin();
   auto end = cfg_->blocks()->end();
   for (; i != end; ++i) {
     BlockHeader* b = *i;
-    df_[b->index()].resize(cfg_->blocks()->size(), false);
 
-    // Skip entry and exit blocks (no idom_ info)
+    // Skip entry and exit blocks
     if (b == cfg_->entry() || b == cfg_->exit()) {
       continue;
     }
@@ -134,7 +138,7 @@ SsaTranslator::insertSinglePhiFunction(BlockHeader* block, Variable* v)
   int size = block->backedgeSize();
   assert(0 < size && size < 100);
 
-  OpcodePhi* phi = new OpcodePhi(0, 0, block, v, size);
+  OpcodePhi* phi = new OpcodePhi(0, 0, block, v, size, block);
   for (Variable** i = phi->rhsBegin(); i < phi->rhsEnd(); ++i) {
     *i = v;
   }

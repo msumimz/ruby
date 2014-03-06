@@ -2,23 +2,23 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/opcode.h"
 
-#ifdef RBJIT_DEBUG
-#include "rbjit/cooperdominatorfinder.h"
-#endif
-
 RBJIT_NAMESPACE_BEGIN
 
 DominatorFinder::DominatorFinder(ControlFlowGraph* cfg)
-  : cfg_(cfg), blocks_(cfg->blocks()),
-    idoms_(blocks_->size())
+  : cfg_(cfg), blocks_(cfg->blocks())
 {}
 
-std::vector<BlockHeader*>&
-DominatorFinder::dominators()
+void
+DominatorFinder::setDominatorsToCfg()
 {
-  findDominators();
+  std::vector<BlockHeader*> idoms = dominators();
 
-  return idoms_;
+  for (int i = 0; i < blocks_->size(); ++i) {
+    if (i == cfg_->entry()->index()) {
+      continue;
+    }
+    (*blocks_)[i]->setIdom(idoms[i]);
+  }
 }
 
 RBJIT_NAMESPACE_END

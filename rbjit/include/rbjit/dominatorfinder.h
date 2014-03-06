@@ -13,16 +13,15 @@ public:
 
   DominatorFinder(ControlFlowGraph* cfg);
 
-  std::vector<BlockHeader*>& dominators();
+  virtual std::vector<BlockHeader*> dominators() = 0;
+  virtual void setDominatorsToCfg();
 
 protected:
 
-  virtual void findDominators() = 0;
+  void findDominators();
 
   ControlFlowGraph* cfg_;
   std::vector<BlockHeader*>* blocks_;
-
-  std::vector<BlockHeader*> idoms_;
 
 };
 

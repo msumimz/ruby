@@ -31,8 +31,7 @@ DomTree*
 ControlFlowGraph::domTree()
 {
   if (!domTree_) {
-    LTDominatorFinder df(this);
-    domTree_ = new DomTree(this, &df.dominators());
+    domTree_ = new DomTree(this);
   }
   return domTree_;
 }
@@ -48,17 +47,15 @@ ControlFlowGraph::copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variabl
 void
 ControlFlowGraph::removeVariables(const std::vector<Variable*>* toBeRemoved)
 {
-  // Zero-clear elements to be removed
-  std::vector<Variable*>::const_iterator i = toBeRemoved->begin();
-  std::vector<Variable*>::const_iterator end = toBeRemoved->end();
-  for (; i != end; ++i) {
-    delete variables_[(*i)->index()];
-    variables_[(*i)->index()] = nullptr;
-  }
+  // Zero-clear elements that should be removed
+  std::for_each(toBeRemoved->cbegin(), toBeRemoved->cend(), [this](Variable* v) {
+    variables_[v->index()] = nullptr;
+    delete v;
+  });
 
-  // Remove null elements
+  // Remove zero-cleared elements
   variables_.erase(std::remove_if(variables_.begin(), variables_.end(),
-    [](Variable* v) { return v == 0; }), variables_.end());
+    [](Variable* v) { return !v; }), variables_.end());
 
   // Reset indexes
   for (int i = 0; i < variables_.size(); ++i) {

@@ -182,6 +182,7 @@ public:
   int index() const { return index_; }
   int depth() const { return depth_; }
   BlockHeader* idom() const { return idom_; }
+  void setIdom(BlockHeader* idom) { idom_ = idom; }
 
   Opcode* footer() const { return footer_; }
   void setFooter(Opcode* footer) { footer_ = footer; }
@@ -334,11 +335,18 @@ private:
 class OpcodePhi : public OpcodeVa {
 public:
 
-  OpcodePhi(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
-    : OpcodeVa(file, line, prev, lhs, rhsSize) {}
+  OpcodePhi(int file, int line, Opcode* prev, Variable* lhs, int rhsSize, BlockHeader* block)
+    : OpcodeVa(file, line, prev, lhs, rhsSize), block_(block) {}
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
+  BlockHeader* block() const { return block_; }
+
+private:
+
+  // Block where the phi opcode is located
+  // (The LLVM phi nodes need the backedge information)
+  BlockHeader* block_;
 };
 
 class OpcodeExit : public Opcode {
