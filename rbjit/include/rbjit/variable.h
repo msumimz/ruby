@@ -11,6 +11,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class Opcode;
 class BlockHeader;
+class TypeConstraint;
 
 class Variable {
 public:
@@ -33,8 +34,10 @@ public:
   // DefInfo
   DefInfo* defInfo() const { return defInfo_; }
   void setDefInfo(DefInfo* defInfo) { defInfo_ = defInfo; }
-
   int defCount() const { return defInfo_ ? defInfo_->defCount() : 0; }
+
+  // TypeConstraint
+  TypeConstraint* typeConstraint();
 
   std::string debugPrint() const;
 
@@ -55,7 +58,10 @@ private:
 
   int index_;
 
-  DefInfo* defInfo_;
+  union {
+    DefInfo* defInfo_;
+    TypeConstraint* typeConstraint_;
+  };
 };
 
 RBJIT_NAMESPACE_END

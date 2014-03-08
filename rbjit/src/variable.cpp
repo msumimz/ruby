@@ -1,5 +1,6 @@
 #include "rbjit/variable.h"
 #include "rbjit/definfo.h"
+#include "rbjit/typeconstraint.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -30,6 +31,15 @@ Variable*
 Variable::copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v)
 {
   return new Variable(defBlock, defOpcode, v->name(), v, index, 0);
+}
+
+TypeConstraint*
+Variable::typeConstraint()
+{
+  if (!typeConstraint_) {
+    typeConstraint_ = TypeConstraint::create(this);
+  }
+  return typeConstraint_;
 }
 
 extern "C" {

@@ -313,6 +313,9 @@
     <ClCompile Include="..\..\src\ltdominatorfinder.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\typeconstraint.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -381,6 +384,9 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\ltdominatorfinder.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\typeconstraint.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

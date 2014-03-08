@@ -327,6 +327,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\ssatranslator.cpp" />
+    <ClCompile Include="..\..\src\typeconstraint.cpp" />
     <ClCompile Include="..\..\src\variable.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
@@ -356,6 +357,7 @@
     <ClInclude Include="..\..\include\rbjit\rubyobject.h" />
     <ClInclude Include="..\..\include\rbjit\runtime_methodcall.h" />
     <ClInclude Include="..\..\include\rbjit\ssatranslator.h" />
+    <ClInclude Include="..\..\include\rbjit\typeconstraint.h" />
     <ClInclude Include="..\..\include\rbjit\variable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
