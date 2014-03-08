@@ -31,6 +31,7 @@ public:
 
   Variable* output() const {  return output_; }
   Variable* undefined() const { return undefined_; }
+  Variable* env() const { return env_; }
 
   DomTree* domTree();
 
@@ -86,6 +87,12 @@ private:
   // Undefined value that is used in the process of SSA translating
   Variable* undefined_;
 
+  // Environment
+  // When two environments are equal, two method lookups with the same receiver
+  // class and method name result in the same method entry.
+  Variable* env_;
+
+  // Dominance tree
   DomTree* domTree_;
 };
 

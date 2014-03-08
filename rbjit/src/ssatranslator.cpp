@@ -196,17 +196,8 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
           op = prev;
         }
         else {
-          if (lhs->defCount() > 1) {
-            Variable* temp = cfg_->copyVariable(b, opl, lhs);
-            lhs->defInfo()->decreaseDefCount();
-            renameStack_[lhs->index()].push_back(temp);
-            opl->setLhs(temp);
-
-            renameStack_.push_back(std::vector<Variable*>());
-          }
-          else {
-            renameStack_[lhs->index()].push_back(lhs);
-          }
+          renameVariablesInLhs(b, opl, lhs);
+          renameEnv(b, opl);
         }
       }
       if (op == footer) {
@@ -238,6 +229,44 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
   }
 
   delete[] depths;
+}
+
+void
+SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
+{
+  if (lhs->defCount() > 1) {
+    Variable* temp = cfg_->copyVariable(b, opl, lhs);
+    lhs->defInfo()->decreaseDefCount();
+    renameStack_[lhs->index()].push_back(temp);
+    opl->setLhs(temp);
+
+    renameStack_.push_back(std::vector<Variable*>());
+  }
+  else {
+    renameStack_[lhs->index()].push_back(lhs);
+  }
+}
+
+void
+SsaTranslator::renameEnv(BlockHeader* b, Opcode* op)
+{
+  OpcodeCall* call = dynamic_cast<OpcodeCall*>(op);
+  if (!call) {
+    return;
+  }
+
+  Variable* circ = call->env();
+  if (circ->defCount() > 1) {
+    Variable* temp = cfg_->copyVariable(b, call, circ);
+    circ->defInfo()->decreaseDefCount();
+    renameStack_[circ->index()].push_back(temp);
+    call->setEnv(temp);
+
+    renameStack_.push_back(std::vector<Variable*>());
+  }
+  else {
+    renameStack_[circ->index()].push_back(circ);
+  }
 }
 
 void

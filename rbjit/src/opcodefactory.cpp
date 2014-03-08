@@ -152,9 +152,26 @@ OpcodeFactory::addImmediate(VALUE value, bool useResult)
 }
 
 Variable*
+OpcodeFactory::addEnv(bool useResult)
+{
+  if (!useResult) {
+    return 0;
+  }
+
+  OpcodeEnv* op = new OpcodeEnv(file_, line_, lastOpcode_, 0);
+  ++cfg_->opcodeCount_;
+  lastOpcode_ = op;
+
+  Variable* lhs = createNamedVariable(OpcodeEnv::envName());
+  op->setLhs(lhs);
+
+  return lhs;
+}
+
+Variable*
 OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 {
-  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName);
+  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->env());
   ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
@@ -169,7 +186,8 @@ OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variabl
 {
   int n = argsEnd - argsBegin;
 
-  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n);
+  Variable* circ = cfg_->env();
+  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n, circ);
   ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
@@ -180,6 +198,8 @@ OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variabl
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
     *v++ = *arg;
   }
+
+  circ->defInfo()->addDefSite(lastBlock_);
 
   return lhs;
 }
@@ -232,6 +252,7 @@ OpcodeFactory::createEntryExitBlocks()
   // entry block
   cfg_->entry_ = addFreeBlockHeader(0);
   cfg_->undefined_ = addImmediate(mri::Object::nilObject(), true);
+  cfg_->env_ = addEnv(true);
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);

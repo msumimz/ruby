@@ -305,6 +305,12 @@ NativeCompiler::visitOpcode(OpcodeImmediate* op)
 }
 
 bool
+NativeCompiler::visitOpcode(OpcodeEnv* op)
+{
+  return true;
+}
+
+bool
 NativeCompiler::visitOpcode(OpcodeLookup* op)
 {
   llvm::Value* value = builder_->CreateCall2(runtime_[RF_lookupMethod],
@@ -341,10 +347,14 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 bool
 NativeCompiler::visitOpcode(OpcodePhi* op)
 {
+  if (OpcodeEnv::isEnv(op->lhs())) {
+    return true;
+  }
+
   llvm::PHINode* phi = builder_->CreatePHI(valueType_, op->rhsCount());
   updateValue(op, phi);
 
-  // Left hand size arguments will be filled later, saving the phi node information here
+  // Left hand side arguments will be filled later, saving the phi node information here
   phis_.push_back(Phi(op, phi));
 
   return true;

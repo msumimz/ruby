@@ -12,6 +12,7 @@ class OpcodeCopy;
 class OpcodeJump;
 class OpcodeJumpIf;
 class OpcodeImmediate;
+class OpcodeEnv;
 class OpcodeLookup;
 class OpcodeCall;
 class OpcodePhi;
@@ -27,6 +28,7 @@ public:
   virtual bool visitOpcode(OpcodeJump* op) = 0;
   virtual bool visitOpcode(OpcodeJumpIf* op) = 0;
   virtual bool visitOpcode(OpcodeImmediate* op) = 0;
+  virtual bool visitOpcode(OpcodeEnv* op) = 0;
   virtual bool visitOpcode(OpcodeLookup* op) = 0;
   virtual bool visitOpcode(OpcodeCall* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
@@ -128,6 +130,8 @@ public:
   {}
 
   Variable* rhs() const { return rhs_[0]; }
+  Variable* rhs(int i) const { return rhs_[i]; }
+
   Variable*const* rhsBegin() const { return rhs_; }
   Variable*const* rhsEnd() const { return rhs_ + N; }
   Variable** rhsBegin() { return rhs_; }
@@ -297,17 +301,37 @@ private:
   VALUE value_;
 };
 
-class OpcodeLookup : public OpcodeLR<1> {
+class OpcodeEnv : public OpcodeL {
 public:
 
-  OpcodeLookup(int file, int line, Opcode* prev, Variable* lhs, Variable* receiver, ID methodName)
-    : OpcodeLR<1>(file, line, prev, lhs), methodName_(methodName)
+  OpcodeEnv(int file, int line, Opcode* prev, Variable* lhs)
+    : OpcodeL(file, line, prev, lhs) {}
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+  // Helper methods
+  static ID envName();
+  static bool isEnv(Variable* v);
+
+private:
+
+  static ID envName_;
+
+};
+
+class OpcodeLookup : public OpcodeLR<2> {
+public:
+
+  OpcodeLookup(int file, int line, Opcode* prev, Variable* lhs, Variable* receiver, ID methodName, Variable* env)
+    : OpcodeLR<2>(file, line, prev, lhs), methodName_(methodName)
   {
     setRhs(0, receiver);
+    setRhs(1, env);
   }
 
   Variable* receiver() const { return rhs(); }
   ID methodName() const { return methodName_; }
+  Variable* env() const { return rhs(1); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
@@ -319,17 +343,24 @@ private:
 class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* methodEntry, int rhsSize)
-    : OpcodeVa(file, line, prev, lhs, rhsSize), methodEntry_(methodEntry) {}
+  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* methodEntry, int rhsSize, Variable* env)
+    : OpcodeVa(file, line, prev, lhs, rhsSize),
+      methodEntry_(methodEntry), env_(env) {}
 
   Variable* methodEntry() const { return methodEntry_; }
   Variable* receiver() const { return rhs(0); }
+
+  Variable* env() const { return env_; }
+  void setEnv(Variable* env) { env_ = env; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
   Variable* methodEntry_;
+
+  // Should be treated as a left-side hand value
+  Variable* env_;
 };
 
 class OpcodePhi : public OpcodeVa {

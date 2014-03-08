@@ -53,6 +53,8 @@ public:
 
   Id(ID id) : id_(id) {}
 
+  Id(const char* name);
+
   const char* name() const;
   std::string stringName() const;
 

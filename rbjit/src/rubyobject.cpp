@@ -7,7 +7,7 @@ RBJIT_NAMESPACE_BEGIN
 namespace mri {
 
 ////////////////////////////////////////////////////////////
-// Symbol
+// Predefined values
 
 VALUE
 Object::trueObject()
@@ -56,6 +56,10 @@ Symbol::id() const
 
 ////////////////////////////////////////////////////////////
 // Id
+
+Id::Id(const char* name)
+  : id_(rb_intern(name))
+{}
 
 const char*
 Id::name() const

@@ -1,5 +1,7 @@
 #include <typeinfo>
 #include "rbjit/opcode.h"
+#include "rbjit/variable.h"
+#include "rbjit/rubyobject.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -68,6 +70,26 @@ BlockHeader::visitEachOpcode(OpcodeVisitor* visitor)
   } while (op);
 
   return result;
+}
+
+////////////////////////////////////////////////////////////
+// Env
+
+ID OpcodeEnv::envName_;
+
+ID
+OpcodeEnv::envName()
+{
+  if (!envName_) {
+    envName_ = mri::Id("<env>");
+  }
+  return envName_;
+}
+
+bool
+OpcodeEnv::isEnv(Variable* v)
+{
+  return v->name() == envName();
 }
 
 RBJIT_NAMESPACE_END

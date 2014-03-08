@@ -88,6 +88,7 @@ public:
   bool visitOpcode(OpcodeJump* op);
   bool visitOpcode(OpcodeJumpIf* op);
   bool visitOpcode(OpcodeImmediate* op);
+  bool visitOpcode(OpcodeEnv* op);
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
   bool visitOpcode(OpcodePhi* op);
@@ -183,11 +184,19 @@ Dumper::visitOpcode(OpcodeImmediate* op)
 }
 
 bool
+Dumper::visitOpcode(OpcodeEnv* op)
+{
+  putCommonOutput(op);
+  out_ += '\n';
+  return true;
+}
+
+bool
 Dumper::visitOpcode(OpcodeLookup* op)
 {
   putCommonOutput(op);
-  put("%Ix '%s'\n",
-    op->receiver(), mri::Id(op->methodName()).name());
+  put("%Ix '%s' [%Ix]\n",
+    op->receiver(), mri::Id(op->methodName()).name(), op->env());
   return true;
 }
 
@@ -200,7 +209,7 @@ Dumper::visitOpcode(OpcodeCall* op)
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
-  out_ += '\n';
+  put(" [%Ix]\n", op->env());
   return true;
 }
 

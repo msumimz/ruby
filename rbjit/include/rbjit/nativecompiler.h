@@ -40,6 +40,7 @@ public:
   bool visitOpcode(OpcodeJump* opcode);
   bool visitOpcode(OpcodeJumpIf* opcode);
   bool visitOpcode(OpcodeImmediate* opcode);
+  bool visitOpcode(OpcodeEnv* opcode);
   bool visitOpcode(OpcodeLookup* opcode);
   bool visitOpcode(OpcodeCall* opcode);
   bool visitOpcode(OpcodePhi* opcode);

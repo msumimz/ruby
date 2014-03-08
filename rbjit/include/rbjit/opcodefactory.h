@@ -38,8 +38,9 @@ public:
   void addJump(BlockHeader* dest = 0);
   void addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse);
   Variable* addImmediate(VALUE value, bool useResult);
+  Variable* addEnv(bool useResult);
   Variable* addLookup(Variable* receiver, ID methodName);
-  // args includes receiver as first argument
+  // args includes a receiver as first argument
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
 
