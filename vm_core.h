@@ -324,9 +324,6 @@ struct rb_iseq_struct {
 
     // rbjit: preserved for jit compilation
     NODE* node;
-
-    // rbjit: holds info for jit compilation
-    void* jit_method_info;
 };
 
 enum ruby_special_exceptions {

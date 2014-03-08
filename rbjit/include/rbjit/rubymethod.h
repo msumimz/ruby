@@ -89,6 +89,9 @@ private:
 //         struct rb_method_entry_struct *orig_me;
 //     } body;
 //     int alias_count;
+//     // rbjit: JIT Compilation information
+//     // defined in methodinfo.h
+//     // (defined in rbjit/methodinfo.h)
 // } rb_method_definition_t;
 
 class MethodDefinition {
@@ -100,6 +103,7 @@ public:
   RNode* astNode() const;
   int argc() const;
 
+  MethodInfo* methodInfo() const;
   void setMethodInfo(MethodInfo* mi);
 
 private:

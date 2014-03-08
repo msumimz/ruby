@@ -96,10 +96,16 @@ MethodDefinition::argc() const
   return def_->body.iseq->argc;
 }
 
+MethodInfo*
+MethodDefinition::methodInfo() const
+{
+  return static_cast<MethodInfo*>(def_->jit_method_info);
+}
+
 void
 MethodDefinition::setMethodInfo(MethodInfo* mi)
 {
-  def_->body.iseq->jit_method_info = mi;
+  def_->jit_method_info = mi;
 }
 
 } // namespace mri
