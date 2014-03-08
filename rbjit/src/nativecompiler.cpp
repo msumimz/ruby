@@ -126,7 +126,10 @@ NativeCompiler::getValue(Variable* v)
   int i = v->index();
   llvm::Value* value;
   while ((value = llvmValues_[i]) == 0) {
+    llvm::BasicBlock* b = builder_->GetInsertBlock();
+    llvm::BasicBlock::iterator iter = builder_->GetInsertPoint();
     translateBlocks();
+    builder_->SetInsertPoint(b, iter);
   }
   return value;
 }
@@ -192,10 +195,6 @@ NativeCompiler::translateToBitcode()
   builder_->SetInsertPoint(bb);
   declareRuntimeFunctions();
 
-  // Suspend translating the exit block
-  BlockHeader* exitBlock = cfg_->exit();
-  states_[exitBlock->index()] = WORKING;
-
   // Translate each block to bitcode
   translateBlocks();
 
@@ -208,12 +207,6 @@ NativeCompiler::translateToBitcode()
       e = e->next();
     }
   });
-
-  // Create the exit block
-  // The exit block is always empty and its bitcode should consist of a single ret
-  visitOpcode(exitBlock);
-  builder_->CreateRet(llvmValues_[cfg_->output()->index()]);
-  states_[exitBlock->index()] = DONE;
 
 #ifdef RBJIT_DEBUG
   std::string bitcode;
@@ -363,6 +356,7 @@ NativeCompiler::visitOpcode(OpcodePhi* op)
 bool
 NativeCompiler::visitOpcode(OpcodeExit* op)
 {
+  builder_->CreateRet(getValue(cfg_->output()));
   return true;
 }
 
