@@ -34,7 +34,7 @@ public:
 
   void* compileMethod(ControlFlowGraph* cfg, const char* name);
 
-  // compile
+  // Compile opcode
   bool visitOpcode(BlockHeader* opcode);
   bool visitOpcode(OpcodeCopy* opcode);
   bool visitOpcode(OpcodeJump* opcode);
@@ -43,6 +43,7 @@ public:
   bool visitOpcode(OpcodeEnv* opcode);
   bool visitOpcode(OpcodeLookup* opcode);
   bool visitOpcode(OpcodeCall* opcode);
+  bool visitOpcode(OpcodePrimitive* opcode);
   bool visitOpcode(OpcodePhi* opcode);
   bool visitOpcode(OpcodeExit* opcode);
 

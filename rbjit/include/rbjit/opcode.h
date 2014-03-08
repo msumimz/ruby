@@ -15,6 +15,7 @@ class OpcodeImmediate;
 class OpcodeEnv;
 class OpcodeLookup;
 class OpcodeCall;
+class OpcodePrimitive;
 class OpcodePhi;
 class OpcodeExit;
 
@@ -31,6 +32,7 @@ public:
   virtual bool visitOpcode(OpcodeEnv* op) = 0;
   virtual bool visitOpcode(OpcodeLookup* op) = 0;
   virtual bool visitOpcode(OpcodeCall* op) = 0;
+  virtual bool visitOpcode(OpcodePrimitive* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
   virtual bool visitOpcode(OpcodeExit* op) = 0;
 };
@@ -361,6 +363,22 @@ private:
 
   // Should be treated as a left-side hand value
   Variable* env_;
+};
+
+class OpcodePrimitive : public OpcodeVa {
+public:
+
+  OpcodePrimitive(int file, int line, Opcode* prev, Variable* lhs, int type, int rhsSize)
+    : OpcodeVa(file, line, prev, lhs, rhsSize),
+      type_(type) {}
+
+  int type() const { return type_; }
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+private:
+
+  int type_;
 };
 
 class OpcodePhi : public OpcodeVa {

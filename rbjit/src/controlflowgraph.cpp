@@ -98,6 +98,7 @@ public:
   bool visitOpcode(OpcodeEnv* op);
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
   bool visitOpcode(OpcodeExit* op);
 
@@ -217,6 +218,18 @@ Dumper::visitOpcode(OpcodeCall* op)
     put(" %Ix", *i);
   }
   put(" [%Ix]\n", op->env());
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodePrimitive* op)
+{
+  putCommonOutput(op);
+  put("%d (%d)",
+    op->type(), op->rhsCount());
+  for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
+    put(" %Ix", *i);
+  }
   return true;
 }
 

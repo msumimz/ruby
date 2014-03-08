@@ -338,6 +338,12 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 }
 
 bool
+NativeCompiler::visitOpcode(OpcodePrimitive* op)
+{
+  return true;
+}
+
+bool
 NativeCompiler::visitOpcode(OpcodePhi* op)
 {
   if (OpcodeEnv::isEnv(op->lhs())) {
