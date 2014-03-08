@@ -4,6 +4,7 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/cfgbuilder.h"
 #include "rbjit/rubyobject.h"
+#include "rbjit/variable.h"
 
 extern "C" {
 #include "ruby.h"
@@ -124,6 +125,11 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
   Variable* lhs = getNamedVariable(factory, node->nd_vid);
 
   Variable* value = factory->addCopy(lhs, rhs, useResult);
+
+  // By copy propagation on SSA translation, the copy opcode will be possibly
+  // removed and the variable name will be lost. To avoid this, set the name to
+  // the temporary.
+  rhs->setName(lhs->name());
 
   return value;
 }

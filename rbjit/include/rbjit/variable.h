@@ -27,6 +27,7 @@ public:
   BlockHeader* defBlock() const { return defBlock_; }
   Opcode* defOpcode() const { return defOpcode_; }
   ID name() const { return name_; }
+  void setName(ID name) { name_ = name; }
   Variable* original() const { return original_; }
   int index() const { return index_; }
   void setIndex(int i) { index_ = i; }

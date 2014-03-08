@@ -30,7 +30,7 @@ Variable::createUnnamedSsa(BlockHeader* defBlock, Opcode* defOpcode, int index)
 Variable*
 Variable::copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v)
 {
-  return new Variable(defBlock, defOpcode, v->name(), v, index, 0);
+  return new Variable(defBlock, defOpcode, v->name(), 0, index, 0);
 }
 
 TypeConstraint*
