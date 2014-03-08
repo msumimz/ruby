@@ -36,6 +36,8 @@ MethodInfo::compile()
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
 
+  cfg_->clearDefInfo();
+
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, methodName_);
 }
 

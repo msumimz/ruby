@@ -25,7 +25,10 @@ public:
     }
   }
 
+  void clearDefSite();
+
 private:
+
 
   BlockHeader* defBlock_;
   DefSite* next_;
@@ -39,6 +42,8 @@ public:
 
   DefInfo(BlockHeader* defBlock)
     : defSite_(defBlock, 0), defCount_(1) {}
+
+  ~DefInfo();
 
   const DefSite* defSite() const { return &defSite_; }
   void addDefSite(BlockHeader* block);

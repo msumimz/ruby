@@ -71,6 +71,14 @@ ControlFlowGraph::removeOpcodeAfter(Opcode* prev)
   delete op;
 }
 
+void
+ControlFlowGraph::clearDefInfo()
+{
+  std::for_each(variables_.begin(), variables_.end(), [](Variable* v) {
+    v->clearDefInfo();
+  });
+}
+
 ////////////////////////////////////////////////////////////
 // Debugging tool
 

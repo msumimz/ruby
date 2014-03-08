@@ -36,6 +36,7 @@ public:
   DefInfo* defInfo() const { return defInfo_; }
   void setDefInfo(DefInfo* defInfo) { defInfo_ = defInfo; }
   int defCount() const { return defInfo_ ? defInfo_->defCount() : 0; }
+  void clearDefInfo();
 
   // TypeConstraint
   TypeConstraint* typeConstraint();

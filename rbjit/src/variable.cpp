@@ -33,6 +33,15 @@ Variable::copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v)
   return new Variable(defBlock, defOpcode, v->name(), 0, index, 0);
 }
 
+void
+Variable::clearDefInfo()
+{
+  if (defInfo_) {
+    delete defInfo_;
+    defInfo_ = 0;
+  }
+}
+
 TypeConstraint*
 Variable::typeConstraint()
 {

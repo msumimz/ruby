@@ -2,6 +2,22 @@
 
 RBJIT_NAMESPACE_BEGIN
 
+DefInfo::~DefInfo()
+{
+  if (defSite_.next()) {
+    defSite_.next()->clearDefSite();
+  }
+}
+
+void
+DefSite::clearDefSite()
+{
+  if (next_) {
+    next_->clearDefSite();
+  }
+  delete this;
+}
+
 void
 DefInfo::addDefSite(BlockHeader* block)
 {

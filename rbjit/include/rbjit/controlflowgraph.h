@@ -46,6 +46,7 @@ public:
   std::vector<Variable*>* variables() { return &variables_; }
   Variable* copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source);
   void removeVariables(const std::vector<Variable*>* toBeRemoved);
+  void clearDefInfo();
 
   // Modifiers
 
