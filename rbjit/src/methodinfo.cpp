@@ -17,10 +17,10 @@ struct RNode;
 RBJIT_NAMESPACE_BEGIN
 
 void
-MethodInfo::compile()
+PrecompiledMethodInfo::compile()
 {
   CfgBuilder builder;
-  cfg_ = builder.buildMethod(node_);
+  cfg_ = builder.buildMethod(node_, methodPropertySet());
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());

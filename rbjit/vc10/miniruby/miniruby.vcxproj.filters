@@ -389,5 +389,8 @@
     <ClInclude Include="..\..\include\rbjit\typeconstraint.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\methodpropertyset.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

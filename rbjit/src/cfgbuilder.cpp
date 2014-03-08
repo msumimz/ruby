@@ -5,6 +5,7 @@
 #include "rbjit/cfgbuilder.h"
 #include "rbjit/rubyobject.h"
 #include "rbjit/variable.h"
+#include "rbjit/methodpropertyset.h"
 
 extern "C" {
 #include "ruby.h"
@@ -28,9 +29,13 @@ CfgBuilder::getNamedVariable(OpcodeFactory* factory, ID name)
 }
 
 ControlFlowGraph*
-CfgBuilder::buildMethod(const RNode* rootNode)
+CfgBuilder::buildMethod(const RNode* rootNode, MethodPropertySet* propSet)
 {
   cfg_ = new ControlFlowGraph;
+
+  propSet->setHasDef(MethodPropertySet::NO);
+  propSet->setHasEval(MethodPropertySet::NO);
+  propSet_ = propSet;
 
   OpcodeFactory factory(cfg_);
   factory.createEntryExitBlocks();
@@ -319,6 +324,10 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
 
   // Call a method
   Variable* value = factory->addCall(methodEntry, args, args + argCount, useResult);
+
+  // Set properties
+  propSet_->setHasDef(MethodPropertySet::UNKNOWN);
+  propSet_->setHasDef(MethodPropertySet::UNKNOWN);
 
   return value;
 }

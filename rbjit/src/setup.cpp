@@ -51,7 +51,8 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
     rb_raise(rb_eArgError, "method does not have the source code to be compiled");
   }
 
-  rbjit::MethodInfo* mi = new rbjit::MethodInfo(def.astNode(), rbjit::mri::Symbol(methodName).name());
+  rbjit::PrecompiledMethodInfo* mi =
+    new rbjit::PrecompiledMethodInfo(def.astNode(), rbjit::mri::Symbol(methodName).name());
   def.setMethodInfo(mi);
 
   mi->compile();

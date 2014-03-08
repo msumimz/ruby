@@ -15,8 +15,6 @@ class DomTree;
 class ControlFlowGraph {
 public:
 
-  enum { UNKNOWN = 0, YES = 1, NO = 2 };
-
   ControlFlowGraph();
 
   ControlFlowGraph* copy() const;
@@ -59,11 +57,6 @@ public:
 private:
 
   friend class OpcodeFactory;
-
-  // properties
-  int hasEvals_ : 2;
-  int hasDefs_ : 2;
-  int hasBindings_ : 2;
 
   BlockHeader* entry_;
   BlockHeader* exit_;
