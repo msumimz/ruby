@@ -107,8 +107,10 @@ private:
   };
   llvm::Value* runtime_[RUNTIME_FUNCTION_COUNT];
 
-  // Singleton
+  // Bitcode loader
+  llvm::Module* loadBitcode(void* p, size_t size);
 
+  // Singleton
   static bool initialized_;
   static NativeCompiler* nativeCompiler_;
 };

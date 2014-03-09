@@ -14,6 +14,10 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
 
+// for bitcode loader
+#include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/Support/MemoryBuffer.h"
+
 #ifdef RBJIT_DEBUG
 #include "llvm/Support/raw_ostream.h"
 #endif
@@ -364,6 +368,27 @@ NativeCompiler::visitOpcode(OpcodeExit* op)
 {
   builder_->CreateRet(getValue(cfg_->output()));
   return true;
+}
+
+llvm::Module*
+NativeCompiler::loadBitcode(void* p, size_t size)
+{
+  std::string errorMessage;
+  llvm::MemoryBuffer* mem =
+    llvm::MemoryBuffer::getMemBuffer(llvm::StringRef((const char*)p, size), "", false);
+
+  llvm::Module* mod = llvm::ParseBitcodeFile(mem, *ctx_, &errorMessage);
+
+  if (!mod) {
+    fputs(errorMessage.c_str(), stderr);
+    abort();
+  }
+
+  ee_->addModule(mod);
+
+  delete mem;
+
+  return mod;
 }
 
 RBJIT_NAMESPACE_END

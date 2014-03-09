@@ -14,6 +14,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="rbjit\Resrouce Files">
+      <UniqueIdentifier>{71795350-c1f5-46cb-a0e8-71ff49f92517}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\main.c">
@@ -392,5 +395,13 @@
     <ClInclude Include="..\..\include\rbjit\methodpropertyset.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\primitives\resource.h">
+      <Filter>rbjit\Resrouce Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\primitives\primitives.rc">
+      <Filter>rbjit\Resrouce Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

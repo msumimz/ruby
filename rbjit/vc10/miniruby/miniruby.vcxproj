@@ -109,8 +109,16 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>LLVMBitReader.lib;LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <ResourceCompile>
+      <ShowProgress>
+      </ShowProgress>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -155,7 +163,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>LLVMBitReader.lib;LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -334,6 +342,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClInclude Include="..\..\primitives\resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def" />
@@ -360,6 +369,9 @@
     <ClInclude Include="..\..\include\rbjit\ssatranslator.h" />
     <ClInclude Include="..\..\include\rbjit\typeconstraint.h" />
     <ClInclude Include="..\..\include\rbjit\variable.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\primitives\primitives.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
