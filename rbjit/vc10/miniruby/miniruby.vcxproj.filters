@@ -319,6 +319,9 @@
     <ClCompile Include="..\..\src\typeconstraint.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\chunkallocator.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -397,6 +400,9 @@
     </ClInclude>
     <ClInclude Include="..\..\primitives\resource.h">
       <Filter>rbjit\Resrouce Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\chunkallocator.h">
+      <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
