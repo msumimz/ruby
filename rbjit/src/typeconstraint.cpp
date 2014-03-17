@@ -365,6 +365,11 @@ mri::Class
 TypeSelection::evaluateClass()
 {
   TypeList* list = resolve();
+  if (list->typeList().empty()) {
+    delete list;
+    return mri::Class();
+  }
+
   auto i = list->typeList().cbegin();
   auto end = list->typeList().cend();
   mri::Class cls = *i++;
@@ -375,6 +380,7 @@ TypeSelection::evaluateClass()
     }
   }
   delete list;
+
   return cls;
 }
 
