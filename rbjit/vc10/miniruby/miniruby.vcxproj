@@ -363,7 +363,6 @@
     <ClInclude Include="..\..\include\rbjit\domtree.h" />
     <ClInclude Include="..\..\include\rbjit\ltdominatorfinder.h" />
     <ClInclude Include="..\..\include\rbjit\methodinfo.h" />
-    <ClInclude Include="..\..\include\rbjit\methodpropertyset.h" />
     <ClInclude Include="..\..\include\rbjit\nativecompiler.h" />
     <ClInclude Include="..\..\include\rbjit\opcode.h" />
     <ClInclude Include="..\..\include\rbjit\opcodefactory.h" />
