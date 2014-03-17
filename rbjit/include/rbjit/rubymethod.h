@@ -78,6 +78,23 @@ private:
 // Wrapper for the MRI's rb_method_definition_t
 
 // In method.h:
+//
+// typedef enum {
+//     VM_METHOD_TYPE_ISEQ,
+//     VM_METHOD_TYPE_CFUNC,
+//     VM_METHOD_TYPE_ATTRSET,
+//     VM_METHOD_TYPE_IVAR,
+//     VM_METHOD_TYPE_BMETHOD,
+//     VM_METHOD_TYPE_ZSUPER,
+//     VM_METHOD_TYPE_UNDEF,
+//     VM_METHOD_TYPE_NOTIMPLEMENTED,
+//     VM_METHOD_TYPE_OPTIMIZED, /* Kernel#send, Proc#call, etc */
+//     VM_METHOD_TYPE_MISSING,   /* wrapper for method_missing(id) */
+//     VM_METHOD_TYPE_REFINED,
+//
+//     END_OF_ENUMERATION(VM_METHOD_TYPE)
+// } rb_method_type_t;
+//
 // typedef struct rb_method_definition_struct {
 //     rb_method_type_t type; /* method type */
 //     ID original_id;
@@ -102,6 +119,20 @@ private:
 
 class MethodDefinition {
 public:
+
+  enum {
+    VM_METHOD_TYPE_ISEQ,
+    VM_METHOD_TYPE_CFUNC,
+    VM_METHOD_TYPE_ATTRSET,
+    VM_METHOD_TYPE_IVAR,
+    VM_METHOD_TYPE_BMETHOD,
+    VM_METHOD_TYPE_ZSUPER,
+    VM_METHOD_TYPE_UNDEF,
+    VM_METHOD_TYPE_NOTIMPLEMENTED,
+    VM_METHOD_TYPE_OPTIMIZED, /* Kernel#send, Proc#call, etc */
+    VM_METHOD_TYPE_MISSING,   /* wrapper for method_missing(id) */
+    VM_METHOD_TYPE_REFINED
+  };
 
   MethodDefinition(rb_method_definition_t* def) : def_(def) {}
 
