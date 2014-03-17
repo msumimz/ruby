@@ -10,7 +10,7 @@ class Variable;
 class Opcode;
 class BlockHeader;
 class OpcodeFactory;
-class MethodPropertySet;
+class MethodInfo;
 
 ////////////////////////////////////////////////////////////
 // IdTable
@@ -39,13 +39,13 @@ private:
 class CfgBuilder {
 public:
 
-  CfgBuilder() : cfg_(0), propSet_(0) {}
+  CfgBuilder() : cfg_(0), methodInfo_(0) {}
 
-  ControlFlowGraph* buildMethod(const RNode* rootNode, MethodPropertySet* propSet);
+  ControlFlowGraph* buildMethod(const RNode* rootNode, MethodInfo* methodInfo);
 
 private:
 
-  Variable* getNamedVariable(OpcodeFactory* factory, ID name);
+  Variable* buildNamedVariable(OpcodeFactory* factory, ID name);
 
   void buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNode(OpcodeFactory* factory, const RNode* node, bool useResult);
@@ -84,7 +84,7 @@ private:
 
   std::vector<ExitPoint> exits_;
 
-  MethodPropertySet* propSet_;
+  MethodInfo* methodInfo_;
 
   /*
   std::vector<OpcodeFactory*> rescueBlocks_;

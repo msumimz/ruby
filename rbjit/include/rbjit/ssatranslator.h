@@ -31,7 +31,7 @@ private:
   void renameVariables();
   void renameVariablesForSingleBlock(BlockHeader* b);
   void renameVariablesInLhs(BlockHeader* block, OpcodeL* op, Variable* lhs);
-  void renameEnv(BlockHeader* block, Opcode* op);
+  void renameEnvInLhs(BlockHeader* block, Opcode* op);
   void renameVariablesInRhs(Opcode* op);
   void renameRhsOfPhiFunctions(BlockHeader* parent, BlockHeader* b);
 

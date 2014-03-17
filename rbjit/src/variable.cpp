@@ -1,18 +1,21 @@
+#include <cassert>
 #include "rbjit/variable.h"
 #include "rbjit/definfo.h"
 #include "rbjit/typeconstraint.h"
+#include "rbjit/rubyobject.h"
 
 RBJIT_NAMESPACE_BEGIN
 
 Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo)
   : defBlock_(defBlock), defOpcode_(defOpcode), name_(name),
-    original_(original == 0 ? this : original), index_(index), defInfo_(defInfo)
+    original_(original == 0 ? this : original), local_(true),
+    index_(index), defInfo_(defInfo)
 {}
 
 Variable*
 Variable::createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name)
 {
-  return new Variable(defBlock, defOpcode, name, 0, index, new DefInfo(defBlock));
+  return new Variable(defBlock, defOpcode, name, 0, index, new DefInfo());
 }
 
 Variable*
@@ -24,7 +27,7 @@ Variable::createUnnamed(BlockHeader* defBlock, Opcode* defOpcode, int index)
 Variable*
 Variable::createUnnamedSsa(BlockHeader* defBlock, Opcode* defOpcode, int index)
 {
-  return new Variable(defBlock, defOpcode, 0, 0, index, new DefInfo(defBlock));
+  return new Variable(defBlock, defOpcode, 0, 0, index, new DefInfo());
 }
 
 Variable*
@@ -42,13 +45,11 @@ Variable::clearDefInfo()
   }
 }
 
-TypeConstraint*
-Variable::typeConstraint()
+bool
+Variable::isSameValueAs(Variable* v)
 {
-  if (!typeConstraint_) {
-    typeConstraint_ = TypeConstraint::create(this);
-  }
-  return typeConstraint_;
+  assert(typeConstraint_);
+  return this == v || typeConstraint_->isSameValueAs(v);
 }
 
 extern "C" {
@@ -61,8 +62,8 @@ Variable::debugPrint() const
   char buf[256];
   std::string result;
 
-  sprintf(buf, "%Ix index=%d defBlock=%Ix defOpcode=%Ix name='%s' original=%Ix ",
-    this, index_, defBlock_, defOpcode_, rb_id2name((ID)name_), original_);
+  sprintf(buf, "%d:%Ix: '%s' defBlock=%Ix defOpcode=%Ix local=%d ",
+    index_, this, mri::Id(name_).name(), defBlock_, defOpcode_, local_);
   result = buf;
 
   if (defInfo_) {

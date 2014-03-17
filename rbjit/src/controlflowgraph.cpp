@@ -6,6 +6,7 @@
 #include "rbjit/variable.h"
 #include "rbjit/rubyobject.h"
 #include "rbjit/ltdominatorfinder.h"
+#include "rbjit/typeconstraint.h"
 
 #ifdef _x64
 # define PTRF "% 16Ix"
@@ -256,8 +257,8 @@ Dumper::visitOpcode(OpcodeExit* op)
 void
 Dumper::dumpCfgInfo(const ControlFlowGraph* cfg)
 {
-  put("[CFG: %Ix]\nentry=%Ix exit=%Ix opcodeCount=%d, output=%Ix\n",
-    cfg, cfg->entry(), cfg->exit(), cfg->opcodeCount(), cfg->output());
+  put("[CFG: %Ix]\nentry=%Ix exit=%Ix opcodeCount=%d output=%Ix env=%Ix\n",
+    cfg, cfg->entry(), cfg->exit(), cfg->opcodeCount(), cfg->output(), cfg->env());
 }
 
 void
@@ -288,13 +289,32 @@ ControlFlowGraph::debugPrint() const
 std::string
 ControlFlowGraph::debugPrintVariables() const
 {
-  char buf[256];
-  std::string result = "[Variables]\n";
-  for (size_t i = 0; i < variables_.size(); ++i) {
-    result += variables_[i]->debugPrint();
-  }
+  std::string out = "[Variables]\n";
+  std::for_each(variables_.cbegin(), variables_.cend(), [&](const Variable* v) {
+    out += v->debugPrint();
+  });
 
-  return result;
+  return out;
+}
+
+std::string
+ControlFlowGraph::debugPrintTypeConstraints() const
+{
+  char buf[256];
+  std::string out = "[Type Constraints]\n";
+  std::for_each(variables_.cbegin(), variables_.cend(), [&](const Variable* v) {
+    sprintf(buf, "%Ix: ", v);
+    out += buf;
+    if (v->typeConstraint()) {
+      out += v->typeConstraint()->debugPrint();
+    }
+    else {
+      out += "(null)";
+    }
+    out += '\n';
+  });
+
+  return out;
 }
 
 RBJIT_NAMESPACE_END

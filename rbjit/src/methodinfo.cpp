@@ -5,22 +5,27 @@
 #include "rbjit/ssatranslator.h"
 #include "rbjit/debugprint.h"
 #include "rbjit/ltdominatorfinder.h"
+#include "rbjit/rubymethod.h"
+#include "rbjit/typeanalyzer.h"
 
 #ifdef RBJIT_DEBUG
 #include "rbjit/domtree.h"
 #endif
 
-extern "C" {
-struct RNode;
-}
-
 RBJIT_NAMESPACE_BEGIN
+
+void
+MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, int hasDef, int hasEval, TypeConstraint* returnType)
+{
+  auto me = cls.findMethod(methodName);
+  me.methodDefinition().setMethodInfo(new MethodInfo(hasDef, hasEval, returnType));
+}
 
 void
 PrecompiledMethodInfo::compile()
 {
   CfgBuilder builder;
-  cfg_ = builder.buildMethod(node_, methodPropertySet());
+  cfg_ = builder.buildMethod(node_, this);
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
@@ -37,6 +42,11 @@ PrecompiledMethodInfo::compile()
   RBJIT_DPRINT(cfg_->debugPrintVariables());
 
   cfg_->clearDefInfo();
+
+  TypeAnalyzer ta(cfg_);
+  ta.analyze();
+
+  RBJIT_DPRINT(cfg_->debugPrintTypeConstraints());
 
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, methodName_);
 }

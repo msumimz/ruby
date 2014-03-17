@@ -46,14 +46,20 @@ public:
     CALL_TYPE_MAX
   };
 
+  MethodEntry() : me_(nullptr) {}
+
   // Look up a method and retrieve a method entry
   MethodEntry(VALUE cls, ID id);
 
   // Copy contructor
   MethodEntry(rb_method_entry_t* me) : me_(me) {}
 
+  // Equality test
+  bool operator==(const MethodEntry& other) const { return me_ == other.me_; }
+
   // Accessors
   rb_method_entry_t* methodEntry() const { return me_; }
+  bool isNull() const { return me_ == nullptr; }
   MethodDefinition methodDefinition() const;
   ID methodName() const;
 
@@ -89,9 +95,9 @@ private:
 //         struct rb_method_entry_struct *orig_me;
 //     } body;
 //     int alias_count;
-//     // rbjit: JIT Compilation information
-//     // defined in methodinfo.h
-//     // (defined in rbjit/methodinfo.h)
+//    // rbjit: JIT Compilation information
+//    // (defined in rbjit/methodinfo.h)
+//    void* jit_method_info;
 // } rb_method_definition_t;
 
 class MethodDefinition {

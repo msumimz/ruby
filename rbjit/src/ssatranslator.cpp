@@ -82,8 +82,8 @@ SsaTranslator::insertPhiFunctions()
 {
   size_t blockCount = cfg_->blocks()->size();
 
-  std::vector<Variable*>::iterator i = cfg_->variables()->begin();
-  std::vector<Variable*>::iterator end = cfg_->variables()->end();
+  auto i = cfg_->variables()->begin();
+  auto end = cfg_->variables()->end();
   for (; i != end; ++i) {
     Variable* v = *i;
     DefInfo* di = v->defInfo();
@@ -92,7 +92,7 @@ SsaTranslator::insertPhiFunctions()
     }
     const DefSite* dsList = di->defSite();
 
-    if (dsList->next() == 0) {
+    if (v->local() && dsList->next() == 0) {
       // No phi functions needed if every definition is in the same block
       continue;
     }
@@ -183,7 +183,8 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
       if (opl) {
         Variable* lhs = op->lhs();
         OpcodeCopy* copy;
-        if (doCopyFolding_ && (copy = dynamic_cast<OpcodeCopy*>(op)) && lhs != cfg_->output()) {
+        if (doCopyFolding_ && (copy = dynamic_cast<OpcodeCopy*>(op)) &&
+            lhs != cfg_->output() && lhs != cfg_->env()) {
           // Copy propagation
           renameStack_[lhs->index()].push_back(copy->rhs());
           if (lhs->defCount() == 1) {
@@ -197,7 +198,7 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
         }
         else {
           renameVariablesInLhs(b, opl, lhs);
-          renameEnv(b, opl);
+          renameEnvInLhs(b, opl);
         }
       }
       if (op == footer) {
@@ -238,6 +239,9 @@ SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
     Variable* temp = cfg_->copyVariable(b, opl, lhs);
     lhs->defInfo()->decreaseDefCount();
     renameStack_[lhs->index()].push_back(temp);
+    if (lhs == cfg_->env()) {
+      cfg_->setEnv(temp);
+    }
     opl->setLhs(temp);
 
     renameStack_.push_back(std::vector<Variable*>());
@@ -248,24 +252,24 @@ SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
 }
 
 void
-SsaTranslator::renameEnv(BlockHeader* b, Opcode* op)
+SsaTranslator::renameEnvInLhs(BlockHeader* b, Opcode* op)
 {
   OpcodeCall* call = dynamic_cast<OpcodeCall*>(op);
   if (!call) {
     return;
   }
 
-  Variable* circ = call->env();
-  if (circ->defCount() > 1) {
-    Variable* temp = cfg_->copyVariable(b, call, circ);
-    circ->defInfo()->decreaseDefCount();
-    renameStack_[circ->index()].push_back(temp);
+  Variable* env = call->env();
+  if (env->defCount() > 1) {
+    Variable* temp = cfg_->copyVariable(b, call, env);
+    env->defInfo()->decreaseDefCount();
+    renameStack_[env->index()].push_back(temp);
     call->setEnv(temp);
 
     renameStack_.push_back(std::vector<Variable*>());
   }
   else {
-    renameStack_[circ->index()].push_back(circ);
+    renameStack_[env->index()].push_back(env);
   }
 }
 
@@ -298,7 +302,13 @@ SsaTranslator::renameRhsOfPhiFunctions(BlockHeader* parent, BlockHeader* b)
   // Rename variables in phi nodes
   OpcodePhi* phi;
   for (Opcode* op = b->next(); op && (phi = dynamic_cast<OpcodePhi*>(op)); op = op->next()) {
-    phi->setRhs(c, renameStack_[phi->rhs(c)->index()].back());
+    std::vector<Variable*>& stack = renameStack_[phi->rhs(c)->index()];
+    if (stack.empty()) {
+      phi->setRhs(c, cfg_->undefined());
+    }
+    else {
+      phi->setRhs(c, stack.back());
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 #include "rbjit/rubyobject.h"
+#include "rbjit/rubymethod.h"
 
 #include "ruby.h"
 
@@ -7,31 +8,20 @@ RBJIT_NAMESPACE_BEGIN
 namespace mri {
 
 ////////////////////////////////////////////////////////////
-// Predefined values
+// Object
 
-VALUE
-Object::trueObject()
+Class
+Object::class_() const
 {
-  return Qtrue;
+  return Class(rb_class_of(value_));
 }
 
-VALUE
-Object::falseObject()
-{
-  return Qfalse;
-}
+// Builtin objects
 
-VALUE
-Object::nilObject()
-{
-  return Qnil;
-}
-
-VALUE
-Object::undefObject()
-{
-  return Qundef;
-}
+VALUE Object::trueObject() { return Qtrue; }
+VALUE Object::falseObject() { return Qfalse; }
+VALUE Object::nilObject() { return Qnil; }
+VALUE Object::undefObject() { return Qundef; }
 
 ////////////////////////////////////////////////////////////
 // Symbol
@@ -72,6 +62,31 @@ Id::stringName() const
 {
   return std::string(name());
 }
+
+////////////////////////////////////////////////////////////
+// Class
+
+MethodEntry
+Class::findMethod(ID methodName)
+{
+  return mri::MethodEntry(value(), methodName);
+}
+
+MethodEntry
+Class::findMethod(const char* methodName)
+{
+  return findMethod(mri::Id(methodName));
+}
+
+// Builtin classes
+
+Class Class::objectClass() { return rb_cObject; }
+Class Class::classClass() { return rb_cClass; }
+Class Class::trueClass() { return rb_cTrueClass; }
+Class Class::falseClass() { return rb_cFalseClass; }
+Class Class::nilClass() { return rb_cNilClass; }
+Class Class::fixnumClass() { return rb_cFixnum; }
+Class Class::bignumClass() { return rb_cBignum; }
 
 } // namespace mri
 

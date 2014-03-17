@@ -227,6 +227,21 @@ public:
   bool visitEachOpcode(OpcodeVisitor* visitor);
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
+  // intrinsic iterator
+  template <class T>
+  void
+  ForEachOpcode(T func)
+  {
+    Opcode* op = this;
+    do {
+      func()(op);
+      if (!result || op == footer_) {
+        break;
+      }
+      op = op->next();
+    } while (op);
+  }
+
 private:
 
   Backedge backedge_;

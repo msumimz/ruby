@@ -284,7 +284,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\src\chunkallocator.cpp" />
     <ClCompile Include="..\..\src\controlflowgraph.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
@@ -299,6 +298,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\defusechain.cpp" />
     <ClCompile Include="..\..\src\dominatorfinder.cpp" />
     <ClCompile Include="..\..\src\domtree.cpp" />
     <ClCompile Include="..\..\src\ltdominatorfinder.cpp" />
@@ -336,6 +336,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\ssatranslator.cpp" />
+    <ClCompile Include="..\..\src\typeanalyzer.cpp" />
     <ClCompile Include="..\..\src\typeconstraint.cpp" />
     <ClCompile Include="..\..\src\variable.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
@@ -343,7 +344,8 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
-    <ClInclude Include="..\..\include\rbjit\chunkallocator.h" />
+    <ClInclude Include="..\..\include\rbjit\defusechain.h" />
+    <ClInclude Include="..\..\include\rbjit\typeanalyzer.h" />
     <ClInclude Include="..\..\primitives\resource.h" />
   </ItemGroup>
   <ItemGroup>

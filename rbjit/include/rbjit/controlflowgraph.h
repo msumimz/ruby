@@ -30,6 +30,7 @@ public:
   Variable* output() const {  return output_; }
   Variable* undefined() const { return undefined_; }
   Variable* env() const { return env_; }
+  void setEnv(Variable* env) { env_ = env; }
 
   DomTree* domTree();
 
@@ -53,6 +54,7 @@ public:
 
   std::string debugPrint() const;
   std::string debugPrintVariables() const;
+  std::string debugPrintTypeConstraints() const;
 
 private:
 

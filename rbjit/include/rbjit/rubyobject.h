@@ -9,10 +9,13 @@ RBJIT_NAMESPACE_BEGIN
 namespace mri {
 
 class Id;
+class Class;
+class MethodEntry;
 
 class Object {
 public:
 
+  Object() : value_(0) {}
   Object(VALUE value) : value_(value) {}
   Object(void* value) : value_((VALUE)value) {}
 
@@ -20,6 +23,13 @@ public:
 
   operator VALUE() const { return value_; }
 
+  Class class_() const;
+
+  bool isTrue() const { return value_ != falseObject() && value_ != nilObject(); }
+
+  bool isNull() const { return value_ == 0; }
+
+  // Builtin objects
   static VALUE trueObject();
   static VALUE falseObject();
   static VALUE nilObject();
@@ -42,12 +52,6 @@ public:
 
 };
 
-class Class : public Object {
-public:
-
-  Class(VALUE cls) : Object(cls) {}
-};
-
 class Id {
 public:
 
@@ -65,6 +69,26 @@ public:
 private:
 
   ID id_;
+};
+
+class Class : public Object {
+public:
+
+  Class() : Object() {}
+  Class(VALUE cls) : Object(cls) {}
+
+  MethodEntry findMethod(ID methodName);
+  MethodEntry findMethod(const char* methodName);
+
+  // Builtin classes
+  static Class objectClass();
+  static Class classClass() ;
+  static Class trueClass() ;
+  static Class falseClass() ;
+  static Class nilClass() ;
+  static Class fixnumClass();
+  static Class bignumClass();
+
 };
 
 } // namespace mri

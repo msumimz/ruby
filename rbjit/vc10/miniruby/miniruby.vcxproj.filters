@@ -319,7 +319,10 @@
     <ClCompile Include="..\..\src\typeconstraint.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\chunkallocator.cpp">
+    <ClCompile Include="..\..\src\typeanalyzer.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\defusechain.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -401,7 +404,10 @@
     <ClInclude Include="..\..\primitives\resource.h">
       <Filter>rbjit\Resrouce Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\rbjit\chunkallocator.h">
+    <ClInclude Include="..\..\include\rbjit\typeanalyzer.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\defusechain.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

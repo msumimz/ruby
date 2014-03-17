@@ -73,6 +73,7 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
 
   return lhs;
 }
@@ -147,6 +148,7 @@ OpcodeFactory::addImmediate(VALUE value, bool useResult)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
 
   return lhs;
 }
@@ -164,6 +166,7 @@ OpcodeFactory::addEnv(bool useResult)
 
   Variable* lhs = createNamedVariable(OpcodeEnv::envName());
   op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
 
   return lhs;
 }
@@ -177,6 +180,7 @@ OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
 
   return lhs;
 }
@@ -186,20 +190,20 @@ OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variabl
 {
   int n = argsEnd - argsBegin;
 
-  Variable* circ = cfg_->env();
-  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n, circ);
+  Variable* env = cfg_->env();
+  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n, env);
   ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);
   op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
+  env->defInfo()->addDefSite(lastBlock_);
 
   Variable** v = op->rhsBegin();
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
     *v++ = *arg;
   }
-
-  circ->defInfo()->addDefSite(lastBlock_);
 
   return lhs;
 }
@@ -219,6 +223,7 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
 
   Variable** v = op->rhsBegin();
   for (Variable*const* rhs = rhsBegin; rhs < rhsEnd; ++rhs) {
@@ -238,7 +243,8 @@ OpcodeFactory::addJumpToReturnBlock(Variable* returnValue)
     if (!cfg_->output_) {
       cfg_->output_ = createTemporary(true);
     }
-    op->setLhs(cfg_->output_); // add definfo?
+    op->setLhs(cfg_->output_);
+    cfg_->output_->defInfo()->addDefSite(lastBlock_);
   }
 
   addJump(cfg_->exit());
@@ -257,6 +263,7 @@ OpcodeFactory::createEntryExitBlocks()
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);
   OpcodeExit* op = new OpcodeExit(0, 0, exit);
+  ++cfg_->opcodeCount_;
   exit->setFooter(op);
   cfg_->exit_ = exit;
 }

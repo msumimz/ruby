@@ -5,7 +5,7 @@
 #include "rbjit/cfgbuilder.h"
 #include "rbjit/rubyobject.h"
 #include "rbjit/variable.h"
-#include "rbjit/methodpropertyset.h"
+#include "rbjit/methodinfo.h"
 
 extern "C" {
 #include "ruby.h"
@@ -15,11 +15,15 @@ extern "C" {
 RBJIT_NAMESPACE_BEGIN
 
 Variable*
-CfgBuilder::getNamedVariable(OpcodeFactory* factory, ID name)
+CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name)
 {
   std::unordered_map<ID, Variable*>::const_iterator i = namedVariables_.find(name);
   if (i != namedVariables_.end()) {
-    return i->second;
+    Variable* v = i->second;
+    if (v->defBlock() != factory->lastBlock()) {
+      v->setLocal(false);
+    }
+    return v;
   }
 
   Variable* v = factory->createNamedVariable(name);
@@ -29,13 +33,13 @@ CfgBuilder::getNamedVariable(OpcodeFactory* factory, ID name)
 }
 
 ControlFlowGraph*
-CfgBuilder::buildMethod(const RNode* rootNode, MethodPropertySet* propSet)
+CfgBuilder::buildMethod(const RNode* rootNode, MethodInfo* methodInfo)
 {
   cfg_ = new ControlFlowGraph;
 
-  propSet->setHasDef(MethodPropertySet::NO);
-  propSet->setHasEval(MethodPropertySet::NO);
-  propSet_ = propSet;
+  methodInfo->setHasDef(MethodInfo::NO);
+  methodInfo->setHasEval(MethodInfo::NO);
+  methodInfo_ = methodInfo;
 
   OpcodeFactory factory(cfg_);
   factory.createEntryExitBlocks();
@@ -127,11 +131,11 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
   assert(nd_type(node) == NODE_DASGN_CURR || nd_type(node) == NODE_LASGN);
 
   Variable* rhs = buildNode(factory, node->nd_value, true);
-  Variable* lhs = getNamedVariable(factory, node->nd_vid);
+  Variable* lhs = buildNamedVariable(factory, node->nd_vid);
 
   Variable* value = factory->addCopy(lhs, rhs, useResult);
 
-  // By copy propagation on SSA translation, the copy opcode will be possibly
+  // By copy propagation optimization during SSA translation, the copy opcode will be possibly
   // removed and the variable name will be lost. To avoid this, set the name to
   // the temporary.
   rhs->setName(lhs->name());
@@ -143,7 +147,7 @@ Variable*
 CfgBuilder::buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_LVAR);
-  return getNamedVariable(factory, node->nd_vid);
+  return buildNamedVariable(factory, node->nd_vid);
 }
 
 Variable*
@@ -326,8 +330,8 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
   Variable* value = factory->addCall(methodEntry, args, args + argCount, useResult);
 
   // Set properties
-  propSet_->setHasDef(MethodPropertySet::UNKNOWN);
-  propSet_->setHasDef(MethodPropertySet::UNKNOWN);
+  methodInfo_->setHasDef(MethodInfo::UNKNOWN);
+  methodInfo_->setHasDef(MethodInfo::UNKNOWN);
 
   return value;
 }

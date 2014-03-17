@@ -1,22 +1,43 @@
 #pragma once
 #include "rbjit/common.h"
-#include "rbjit/rubytypes.h"
-#include "rbjit/methodpropertyset.h"
+#include "rbjit/rubyobject.h"
 
 RBJIT_NAMESPACE_BEGIN
 
+class TypeConstraint;
 class ControlFlowGraph;
 
 class MethodInfo {
 public:
 
-  MethodInfo() {}
+  enum { UNKNOWN = 0, YES = 1, NO = 2 };
 
-  MethodPropertySet* methodPropertySet() { return &propSet_; }
+  MethodInfo()
+    : hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
+  {}
+
+  MethodInfo(int hasDef, int hasEval, TypeConstraint* returnType)
+    : hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
+  {}
+
+  int hasDef() const { return hasDef_; }
+  int hasEval() const { return hasEval_; }
+  TypeConstraint* returnType() const { return returnType_; }
+
+  void setHasDef(int state) { hasDef_ = state; }
+  void setHasEval(int state) { hasEval_ = state; }
+
+  bool isMutator() const { return hasDef_ != NO || hasEval_ != NO; }
+
+  static void addToNativeMethod(mri::Class cls, const char* methodName,
+    int hasDef, int hasEval, TypeConstraint* returnType);
 
 private:
 
-  MethodPropertySet propSet_;
+  int hasDef_ : 2;
+  int hasEval_ : 2;
+
+  TypeConstraint* returnType_;
 
 };
 
@@ -24,7 +45,7 @@ class PrecompiledMethodInfo : public MethodInfo {
 public:
 
   PrecompiledMethodInfo(RNode* node, const char* methodName)
-    : node_(node), methodName_(methodName), cfg_(0), methodBody_(0)
+    : MethodInfo(), node_(node), methodName_(methodName), cfg_(0), methodBody_(0)
   {}
 
   void* methodBody() { return methodBody_; }

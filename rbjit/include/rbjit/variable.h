@@ -29,6 +29,8 @@ public:
   ID name() const { return name_; }
   void setName(ID name) { name_ = name; }
   Variable* original() const { return original_; }
+  bool local() const { return local_; }
+  void setLocal(bool local) { local_ = local; }
   int index() const { return index_; }
   void setIndex(int i) { index_ = i; }
 
@@ -39,7 +41,9 @@ public:
   void clearDefInfo();
 
   // TypeConstraint
-  TypeConstraint* typeConstraint();
+  TypeConstraint* typeConstraint() const { return typeConstraint_; }
+  void setTypeConstraint(TypeConstraint* type) { typeConstraint_ = type; }
+  bool isSameValueAs(Variable* v);
 
   std::string debugPrint() const;
 
@@ -57,6 +61,9 @@ private:
 
   // original variable when this variable is created by renaming the existing one
   Variable* original_;
+
+  // True if every def and use is located in the same block
+  bool local_;
 
   int index_;
 

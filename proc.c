@@ -1207,6 +1207,8 @@ mnew_from_me(rb_method_entry_t *me, VALUE defined_class, VALUE klass,
 	def->type = VM_METHOD_TYPE_MISSING;
 	def->original_id = id;
 	def->alias_count = 0;
+        // Added by rbjit
+        def->jit_method_info = 0;
 
     }
     data->ume = ALLOC(struct unlinked_method_entry_list_entry);

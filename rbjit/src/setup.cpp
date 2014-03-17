@@ -4,6 +4,7 @@
 #include "rbjit/methodinfo.h"
 #include "rbjit/nativecompiler.h"
 #include "rbjit/rubymethod.h"
+#include "rbjit/TypeConstraint.h"
 
 extern "C" {
 #include "ruby.h"
@@ -13,6 +14,8 @@ extern "C" {
 extern "C" {
 void Init_rbjit();
 }
+
+using namespace rbjit;
 
 ////////////////////////////////////////////////////////////
 // Development tools
@@ -31,8 +34,8 @@ debugbreak(int argc, VALUE *argv, VALUE obj)
 static VALUE
 dumptree(VALUE self, VALUE cls, VALUE methodName)
 {
-  rbjit::mri::MethodEntry me(cls, rbjit::mri::Symbol(methodName).id());
-  rbjit::mri::MethodDefinition def = me.methodDefinition();
+  mri::MethodEntry me(cls, mri::Symbol(methodName).id());
+  mri::MethodDefinition def = me.methodDefinition();
 
   if (!def.hasAstNode()) {
     rb_raise(rb_eArgError, "method does not have the source code to be dumped");
@@ -44,21 +47,21 @@ dumptree(VALUE self, VALUE cls, VALUE methodName)
 static VALUE
 precompile(VALUE self, VALUE cls, VALUE methodName)
 {
-  rbjit::mri::MethodEntry me(rbjit::mri::Class(cls), rbjit::mri::Symbol(methodName).id());
-  rbjit::mri::MethodDefinition def = me.methodDefinition();
+  mri::MethodEntry me(mri::Class(cls), mri::Symbol(methodName).id());
+  mri::MethodDefinition def = me.methodDefinition();
 
   if (!def.hasAstNode()) {
     rb_raise(rb_eArgError, "method does not have the source code to be compiled");
   }
 
-  rbjit::PrecompiledMethodInfo* mi =
-    new rbjit::PrecompiledMethodInfo(def.astNode(), rbjit::mri::Symbol(methodName).name());
+  PrecompiledMethodInfo* mi =
+    new PrecompiledMethodInfo(def.astNode(), mri::Symbol(methodName).name());
   def.setMethodInfo(mi);
 
   mi->compile();
   void* func = mi->methodBody();
 
-  const char* oldName = rbjit::mri::Symbol(methodName).name();
+  const char* oldName = mri::Symbol(methodName).name();
   std::string newName(oldName);
   newName += "_orig";
   rb_define_alias(cls, newName.c_str(), oldName);
@@ -70,10 +73,16 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
 void
 Init_rbjit()
 {
-  rbjit::NativeCompiler::setup();
+  NativeCompiler::setup();
 
   rb_define_method(rb_cObject, "debugbreak", (VALUE (*)(...))debugbreak, 0);
   rb_define_method(rb_cObject, "dumptree", (VALUE (*)(...))dumptree, 2);
   rb_define_method(rb_cObject, "precompile", (VALUE (*)(...))precompile, 2);
+
+  MethodInfo::addToNativeMethod(mri::Class::fixnumClass(), "+",
+    MethodInfo::NO, // hasDef
+    MethodInfo::NO, // hasEval
+    new TypeSelection(new TypeExactClass(mri::Class::fixnumClass()),
+                      new TypeExactClass(mri::Class::bignumClass())));
 }
 
