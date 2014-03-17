@@ -28,6 +28,7 @@
 #include "rbjit/variable.h"
 #include "rbjit/debugprint.h"
 #include "rbjit/runtime_methodcall.h"
+#include "rbjit/typeconstraint.h"
 
 #include "ruby.h"
 
@@ -310,8 +311,22 @@ NativeCompiler::visitOpcode(OpcodeEnv* op)
 bool
 NativeCompiler::visitOpcode(OpcodeLookup* op)
 {
-  llvm::Value* value = builder_->CreateCall2(runtime_[RF_lookupMethod],
-    getValue(op->rhs()), getInt(op->methodName()), "");
+  llvm::Value* value = 0;
+
+  // Try compile-time lookup
+  TypeConstraint* type = op->lhs()->typeConstraint();
+  if (type && typeid(*type) == typeid(TypeMethodEntry)) {
+    mri::MethodEntry me = static_cast<TypeMethodEntry*>(type)->methodEntry();
+    if (!me.isNull()) {
+      value = getInt((int)me.methodEntry());
+    }
+  }
+
+  if (!value) {
+    value = builder_->CreateCall2(runtime_[RF_lookupMethod],
+      getValue(op->rhs()), getInt(op->methodName()), "");
+  }
+
   updateValue(op, value);
   return true;
 }
