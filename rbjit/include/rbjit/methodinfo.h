@@ -16,12 +16,12 @@ public:
     : hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
   {}
 
-  MethodInfo(int hasDef, int hasEval, TypeConstraint* returnType)
+  MethodInfo(unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
     : hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
   {}
 
-  int hasDef() const { return hasDef_; }
-  int hasEval() const { return hasEval_; }
+  unsigned hasDef() const { return hasDef_; }
+  unsigned hasEval() const { return hasEval_; }
   TypeConstraint* returnType() const { return returnType_; }
 
   void setHasDef(int state) { hasDef_ = state; }
@@ -30,12 +30,12 @@ public:
   bool isMutator() const { return hasDef_ != NO || hasEval_ != NO; }
 
   static void addToNativeMethod(mri::Class cls, const char* methodName,
-    int hasDef, int hasEval, TypeConstraint* returnType);
+    unsigned hasDef, unsigned hasEval, TypeConstraint* returnType);
 
 private:
 
-  int hasDef_ : 2;
-  int hasEval_ : 2;
+  unsigned hasDef_ : 2;
+  unsigned hasEval_ : 2;
 
   TypeConstraint* returnType_;
 

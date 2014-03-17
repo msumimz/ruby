@@ -15,7 +15,7 @@
 RBJIT_NAMESPACE_BEGIN
 
 void
-MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, int hasDef, int hasEval, TypeConstraint* returnType)
+MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
 {
   auto me = cls.findMethod(methodName);
   me.methodDefinition().setMethodInfo(new MethodInfo(hasDef, hasEval, returnType));
