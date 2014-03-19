@@ -311,6 +311,9 @@ TypeExactClass::debugPrint() const
 void
 TypeSelection::addOption(TypeConstraint* type)
 {
+  if (std::find(types_.cbegin(), types_.cend(), type) != types_.cend()) {
+    return;
+  }
   types_.push_back(type);
 }
 

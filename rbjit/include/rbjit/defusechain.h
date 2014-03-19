@@ -14,11 +14,11 @@ public:
 
   DefUseChain(ControlFlowGraph* cfg);
 
-  std::vector<Variable*>& uses(int index) { return uses_[index]; }
-  const std::vector<Variable*>& uses(int index) const { return uses_[index]; }
+  std::vector<std::pair<BlockHeader*, Variable*>>& uses(int index) { return uses_[index]; }
+  const std::vector<std::pair<BlockHeader*, Variable*>>& uses(int index) const { return uses_[index]; }
 
-  std::vector<Variable*>& uses(Variable* v);
-  const std::vector<Variable*>& uses(Variable* v) const;
+  std::vector<std::pair<BlockHeader*, Variable*>>& uses(Variable* v);
+  const std::vector<std::pair<BlockHeader*, Variable*>>& uses(Variable* v) const;
 
   bool isCondition(int index) const { return conditions_[index]; }
   bool isCondition(Variable* v) const;
@@ -44,8 +44,9 @@ private:
   void build();
 
   ControlFlowGraph* cfg_;
-  std::vector<std::vector<Variable*> > uses_;
+  std::vector<std::vector<std::pair<BlockHeader*, Variable*>>> uses_;
   std::vector<bool> conditions_;
+  BlockHeader* block_;
 };
 
 RBJIT_NAMESPACE_END

@@ -93,9 +93,10 @@ TypeAnalyzer::analyze()
 void
 TypeAnalyzer::evaluateExpressionsUsing(Variable* v)
 {
-  const std::vector<Variable*>& uses = defUseChain_.uses(v);
-  std::for_each(uses.cbegin(), uses.cend(), [this](Variable* u) {
-    u->defOpcode()->accept(this);
+  const std::vector<std::pair<BlockHeader*, Variable*>>& uses = defUseChain_.uses(v);
+  std::for_each(uses.cbegin(), uses.cend(), [this](const std::pair<BlockHeader*, Variable*>& u) {
+    block_ = u.first;
+    u.second->defOpcode()->accept(this);
   });
 }
 
@@ -226,14 +227,26 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodePhi* op)
 {
-  // TODO: Consider reachTrueEdges and reachFalseEdges
   auto types = TypeSelection();
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
-  for (; i < end; ++i) {
-    types.addOption((*i)->typeConstraint());
+  BlockHeader::Backedge* e = block_->backedge();
+  for (; i < end; ++i, e = e->next()) {
+    assert(e->block());
+    if ((*i)->typeConstraint()) {
+      auto r = reachEdges_.find(std::make_pair(e->block(), block_));
+      if (r != reachEdges_.end() && r->second == REACHABLE) {
+        types.addOption((*i)->typeConstraint());
+      }
+    }
   }
-  updateTypeConstraint(op->lhs(), types);
+
+  if (types.types().size() == 1) {
+    updateTypeConstraint(op->lhs(), *types.types()[0]);
+  }
+  else {
+    updateTypeConstraint(op->lhs(), types);
+  }
 
   return true;
 }

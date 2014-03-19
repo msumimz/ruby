@@ -22,6 +22,15 @@ def m3
   b
 end
 
-precompile Object, :m2
+def m4
+  if true
+    a = 1
+  else
+    a = nil
+  end
+  a              # a should be a Fixnum
+end
 
-m2
+precompile Object, :m4
+
+m4

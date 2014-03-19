@@ -8,18 +8,19 @@ RBJIT_NAMESPACE_BEGIN
 DefUseChain::DefUseChain(ControlFlowGraph* cfg)
   : cfg_(cfg),
     uses_(cfg_->variables()->size()),
-    conditions_(cfg_->variables()->size(), false)
+    conditions_(cfg_->variables()->size(), false),
+    block_(0)
 {
   build();
 }
 
-std::vector<Variable*>&
+std::vector<std::pair<BlockHeader*, Variable*>>&
 DefUseChain::uses(Variable* v)
 {
   return uses_[v->index()];
 }
 
-const std::vector<Variable*>&
+const std::vector<std::pair<BlockHeader*, Variable*>>&
 DefUseChain::uses(Variable* v) const
 {
   return uses_[v->index()];
@@ -52,7 +53,7 @@ DefUseChain::visitOpcodeVa(OpcodeVa* op)
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
   for (; i < end; ++i) {
-    uses_[(*i)->index()].push_back(lhs);
+    uses_[(*i)->index()].push_back(std::make_pair(block_, lhs));
   }
   return true;
 }
@@ -60,13 +61,14 @@ DefUseChain::visitOpcodeVa(OpcodeVa* op)
 bool
 DefUseChain::visitOpcode(BlockHeader* op)
 {
+  block_ = op;
   return true;
 }
 
 bool
 DefUseChain::visitOpcode(OpcodeCopy* op)
 {
-  uses_[op->rhs()->index()].push_back(op->lhs());
+  uses_[op->rhs()->index()].push_back(std::make_pair(block_, op->lhs()));
   return true;
 }
 
@@ -98,8 +100,8 @@ DefUseChain::visitOpcode(OpcodeEnv* op)
 bool
 DefUseChain::visitOpcode(OpcodeLookup* op)
 {
-  uses_[op->receiver()->index()].push_back(op->lhs());
-  uses_[op->env()->index()].push_back(op->lhs());
+  uses_[op->receiver()->index()].push_back(std::make_pair(block_, op->lhs()));
+  uses_[op->env()->index()].push_back(std::make_pair(block_, op->lhs()));
   return true;
 }
 
@@ -137,9 +139,9 @@ DefUseChain::debugPrint() const
   for (size_t i = 0; i < size; ++i) {
     sprintf(buf, "%Ix:", (*cfg_->variables())[i]);
     out += buf;
-    const std::vector<Variable*>& uses = uses_[i];
-    std::for_each(uses.cbegin(), uses.cend(), [&](Variable* v) {
-      sprintf(buf, " %Ix", v);
+    const std::vector<std::pair<BlockHeader*, Variable*>>& uses = uses_[i];
+    std::for_each(uses.cbegin(), uses.cend(), [&](const std::pair<BlockHeader*, Variable*>& v) {
+      sprintf(buf, " %Ix:%Ix", v.first, v.second);
       out += buf;
     });
     out += '\n';
