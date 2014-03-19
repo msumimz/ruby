@@ -14,8 +14,6 @@ RBJIT_NAMESPACE_BEGIN
 TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg)
   : cfg_(cfg),
     reachBlocks_(cfg->blocks()->size(), UNKNOWN),
-    reachTrueEdges_(cfg->blocks()->size(), UNKNOWN),
-    reachFalseEdges_(cfg->blocks()->size(), UNKNOWN),
     defUseChain_(cfg)
 {}
 
@@ -30,6 +28,30 @@ TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
   delete v->typeConstraint();
   v->setTypeConstraint(type);
   variables_.push_back(v);
+}
+
+void
+TypeAnalyzer::makeEdgeReachable(BlockHeader* from, BlockHeader* to)
+{
+  auto c = reachEdges_.find(std::make_pair(from, to));
+  if (c == reachEdges_.end()) {
+    reachEdges_[std::make_pair(from, to)] = REACHABLE;
+  }
+  else {
+    if (c->second == REACHABLE) {
+      // It is unnecessary to visit _to_ block.
+      return;
+    }
+    c->second = REACHABLE;
+  }
+
+  blocks_.push_back(to);
+}
+
+void
+TypeAnalyzer::makeEdgeUnreachable(BlockHeader* from, BlockHeader* to)
+{
+  reachEdges_[std::make_pair(from, to)] = UNREACHABLE;
 }
 
 void
@@ -81,6 +103,7 @@ bool
 TypeAnalyzer::visitOpcode(BlockHeader* op)
 {
   reachBlocks_[op->index()] = REACHABLE;
+  block_ = op;
   return true;
 }
 
@@ -96,7 +119,7 @@ TypeAnalyzer::visitOpcode(OpcodeJump* op)
 {
   auto* b = op->nextBlock();
   blocks_.push_back(b);;
-  reachTrueEdges_[b->index()] = REACHABLE;
+  reachEdges_[std::make_pair(block_, b)] = REACHABLE;
   return true;
 }
 
@@ -108,22 +131,18 @@ TypeAnalyzer::visitOpcode(OpcodeJumpIf* op)
 
   switch (condType->evaluatesToBoolean()) {
   case TypeConstraint::ALWAYS_TRUE:
-    blocks_.push_back(op->ifTrue());
-    reachTrueEdges_[op->ifTrue()->index()] = REACHABLE;
-    reachFalseEdges_[op->ifFalse()->index()] = UNREACHABLE;
+    makeEdgeReachable(block_, op->ifTrue());
+    makeEdgeUnreachable(block_, op->ifFalse());
     break;
 
   case TypeConstraint::ALWAYS_FALSE:
-    blocks_.push_back(op->ifFalse());
-    reachTrueEdges_[op->ifTrue()->index()] = UNREACHABLE;
-    reachFalseEdges_[op->ifFalse()->index()] = REACHABLE;
+    makeEdgeUnreachable(block_, op->ifTrue());
+    makeEdgeReachable(block_, op->ifFalse());
     break;
 
   case TypeConstraint::TRUE_OR_FALSE:
-    blocks_.push_back(op->ifTrue());
-    blocks_.push_back(op->ifFalse());
-    reachTrueEdges_[op->ifTrue()->index()] = REACHABLE;
-    reachFalseEdges_[op->ifFalse()->index()] = REACHABLE;
+    makeEdgeReachable(block_, op->ifTrue());
+    makeEdgeReachable(block_, op->ifFalse());
     break;
 
   default:
