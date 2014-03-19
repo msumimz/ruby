@@ -18,8 +18,9 @@ namespace std {
   class hash<std::pair<rbjit::BlockHeader*, rbjit::BlockHeader*>> {
   public:
     size_t
-      operator()(const std::pair<rbjit::BlockHeader*, rbjit::BlockHeader*>& value) const {
-        return ((size_t)value.first ^ (size_t)value.second) >> 2;
+    operator()(const std::pair<rbjit::BlockHeader*, rbjit::BlockHeader*>& value) const
+    {
+      return (reinterpret_cast<size_t>(value.first) ^ reinterpret_cast<size_t>(value.second)) >> 2;
     }
   };
 }
