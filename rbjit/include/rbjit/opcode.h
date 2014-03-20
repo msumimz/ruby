@@ -44,7 +44,7 @@ class Opcode {
 public:
 
   Opcode(int file, int line, Opcode* prev)
-    : file_(file), line_(line), next_(0)
+    : file_(file), line_(line), next_(0), prev_(prev)
   {
     if (prev) {
       next_ = prev->next_;
@@ -55,6 +55,7 @@ public:
   virtual ~Opcode() {}
 
   Opcode* next() const { return next_; }
+  Opcode* prev() const { return prev_; }
   void removeNextOpcode() { next_ = next_->next_; }
 
   // Obtain variables
@@ -79,6 +80,7 @@ protected:
   int file_ : 8;
   int line_ : 16;
   Opcode* next_;
+  Opcode* prev_;
 };
 
 ////////////////////////////////////////////////////////////

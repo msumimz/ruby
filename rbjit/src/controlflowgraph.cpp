@@ -130,8 +130,8 @@ Dumper::putCommonOutput(Opcode* op)
     opname = typeid(*op).name() + skip;
   }
 
-  sprintf(buf_, "  " PTRF " " PTRF " %d:%d ",
-    op, op->next(), op->file(), op->line());
+  sprintf(buf_, "  " PTRF " " PTRF " " PTRF " %d:%d ",
+    op, op->prev(), op->next(), op->file(), op->line());
   out_ += buf_;
   if (op->lhs()) {
     sprintf(buf_, PTRF " %-7s", op->lhs(), opname);
