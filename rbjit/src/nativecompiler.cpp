@@ -234,8 +234,8 @@ NativeCompiler::translateToBitcode()
   // module-wide optimization (module pass) to each method complication. The
   // module-wide optimization is required for inlining, and inlining is
   // important to execute primitives efficiently. One of possible alternatives
-  // is to build primitives' IRs on each compile-time instead of loading the
-  // precompiled bitcode.
+  // is to build the primitives' IRs on each compile-time instead of loading
+  // the precompiled bitcode beforehand.
   mpm_->run(*module_);
   fpm_->run(*func_);
 }
