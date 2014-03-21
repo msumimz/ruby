@@ -3,8 +3,9 @@
 
 #include "rbjit/methodinfo.h"
 #include "rbjit/nativecompiler.h"
+#include "rbjit/primitivestore.h"
 #include "rbjit/rubymethod.h"
-#include "rbjit/TypeConstraint.h"
+#include "rbjit/typeconstraint.h"
 
 extern "C" {
 #include "ruby.h"
@@ -73,6 +74,7 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
 void
 Init_rbjit()
 {
+  PrimitiveStore::setup();
   NativeCompiler::setup();
 
   rb_define_method(rb_cObject, "debugbreak", (VALUE (*)(...))debugbreak, 0);

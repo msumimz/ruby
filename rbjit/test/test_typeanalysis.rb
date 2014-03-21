@@ -31,6 +31,6 @@ def m4
   a              # a should be a Fixnum
 end
 
-precompile Object, :m4
+precompile Object, :m2
 
-m4
+m2

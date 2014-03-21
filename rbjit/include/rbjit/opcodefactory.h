@@ -4,6 +4,7 @@
 #include <string>
 #include "rbjit/common.h"
 #include "rbjit/rubytypes.h"
+#include "rbjit/primitive.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -47,6 +48,7 @@ public:
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   void duplicateCall(OpcodeCall* source, Variable* methodEntry);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
+  Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
 
   void addJumpToReturnBlock(Variable* returnValue);
 

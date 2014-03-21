@@ -226,8 +226,8 @@ bool
 Dumper::visitOpcode(OpcodePrimitive* op)
 {
   putCommonOutput(op);
-  put("%d (%d)",
-    op->type(), op->rhsCount());
+  put("%s (%d)",
+    mri::Id(op->name()).name(), op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }

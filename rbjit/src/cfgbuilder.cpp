@@ -6,6 +6,7 @@
 #include "rbjit/rubyobject.h"
 #include "rbjit/variable.h"
 #include "rbjit/methodinfo.h"
+#include "rbjit/primitivestore.h"
 
 extern "C" {
 #include "ruby.h"
@@ -116,6 +117,10 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
 
   case NODE_CALL:
     v = buildCall(factory, node, useResult);
+    break;
+
+  case NODE_FCALL:
+    v = buildFuncall(factory, node, useResult);
     break;
 
   default:
@@ -332,6 +337,31 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
   // Set properties
   methodInfo_->setHasDef(MethodInfo::UNKNOWN);
   methodInfo_->setHasDef(MethodInfo::UNKNOWN);
+
+  return value;
+}
+
+Variable*
+CfgBuilder::buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  Variable* value;
+  if (PrimitiveStore::instance()->isPrimitive(node->nd_mid)) {
+    // Primitive
+
+    // Arguments
+    int argCount = node->nd_args->nd_alen;
+    Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
+    Variable** a = args;
+    for (RNode* n = node->nd_args; n; n = n->nd_next) {
+      *a++ = buildNode(factory, n->nd_head, true);
+    }
+
+    // Call a primitive
+    value = factory->addPrimitive(node->nd_mid, args, args + argCount, useResult);
+  }
+  else {
+    assert(!"funcall is not implemented");
+  }
 
   return value;
 }

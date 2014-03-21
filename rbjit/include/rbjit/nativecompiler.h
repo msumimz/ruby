@@ -65,6 +65,8 @@ private:
 
   void declareRuntimeFunctions();
 
+  llvm::Module* loadBitcode();
+
   // Shared with every compilation session
 
   llvm::LLVMContext* ctx_;
@@ -106,9 +108,6 @@ private:
     RUNTIME_FUNCTION_COUNT
   };
   llvm::Value* runtime_[RUNTIME_FUNCTION_COUNT];
-
-  // Bitcode loader
-  llvm::Module* loadBitcode(void* p, size_t size);
 
   // Singleton
   static bool initialized_;

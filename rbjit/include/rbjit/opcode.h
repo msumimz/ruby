@@ -389,17 +389,17 @@ private:
 class OpcodePrimitive : public OpcodeVa {
 public:
 
-  OpcodePrimitive(int file, int line, Opcode* prev, Variable* lhs, int type, int rhsSize)
+  OpcodePrimitive(int file, int line, Opcode* prev, Variable* lhs, ID name, int rhsSize)
     : OpcodeVa(file, line, prev, lhs, rhsSize),
-      type_(type) {}
+      name_(name) {}
 
-  int type() const { return type_; }
+  ID name() const { return name_; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
-  int type_;
+  ID name_;
 };
 
 class OpcodePhi : public OpcodeVa {

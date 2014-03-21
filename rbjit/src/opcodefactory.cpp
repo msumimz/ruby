@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstdarg>
 #include "rbjit/opcodefactory.h"
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
@@ -228,6 +229,26 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
   Variable** v = op->rhsBegin();
   for (Variable*const* rhs = rhsBegin; rhs < rhsEnd; ++rhs) {
     *v++ = *rhs;
+  }
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
+{
+  int n = argsEnd - argsBegin;
+  OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, name, n);
+  ++cfg_->opcodeCount_;
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
+
+  Variable** v = op->rhsBegin();
+  for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
+    *v++ = *arg;
   }
 
   return lhs;

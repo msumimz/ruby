@@ -29,6 +29,7 @@
 #include "rbjit/debugprint.h"
 #include "rbjit/runtime_methodcall.h"
 #include "rbjit/typeconstraint.h"
+#include "rbjit/primitivestore.h"
 
 #include "ruby.h"
 
@@ -46,13 +47,14 @@ NativeCompiler::setup()
   if (!initialized_) {
     initialized_ = true;
     llvm::InitializeNativeTarget();
+
     nativeCompiler_ = new NativeCompiler();
   }
 }
 
 NativeCompiler::NativeCompiler()
   : ctx_(new llvm::LLVMContext()),
-    module_(new llvm::Module("precompiled method", *ctx_)),
+    module_(loadBitcode()),
     builder_(static_cast<IRBuilder*>(new llvm::IRBuilder<false>(*ctx_))),
     fpm_(new llvm::FunctionPassManager(module_)),
     valueType_(getValueType())
@@ -360,6 +362,18 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 bool
 NativeCompiler::visitOpcode(OpcodePrimitive* op)
 {
+  int argCount = op->rhsCount();
+  std::vector<llvm::Value*> args(argCount);
+  for (int i = 0; i < op->rhsCount(); ++i) {
+    args[i] = getValue(op->rhs(i));
+  }
+
+  llvm::Function* f = module_->getFunction(mri::Id(op->name()).name());
+  assert(f);
+  llvm::CallInst* value = builder_->CreateCall(f, args);
+  value->setCallingConv(llvm::CallingConv::C);
+  updateValue(op, value);
+
   return true;
 }
 
@@ -387,12 +401,16 @@ NativeCompiler::visitOpcode(OpcodeExit* op)
 }
 
 llvm::Module*
-NativeCompiler::loadBitcode(void* p, size_t size)
+NativeCompiler::loadBitcode()
 {
-  std::string errorMessage;
-  llvm::MemoryBuffer* mem =
-    llvm::MemoryBuffer::getMemBuffer(llvm::StringRef((const char*)p, size), "", false);
+  void* p;
+  size_t size;
+  PrimitiveStore::instance()->load(&p, &size);
 
+  llvm::MemoryBuffer* mem =
+    llvm::MemoryBuffer::getMemBuffer(llvm::StringRef((const char*)p, size), "precompiled methods", false);
+
+  std::string errorMessage;
   llvm::Module* mod = llvm::ParseBitcodeFile(mem, *ctx_, &errorMessage);
 
   if (!mod) {
@@ -400,9 +418,9 @@ NativeCompiler::loadBitcode(void* p, size_t size)
     abort();
   }
 
-  ee_->addModule(mod);
-
   delete mem;
+
+  PrimitiveStore::instance()->buildLookupMap(mod);
 
   return mod;
 }

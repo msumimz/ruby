@@ -1,6 +1,5 @@
 *.obj
 *.pdb
-*.rc
 *.res
 *.lib
 *.dll
@@ -11,6 +10,7 @@
 *.opensdf
 *.suo
 *.vcxproj.user
+*.bc
 Debug/
 Release/
 ipch/
