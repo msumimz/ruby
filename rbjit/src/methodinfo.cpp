@@ -41,8 +41,6 @@ PrecompiledMethodInfo::compile()
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
 
-  cfg_->clearDefInfo();
-
   TypeAnalyzer ta(cfg_);
   ta.analyze();
 

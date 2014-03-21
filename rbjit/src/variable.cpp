@@ -9,7 +9,7 @@ RBJIT_NAMESPACE_BEGIN
 Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo)
   : defBlock_(defBlock), defOpcode_(defOpcode), name_(name),
     original_(original == 0 ? this : original), local_(true),
-    index_(index), defInfo_(defInfo)
+    index_(index), defInfo_(defInfo), typeConstraint_(0)
 {}
 
 Variable*

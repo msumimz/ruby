@@ -252,6 +252,22 @@ OpcodeFactory::addJumpToReturnBlock(Variable* returnValue)
   halted_ = true;
 }
 
+Variable*
+OpcodeFactory::addCallClone(OpcodeCall* source, Variable* methodEntry)
+{
+  OpcodeCall* op = source->clone(lastOpcode_, methodEntry);
+  ++cfg_->opcodeCount_;
+  lastOpcode_ = op;
+
+  Variable* lhs = 0;
+  if (source->lhs()) {
+    lhs = Variable::copy(lastBlock_, op, cfg_->variables()->size(), source->lhs());
+    cfg_->variables()->push_back(lhs);
+  }
+
+  return lhs;
+}
+
 void
 OpcodeFactory::createEntryExitBlocks()
 {

@@ -67,10 +67,9 @@ private:
 
   int index_;
 
-  union {
-    DefInfo* defInfo_;
-    TypeConstraint* typeConstraint_;
-  };
+  DefInfo* defInfo_;
+  TypeConstraint* typeConstraint_;
+
 };
 
 RBJIT_NAMESPACE_END

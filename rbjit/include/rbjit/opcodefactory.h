@@ -9,6 +9,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
 class Opcode;
+class OpcodeCall;
 class BlockHeader;
 class Variable;
 
@@ -16,8 +17,10 @@ class OpcodeFactory {
 public:
 
   OpcodeFactory(ControlFlowGraph* cfg);
+  OpcodeFactory(ControlFlowGraph* cfg, BlockHeader* block, Opcode* opcode);
 
-  // Inherits the internal state of factory and initiates a basic block
+  // Inherits the internal state of the factory and initiates a basic block
+  // (_idom_ is meaningless)
   OpcodeFactory(OpcodeFactory& factory, BlockHeader* idom);
 
   BlockHeader* lastBlock() const { return lastBlock_; }
@@ -42,9 +45,12 @@ public:
   Variable* addLookup(Variable* receiver, ID methodName);
   // args includes a receiver as first argument
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
+  void duplicateCall(OpcodeCall* source, Variable* methodEntry);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
 
   void addJumpToReturnBlock(Variable* returnValue);
+
+  Variable* addCallClone(OpcodeCall* source, Variable* methodEntry);
 
   void halt() { halted_ = true; }
   bool continues() const { return !halted_; }

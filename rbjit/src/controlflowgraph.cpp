@@ -64,19 +64,19 @@ ControlFlowGraph::removeVariables(const std::vector<Variable*>* toBeRemoved)
 }
 
 void
-ControlFlowGraph::removeOpcodeAfter(Opcode* prev)
-{
-  Opcode* op = prev->next();
-  prev->removeNextOpcode();
-  delete op;
-}
-
-void
 ControlFlowGraph::clearDefInfo()
 {
   std::for_each(variables_.begin(), variables_.end(), [](Variable* v) {
     v->clearDefInfo();
   });
+}
+
+void
+ControlFlowGraph::removeOpcodeAfter(Opcode* prev)
+{
+  Opcode* op = prev->next();
+  prev->removeNextOpcode();
+  delete op;
 }
 
 ////////////////////////////////////////////////////////////

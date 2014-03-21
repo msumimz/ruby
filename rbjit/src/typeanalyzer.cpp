@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <memory> // unique_ptr
 #include "rbjit/typeanalyzer.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/opcode.h"
@@ -20,7 +21,7 @@ TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg)
 void
 TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
 {
-  if (*v->typeConstraint() == newType) {
+  if (!v || *v->typeConstraint() == newType) {
     return;
   }
 
@@ -170,14 +171,36 @@ TypeAnalyzer::visitOpcode(OpcodeEnv* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 {
-  TypeMethodEntry* type;
-  mri::Class cls = op->receiver()->typeConstraint()->evaluateClass();
-
-  mri::MethodEntry me;
-  if (!cls.isNull() && op->env()->isSameValueAs(cfg_->env())) {
-    me = cls.findMethod(op->methodName());
+  if (!op->env()->isSameValueAs(cfg_->env())) {
+    updateTypeConstraint(op->lhs(), TypeMethodEntry(0, 0));
+    return true;
   }
-  updateTypeConstraint(op->lhs(), TypeMethodEntry(me));
+
+  TypeMethodEntry* type;
+  std::unique_ptr<TypeList> list(op->receiver()->typeConstraint()->resolve());
+
+  if (list->lattice() != TypeList::DETERMINED) {
+    updateTypeConstraint(op->lhs(), TypeAny());
+  }
+  else {
+    TypeSelection types;
+    auto i = list->typeList().cbegin();
+    auto end = list->typeList().cend();
+    for (; i != end; ++i) {
+      mri::MethodEntry me = (*i).findMethod(op->methodName());
+      types.addOption(new TypeMethodEntry(*i, me));
+    }
+
+    if (types.types().empty()) {
+      updateTypeConstraint(op->lhs(), TypeNone());
+    }
+    else if (types.types().size() == 1) {
+      updateTypeConstraint(op->lhs(), *types.types()[0]);
+    }
+    else {
+      updateTypeConstraint(op->lhs(), types);
+    }
+  }
 
   return true;
 }
@@ -185,11 +208,22 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeCall* op)
 {
-  mri::MethodEntry me =
-    static_cast<TypeMethodEntry*>(op->methodEntry()->typeConstraint())->methodEntry();
-
   bool mutator = true;
   TypeConstraint* type = 0;
+
+  TypeConstraint* m = op->methodEntry()->typeConstraint();
+
+  mri::MethodEntry me;
+  if (typeid(*m) == typeid(TypeMethodEntry)) {
+    me = static_cast<TypeMethodEntry*>(m)->methodEntry();
+  }
+  else if (typeid(*m) == typeid(TypeSelection)) {
+    auto sel = static_cast<TypeSelection*>(m);
+    if (sel->types().size() == 1) {
+      me = static_cast<TypeMethodEntry*>(sel->types()[0])->methodEntry();
+    }
+  }
+
   if (!me.isNull()) {
     MethodInfo* mi = me.methodDefinition().methodInfo();
     if (mi) {

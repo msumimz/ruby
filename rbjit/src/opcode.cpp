@@ -6,6 +6,19 @@
 RBJIT_NAMESPACE_BEGIN
 
 ////////////////////////////////////////////////////////////
+// Call
+
+OpcodeCall*
+OpcodeCall::clone(Opcode* prev, Variable* methodEntry) const
+{
+  OpcodeCall* op = new OpcodeCall(file(), line(), prev, lhs(), methodEntry, rhsCount(), env_);
+  for (int i = 0; i <= rhsCount(); ++i) {
+    op->setRhs(i, rhs(i));
+  }
+  return op;
+}
+
+////////////////////////////////////////////////////////////
 // BlockHeader
 
 BlockHeader::~BlockHeader()

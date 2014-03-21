@@ -54,6 +54,8 @@ public:
 
   virtual ~Opcode() {}
 
+  virtual Opcode* clone(Opcode* prev) const { assert(!"clone() is not implemented"); return 0; }
+
   Opcode* next() const { return next_; }
   Opcode* prev() const { return prev_; }
   void removeNextOpcode() { next_ = next_->next_; }
@@ -365,6 +367,8 @@ public:
   OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* methodEntry, int rhsSize, Variable* env)
     : OpcodeVa(file, line, prev, lhs, rhsSize),
       methodEntry_(methodEntry), env_(env) {}
+
+  OpcodeCall* clone(Opcode* prev, Variable* methodEntry) const;
 
   Variable* methodEntry() const { return methodEntry_; }
   Variable* receiver() const { return rhs(0); }

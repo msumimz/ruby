@@ -6,6 +6,7 @@
 RBJIT_NAMESPACE_BEGIN
 
 class Opcode;
+class OpcodeCall;
 class BlockHeader;
 class Variable;
 class BlockVisitor;
@@ -51,6 +52,7 @@ public:
 
   void removeOpcodeAfter(Opcode* prev);
   void inlineAnotherCFG(Opcode* where, ControlFlowGraph* cfg);
+  Variable* duplicateCall(OpcodeCall* source, Variable* methodEntry);
 
   std::string debugPrint() const;
   std::string debugPrintVariables() const;

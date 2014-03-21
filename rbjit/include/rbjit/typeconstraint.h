@@ -205,11 +205,12 @@ public:
 class TypeMethodEntry : public TypeConstraint {
 public:
 
-  TypeMethodEntry(mri::MethodEntry me) : me_(me) {}
-  TypeMethodEntry* clone() const { return new TypeMethodEntry(me_); }
+  TypeMethodEntry(mri::Class cls, mri::MethodEntry me) : cls_(cls), me_(me) {}
+  TypeMethodEntry* clone() const { return new TypeMethodEntry(cls_, me_); }
 
   bool operator==(const TypeConstraint& other) const;
 
+  mri::Class class_() const { return cls_; }
   mri::MethodEntry methodEntry() const { return me_; }
 
   bool isSameValueAs(Variable* v);
@@ -223,6 +224,7 @@ public:
 
 private:
 
+  mri::Class cls_;
   mri::MethodEntry me_;
 
 };

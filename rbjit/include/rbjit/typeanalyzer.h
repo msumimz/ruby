@@ -46,7 +46,7 @@ public:
   bool visitOpcode(OpcodePhi* opcode);
   bool visitOpcode(OpcodeExit* opcode);
 
-private:
+protected:
 
   void updateTypeConstraint(Variable* v, const TypeConstraint& newType);
   void makeEdgeReachable(BlockHeader* from, BlockHeader* to);
