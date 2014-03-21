@@ -48,6 +48,7 @@ public:
   void duplicateCall(OpcodeCall* source, Variable* methodEntry);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
   Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
+  Variable* addPrimitive(const char* name, int argCount, ...);
 
   void addJumpToReturnBlock(Variable* returnValue);
 

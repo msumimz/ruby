@@ -237,6 +237,11 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
 Variable*
 OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
 {
+  if (!useResult) {
+    // Currently primitives have no side effects.
+    return 0;
+  }
+
   int n = argsEnd - argsBegin;
   OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, name, n);
   ++cfg_->opcodeCount_;
@@ -250,6 +255,27 @@ OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* 
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
     *v++ = *arg;
   }
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addPrimitive(const char* name, int argCount, ...)
+{
+  OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, mri::Id(name).id(), argCount);
+  ++cfg_->opcodeCount_;
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  lhs->defInfo()->addDefSite(lastBlock_);
+
+  va_list args;
+  va_start(args, name);
+  for (auto v = op->rhsBegin(), end = op->rhsEnd(); v != end; ++v) {
+    *v = va_arg(args, Variable*);
+  }
+  va_end(args);
 
   return lhs;
 }
