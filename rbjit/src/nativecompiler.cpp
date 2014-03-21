@@ -204,14 +204,15 @@ NativeCompiler::translateToBitcode()
   translateBlocks();
 
   // Fill arguments in phi nodes
-  std::for_each(phis_.cbegin(), phis_.cend(), [this](Phi phi) {
+  for (auto i = phis_.cbegin(), end = phis_.cend(); i != end; ++i) {
+    const Phi& phi = *i;
     BlockHeader::Backedge* e = phi.opcode_->block()->backedge();
     for (Variable*const* i = phi.opcode_->rhsBegin(); i < phi.opcode_->rhsEnd(); ++i) {
       assert(e && e->block());
       phi.bitcode_->addIncoming(getValue(*i), llvmBlocks_[e->block()->index()]);
       e = e->next();
     }
-  });
+  };
 
 #ifdef RBJIT_DEBUG
   std::string bitcode;

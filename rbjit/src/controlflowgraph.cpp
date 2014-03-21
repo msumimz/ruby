@@ -48,10 +48,10 @@ void
 ControlFlowGraph::removeVariables(const std::vector<Variable*>* toBeRemoved)
 {
   // Zero-clear elements that should be removed
-  std::for_each(toBeRemoved->cbegin(), toBeRemoved->cend(), [this](Variable* v) {
-    variables_[v->index()] = nullptr;
-    delete v;
-  });
+  for (auto i = toBeRemoved->cbegin(), end = toBeRemoved->cend(); i != end; ++i) {
+    variables_[(*i)->index()] = nullptr;
+    delete (*i);
+  };
 
   // Remove zero-cleared elements
   variables_.erase(std::remove_if(variables_.begin(), variables_.end(),
@@ -66,9 +66,9 @@ ControlFlowGraph::removeVariables(const std::vector<Variable*>* toBeRemoved)
 void
 ControlFlowGraph::clearDefInfo()
 {
-  std::for_each(variables_.begin(), variables_.end(), [](Variable* v) {
-    v->clearDefInfo();
-  });
+  for (auto i = variables_.begin(), end = variables_.end(); i != end; ++i) {
+    (*i)->clearDefInfo();
+  };
 }
 
 void
@@ -290,9 +290,9 @@ std::string
 ControlFlowGraph::debugPrintVariables() const
 {
   std::string out = "[Variables]\n";
-  std::for_each(variables_.cbegin(), variables_.cend(), [&](const Variable* v) {
-    out += v->debugPrint();
-  });
+  for (auto i = variables_.cbegin(), end = variables_.cend(); i != end; ++i) {
+    out += (*i)->debugPrint();
+  };
 
   return out;
 }
@@ -302,7 +302,8 @@ ControlFlowGraph::debugPrintTypeConstraints() const
 {
   char buf[256];
   std::string out = "[Type Constraints]\n";
-  std::for_each(variables_.cbegin(), variables_.cend(), [&](const Variable* v) {
+  for (auto i = variables_.cbegin(), end = variables_.cend(); i != end; ++i) {
+    Variable* v = *i;
     sprintf(buf, "%Ix: ", v);
     out += buf;
     if (v->typeConstraint()) {
@@ -312,7 +313,7 @@ ControlFlowGraph::debugPrintTypeConstraints() const
       out += "(null)";
     }
     out += '\n';
-  });
+  };
 
   return out;
 }

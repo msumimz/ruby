@@ -59,10 +59,10 @@ void
 TypeAnalyzer::analyze()
 {
   // Initialize type constraints
-  std::for_each(cfg_->variables()->cbegin(), cfg_->variables()->cend(), [](Variable* v) {
-    delete v->typeConstraint();
-    v->setTypeConstraint(new TypeAny());
-  });
+  for (auto i = cfg_->variables()->cbegin(), end =cfg_->variables()->cend(); i != end; ++i) {
+    delete (*i)->typeConstraint();
+    (*i)->setTypeConstraint(new TypeAny());
+  };
 
   blocks_.push_back(cfg_->entry());
 
@@ -95,10 +95,10 @@ void
 TypeAnalyzer::evaluateExpressionsUsing(Variable* v)
 {
   const std::vector<std::pair<BlockHeader*, Variable*>>& uses = defUseChain_.uses(v);
-  std::for_each(uses.cbegin(), uses.cend(), [this](const std::pair<BlockHeader*, Variable*>& u) {
-    block_ = u.first;
-    u.second->defOpcode()->accept(this);
-  });
+  for (auto i = uses.cbegin(), end = uses.cend(); i != end; ++i) {
+    block_ = i->first;
+    i->second->defOpcode()->accept(this);
+  };
 }
 
 bool

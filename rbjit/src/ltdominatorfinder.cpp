@@ -105,19 +105,20 @@ LTDominatorFinder::findDominators()
     // Step 2
     // Compute the semidominators of all vertices. Carry out the computation
     // vertex by vertex in decreasing order by number.
-    std::for_each(pred_[w].cbegin(), pred_[w].cend(), [this, i, w](int v) {
-      int u = eval(v);
+    for (auto p = pred_[w].cbegin(), pend = pred_[w].cend(); p != pend; ++p) {
+      int u = eval(*p);
       if (semi_[u] < semi_[w]) {
         semi_[w] = semi_[u];
       }
-    });
+    };
     bucket_[vertex_[semi_[w]]].push_back(w);
     link(parent_[w],  w);
 
     // Step 3
     // Implicitly define the immediate dominator of each vertex.
     std::vector<int>& b = bucket_[parent_[w]];
-    std::for_each(b.cbegin(), b.cend(), [this, w](int v) {
+    for (auto p = b.cbegin(), pend = b.cend(); p != pend; ++p) {
+      int v = *p;
       int u = eval(v);
       if (semi_[u] < semi_[v]) {
         dom_[v] = u;
@@ -125,7 +126,7 @@ LTDominatorFinder::findDominators()
       else {
         dom_[v] = parent_[w];
       }
-    });
+    };
     b.clear();
   }
 

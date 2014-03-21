@@ -140,10 +140,10 @@ DefUseChain::debugPrint() const
     sprintf(buf, "%Ix:", (*cfg_->variables())[i]);
     out += buf;
     const std::vector<std::pair<BlockHeader*, Variable*>>& uses = uses_[i];
-    std::for_each(uses.cbegin(), uses.cend(), [&](const std::pair<BlockHeader*, Variable*>& v) {
-      sprintf(buf, " %Ix:%Ix", v.first, v.second);
+    for (auto i = uses.cbegin(), end = uses.cend(); i != end; ++i) {
+      sprintf(buf, " %Ix:%Ix", i->first, i->second);
       out += buf;
-    });
+    };
     out += '\n';
   }
 

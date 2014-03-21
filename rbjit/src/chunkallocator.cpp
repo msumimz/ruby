@@ -62,13 +62,13 @@ ChunkAllocator::allocateLargeSize(size_t size)
 void
 ChunkAllocator::clear()
 {
-  std::for_each(chunks_.begin(), chunks_.end(), [this](char* p) {
-    VirtualFree(p, chunkSize_, MEM_RELEASE);
-  });
+  for (auto i = chunks_.begin(), end = chunks_.end(), i != end; ++i) {
+    VirtualFree(*i, chunkSize_, MEM_RELEASE);
+  }
 
-  std::for_each(largeAllocs_.begin(), largeAllocs_.end(), [](char* p) {
-    delete p;
-  });
+  for (auto i = largeAllocs_.begin(), end = largeAllocs_.end(), i != end; ++i) {
+    delete *i;
+  };
 
   chunks_.clear();
   largeAllocs_.clear();

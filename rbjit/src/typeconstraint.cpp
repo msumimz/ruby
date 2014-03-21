@@ -471,10 +471,10 @@ TypeSelection::debugPrint() const
   sprintf(buf, "Selection (%d)", types_.size());
   std::string out = buf;
 
-  std::for_each(types_.cbegin(), types_.cend(), [&](const TypeConstraint* type) {
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
     out += ' ';
-    out += type->debugPrint();
-  });
+    out += (*i)->debugPrint();
+  };
   return out;
 }
 
