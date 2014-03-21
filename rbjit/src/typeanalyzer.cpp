@@ -227,7 +227,7 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodePhi* op)
 {
-  auto types = TypeSelection();
+  TypeSelection types;
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
   BlockHeader::Backedge* e = block_->backedge();
@@ -236,7 +236,7 @@ TypeAnalyzer::visitOpcode(OpcodePhi* op)
     if ((*i)->typeConstraint()) {
       auto r = reachEdges_.find(std::make_pair(e->block(), block_));
       if (r != reachEdges_.end() && r->second == REACHABLE) {
-        types.addOption((*i)->typeConstraint());
+        types.addOption((*i)->typeConstraint()->clone());
       }
     }
   }

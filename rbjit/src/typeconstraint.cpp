@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <utility> // std::move
+#include <cassert>
 #include "rbjit/typeconstraint.h"
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
@@ -307,6 +309,31 @@ TypeExactClass::debugPrint() const
 
 ////////////////////////////////////////////////////////////
 // TypeSelection
+
+TypeSelection*
+TypeSelection::clone() const
+{
+  std::vector<TypeConstraint*> types(types_.size());
+
+  auto i = types_.cbegin();
+  auto end = types_.cend();
+  auto p = types.begin();
+  for (; i != end; ++i) {
+    *p++ = (*i)->clone();
+  }
+  assert(p == types.end());
+
+  return new TypeSelection(std::move(types));
+}
+
+TypeSelection::~TypeSelection()
+{
+  auto i = types_.cbegin();
+  auto end = types_.cend();
+  for (; i != end; ++i) {
+    delete *i;
+  }
+}
 
 void
 TypeSelection::addOption(TypeConstraint* type)

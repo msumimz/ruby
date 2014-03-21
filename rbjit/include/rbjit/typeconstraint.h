@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <utility> // std::move
 #include "rbjit/common.h"
 #include "rbjit/rubyobject.h"
 #include "rbjit/rubymethod.h"
@@ -281,7 +282,7 @@ public:
 
   TypeSelection() {}
 
-  TypeSelection(const std::vector<TypeConstraint*> types) : types_(types) {}
+  TypeSelection(std::vector<TypeConstraint*> types) : types_(std::move(types)) {}
 
   TypeSelection(TypeConstraint* type1)
   {
@@ -301,7 +302,9 @@ public:
     types_.push_back(type3);
   }
 
-  TypeSelection* clone() const { return new TypeSelection(types_); }
+  ~TypeSelection();
+
+  TypeSelection* clone() const;
 
   void addOption(TypeConstraint* type);
 
@@ -319,6 +322,9 @@ public:
 //  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
+
+  // Should not call
+  TypeSelection(const TypeSelection&);
 
   std::vector<TypeConstraint*> types_;
 

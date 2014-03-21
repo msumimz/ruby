@@ -67,13 +67,13 @@ Id::stringName() const
 // Class
 
 MethodEntry
-Class::findMethod(ID methodName)
+Class::findMethod(ID methodName) const
 {
   return mri::MethodEntry(value(), methodName);
 }
 
 MethodEntry
-Class::findMethod(const char* methodName)
+Class::findMethod(const char* methodName) const
 {
   return findMethod(mri::Id(methodName));
 }

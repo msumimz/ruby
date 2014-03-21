@@ -77,8 +77,8 @@ public:
   Class() : Object() {}
   Class(VALUE cls) : Object(cls) {}
 
-  MethodEntry findMethod(ID methodName);
-  MethodEntry findMethod(const char* methodName);
+  MethodEntry findMethod(ID methodName) const;
+  MethodEntry findMethod(const char* methodName) const;
 
   // Builtin classes
   static Class objectClass();
