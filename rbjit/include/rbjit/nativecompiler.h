@@ -9,6 +9,7 @@ namespace llvm {
 class LLVMContext;
 class Module;
 class FunctionPassManager;
+class PassManager;
 class Type;
 class ExecutionEngine;
 class Function;
@@ -73,6 +74,7 @@ private:
   IRBuilder* builder_;
   llvm::Module* module_;
   llvm::FunctionPassManager* fpm_;
+  llvm::PassManager* mpm_;
   llvm::Type* valueType_;
   llvm::ExecutionEngine* ee_;
   std::string errorMessage_;

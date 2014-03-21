@@ -13,6 +13,7 @@
 #include "llvm/PassManager.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/IPO.h"
 
 // for bitcode loader
 #include "llvm/Bitcode/ReaderWriter.h"
@@ -57,6 +58,7 @@ NativeCompiler::NativeCompiler()
     module_(loadBitcode()),
     builder_(static_cast<IRBuilder*>(new llvm::IRBuilder<false>(*ctx_))),
     fpm_(new llvm::FunctionPassManager(module_)),
+    mpm_(new llvm::PassManager()),
     valueType_(getValueType())
 {
   assert(initialized_);
@@ -85,6 +87,8 @@ NativeCompiler::NativeCompiler()
   fpm_->add(llvm::createCFGSimplificationPass());
 
   fpm_->doInitialization();
+
+  mpm_->add(llvm::createAlwaysInlinerPass());
 }
 
 NativeCompiler::~NativeCompiler()
@@ -92,6 +96,7 @@ NativeCompiler::~NativeCompiler()
   // neccesary? - Not sure who holds ee's ownership
   // delete ee_;
   // delete valueType_;
+  delete mpm_;
   delete fpm_;
   delete builder_;
   delete module_;
@@ -224,7 +229,14 @@ NativeCompiler::translateToBitcode()
   llvm::verifyFunction(*func_);
 #endif
 
-  // Optimize
+  // Optimization
+  // NOTE: Investigation is necessary about performance hit by applying the
+  // module-wide optimization (module pass) to each method complication. The
+  // module-wide optimization is required for inlining, and inlining is
+  // important to execute primitives efficiently. One of possible alternatives
+  // is to build primitives' IRs on each compile-time instead of loading the
+  // precompiled bitcode.
+  mpm_->run(*module_);
   fpm_->run(*func_);
 }
 

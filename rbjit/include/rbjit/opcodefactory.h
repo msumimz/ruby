@@ -4,7 +4,6 @@
 #include <string>
 #include "rbjit/common.h"
 #include "rbjit/rubytypes.h"
-#include "rbjit/primitive.h"
 
 RBJIT_NAMESPACE_BEGIN
 
