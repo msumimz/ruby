@@ -329,10 +329,10 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
   }
 
   // Find a method
-  Variable* methodEntry = factory->addLookup(receiver, node->nd_mid);
+  Variable* lookup = factory->addLookup(receiver, node->nd_mid);
 
   // Call a method
-  Variable* value = factory->addCall(methodEntry, args, args + argCount, useResult);
+  Variable* value = factory->addCall(lookup, args, args + argCount, useResult);
 
   // Set properties
   methodInfo_->setHasDef(MethodInfo::UNKNOWN);

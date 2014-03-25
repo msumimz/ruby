@@ -174,48 +174,58 @@ TypeEnv::debugPrint() const
 }
 
 ////////////////////////////////////////////////////////////
-// TypeMethodLookup
+// TypeLookup
 
-bool
-TypeMethodEntry::operator==(const TypeConstraint& other) const
+TypeLookup*
+TypeLookup::clone() const
 {
-  return typeid(other) == typeid(TypeMethodEntry) &&
-    static_cast<const TypeMethodEntry&>(other).me_ == me_;
+  return new TypeLookup(candidates_);
 }
 
 bool
-TypeMethodEntry::isSameValueAs(Variable* v)
+TypeLookup::operator==(const TypeConstraint& other) const
 {
-  // The null method entry indicates 'any' method, so that it should be
-  // regarded as different from the other ones.
-  return !methodEntry().isNull() && this == v->typeConstraint();
+  return typeid(other) == typeid(TypeLookup) &&
+    static_cast<const TypeLookup&>(other).candidates_ == candidates_;
+}
+
+bool
+TypeLookup::isSameValueAs(Variable* v)
+{
+  return *this == *v->typeConstraint();
 }
 
 TypeConstraint::Boolean
-TypeMethodEntry::evaluatesToBoolean()
+TypeLookup::evaluatesToBoolean()
 {
   return TRUE_OR_FALSE;
 }
 
 mri::Class
-TypeMethodEntry::evaluateClass()
+TypeLookup::evaluateClass()
 {
   // No corresponding Ruby class
   return mri::Class();
 }
 
 TypeList*
-TypeMethodEntry::resolve()
+TypeLookup::resolve()
 {
   return new TypeList(TypeList::NONE);
 }
 
 std::string
-TypeMethodEntry::debugPrint() const
+TypeLookup::debugPrint() const
 {
   char buf[256];
-  sprintf(buf, "MethodEntry(%Ix)", me_.methodEntry());
-  return buf;
+  sprintf(buf, "Lookup (%d)", candidates_.size());
+  std::string out = buf;
+
+  for (auto i = candidates_.cbegin(), end = candidates_.cend(); i != end; ++i) {
+    sprintf(buf, " (%Ix, %Ix)", i->class_().value(), i->methodEntry().methodEntry());
+    out += buf;
+  };
+  return out;
 }
 
 ////////////////////////////////////////////////////////////

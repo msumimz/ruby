@@ -214,7 +214,7 @@ Dumper::visitOpcode(OpcodeCall* op)
 {
   putCommonOutput(op);
   put("%Ix (%d)",
-    op->methodEntry(), op->rhsCount());
+    op->lookup(), op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }

@@ -48,7 +48,7 @@ class TypeNone;
 class TypeAny;
 class TypeConstant;
 class TypeEnv;
-class TypeMethodEntry;
+class TypeLookup;
 class TypeSameAs;
 class TypeExactClass;
 class TypeSelection;
@@ -60,7 +60,7 @@ public:
   virtual bool visitType(TypeAny* type) = 0;
   virtual bool visitType(TypeConstant* type) = 0;
   virtual bool visitType(TypeEnv* type) = 0;
-  virtual bool visitType(TypeMethodEntry* type) = 0;
+  virtual bool visitType(TypeLookup* type) = 0;
   virtual bool visitType(TypeSameAs* type) = 0;
   virtual bool visitType(TypeExactClass* type) = 0;
   virtual bool visitType(TypeSelection* type) = 0;
@@ -202,16 +202,37 @@ public:
 
 };
 
-class TypeMethodEntry : public TypeConstraint {
+class TypeLookup : public TypeConstraint {
 public:
 
-  TypeMethodEntry(mri::Class cls, mri::MethodEntry me) : cls_(cls), me_(me) {}
-  TypeMethodEntry* clone() const { return new TypeMethodEntry(cls_, me_); }
+  // Possible method entites at the call site
+  class Candidate {
+  public:
+    Candidate(mri::Class cls, mri::MethodEntry me) : cls_(cls), me_(me) {}
+    mri::Class class_() const { return cls_; }
+    mri::MethodEntry methodEntry() const { return me_; }
+    bool operator==(const Candidate& other) const
+    { return cls_ == other.cls_ && me_ == other.me_;  }
+  private:
+    mri::Class cls_;
+    mri::MethodEntry me_;
+  };
+
+
+  TypeLookup() {}
+  TypeLookup(std::vector<Candidate> candidates)
+    : candidates_(std::move(candidates)) {}
+  TypeLookup* clone() const;
 
   bool operator==(const TypeConstraint& other) const;
 
-  mri::Class class_() const { return cls_; }
-  mri::MethodEntry methodEntry() const { return me_; }
+  void addCandidate(mri::Class cls, mri::MethodEntry me)
+  {
+    candidates_.push_back(Candidate(cls, me));
+  }
+
+  std::vector<Candidate>& candidates() { return candidates_; }
+  const std::vector<Candidate>& candidates() const { return candidates_; }
 
   bool isSameValueAs(Variable* v);
   Boolean evaluatesToBoolean();
@@ -224,8 +245,7 @@ public:
 
 private:
 
-  mri::Class cls_;
-  mri::MethodEntry me_;
+  std::vector<Candidate> candidates_;
 
 };
 

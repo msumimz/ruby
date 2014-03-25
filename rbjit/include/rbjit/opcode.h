@@ -364,13 +364,13 @@ private:
 class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* methodEntry, int rhsSize, Variable* env)
+  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* lookup, int rhsSize, Variable* env)
     : OpcodeVa(file, line, prev, lhs, rhsSize),
-      methodEntry_(methodEntry), env_(env) {}
+      lookup_(lookup), env_(env) {}
 
   OpcodeCall* clone(Opcode* prev, Variable* methodEntry) const;
 
-  Variable* methodEntry() const { return methodEntry_; }
+  Variable* lookup() const { return lookup_; }
   Variable* receiver() const { return rhs(0); }
 
   Variable* env() const { return env_; }
@@ -380,7 +380,7 @@ public:
 
 private:
 
-  Variable* methodEntry_;
+  Variable* lookup_;
 
   // Should be treated as a left-side hand value
   Variable* env_;

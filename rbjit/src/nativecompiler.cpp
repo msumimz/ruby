@@ -329,9 +329,9 @@ NativeCompiler::visitOpcode(OpcodeLookup* op)
   llvm::Value* value = 0;
 
   // Try compile-time lookup
-  TypeConstraint* type = op->lhs()->typeConstraint();
-  if (type && typeid(*type) == typeid(TypeMethodEntry)) {
-    mri::MethodEntry me = static_cast<TypeMethodEntry*>(type)->methodEntry();
+  TypeLookup* type = dynamic_cast<TypeLookup*>(op->lhs()->typeConstraint());
+  if (type && type->candidates().size() == 1) {
+    mri::MethodEntry me = type->candidates()[0].methodEntry();
     if (!me.isNull()) {
       value = getInt((int)me.methodEntry());
     }
@@ -354,7 +354,7 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
   Variable*const* i = op->rhsBegin();
   Variable*const* rhsEnd = op->rhsEnd();
 
-  args[count++] = getValue(op->methodEntry()); // methoEntry
+  args[count++] = getValue(op->lookup());      // methoEntry
   args[count++] = getValue(*i++);              // receiver
   args[count++] = getInt(op->rhsCount() - 1);  // argc
 

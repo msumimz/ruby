@@ -171,36 +171,32 @@ TypeAnalyzer::visitOpcode(OpcodeEnv* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 {
+  // If the 'environment' is changed between the method entry and the call
+  // site, it is impossible to decide actual methods.
   if (!op->env()->isSameValueAs(cfg_->env())) {
-    updateTypeConstraint(op->lhs(), TypeMethodEntry(0, 0));
+    updateTypeConstraint(op->lhs(), TypeLookup()); // empty TypeLookup instance
     return true;
   }
 
-  TypeMethodEntry* type;
+  // The list of the receiver's possible classes
   std::unique_ptr<TypeList> list(op->receiver()->typeConstraint()->resolve());
 
   if (list->lattice() != TypeList::DETERMINED) {
-    updateTypeConstraint(op->lhs(), TypeAny());
+    updateTypeConstraint(op->lhs(), TypeLookup());
+    return true;
   }
-  else {
-    TypeSelection types;
-    auto i = list->typeList().cbegin();
-    auto end = list->typeList().cend();
-    for (; i != end; ++i) {
-      mri::MethodEntry me = (*i).findMethod(op->methodName());
-      types.addOption(new TypeMethodEntry(*i, me));
-    }
 
-    if (types.types().empty()) {
-      updateTypeConstraint(op->lhs(), TypeNone());
-    }
-    else if (types.types().size() == 1) {
-      updateTypeConstraint(op->lhs(), *types.types()[0]);
-    }
-    else {
-      updateTypeConstraint(op->lhs(), types);
+  TypeLookup lookup;
+  auto i = list->typeList().cbegin();
+  auto end = list->typeList().cend();
+  for (; i != end; ++i) {
+    mri::MethodEntry me = (*i).findMethod(op->methodName());
+    if (!me.isNull()) {
+      lookup.addCandidate(*i, me);
     }
   }
+
+  updateTypeConstraint(op->lhs(), lookup);
 
   return true;
 }
@@ -208,35 +204,37 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeCall* op)
 {
-  bool mutator = true;
-  TypeConstraint* type = 0;
+  auto lookup = static_cast<TypeLookup*>(op->lookup()->typeConstraint());
+  int count = lookup->candidates().size();
 
-  TypeConstraint* m = op->methodEntry()->typeConstraint();
-
-  mri::MethodEntry me;
-  if (typeid(*m) == typeid(TypeMethodEntry)) {
-    me = static_cast<TypeMethodEntry*>(m)->methodEntry();
+  if (count == 0) {
+    updateTypeConstraint(op->lhs(), TypeAny());
   }
-  else if (typeid(*m) == typeid(TypeSelection)) {
-    auto sel = static_cast<TypeSelection*>(m);
-    if (sel->types().size() == 1) {
-      me = static_cast<TypeMethodEntry*>(sel->types()[0])->methodEntry();
+
+  bool mutator = false;
+  std::vector<TypeConstraint*> types;
+  auto i = lookup->candidates().cbegin();
+  auto end = lookup->candidates().cend();
+  for (; i != end; ++i) {
+    MethodInfo* mi;
+    if (!i->methodEntry().isNull() &&
+        (mi = i->methodEntry().methodDefinition().methodInfo())) {
+      types.push_back(mi->returnType()->clone());
+      mutator = mutator || mi->isMutator();
+    }
+    else {
+      // If there is any method without method info, type inference will fail.
+      mutator = true;
+      types.clear();
+      break;
     }
   }
 
-  if (!me.isNull()) {
-    MethodInfo* mi = me.methodDefinition().methodInfo();
-    if (mi) {
-      type = mi->returnType();
-      mutator = mi->isMutator();
-    }
-  }
-
-  if (type) {
-    updateTypeConstraint(op->lhs(), *type);
+  if (types.empty()) {
+    updateTypeConstraint(op->lhs(), TypeAny());
   }
   else {
-    updateTypeConstraint(op->lhs(), TypeAny());
+    updateTypeConstraint(op->lhs(), TypeSelection(std::move(types)));
   }
 
   if (mutator) {
@@ -244,7 +242,7 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   }
   else {
     updateTypeConstraint(op->env(),
-      TypeSameAs(static_cast<OpcodeLookup*>(op->methodEntry()->defOpcode())->env()));
+      TypeSameAs(static_cast<OpcodeLookup*>(op->lookup()->defOpcode())->env()));
   }
 
   return true;
