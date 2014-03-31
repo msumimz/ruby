@@ -6,6 +6,7 @@
 #include "rbjit/primitivestore.h"
 #include "rbjit/rubymethod.h"
 #include "rbjit/typeconstraint.h"
+#include "rbjit/controlflowgraph.h"
 
 extern "C" {
 #include "ruby.h"
@@ -65,8 +66,11 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
   const char* oldName = mri::Symbol(methodName).name();
   std::string newName(oldName);
   newName += "_orig";
+
+  int argc = mi->cfg()->hasOptionalArg() || mi->cfg()->hasRestArg() ? -1 : mi->cfg()->requiredArgCount();
+
   rb_define_alias(cls, newName.c_str(), oldName);
-  rb_define_method(cls, oldName, (VALUE (*)(...))func, def.argc());
+  rb_define_method(cls, oldName, (VALUE (*)(...))func, argc);
 
   return Qnil;
 }

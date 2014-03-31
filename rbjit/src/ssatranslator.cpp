@@ -151,6 +151,11 @@ SsaTranslator::insertSinglePhiFunction(BlockHeader* block, Variable* v)
 void
 SsaTranslator::renameVariables()
 {
+  // Set renameStack_ of arguments
+  for (auto i = cfg_->inputs()->cbegin(), end = cfg_->inputs()->cend(); i != end; ++i) {
+    renameStack_[(*i)->index()].push_back(*i);
+  }
+
   // Do rename
   renameVariablesForSingleBlock(cfg_->entry());
 

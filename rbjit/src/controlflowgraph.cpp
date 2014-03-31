@@ -23,6 +23,7 @@ RBJIT_NAMESPACE_BEGIN
 
 ControlFlowGraph::ControlFlowGraph()
   : opcodeCount_(0), entry_(0), exit_(0),
+    requiredArgCount_(0), hasOptionalArg_(false), hasRestArg_(false),
     output_(0), undefined_(0),
     domTree_(0)
 {}
@@ -289,7 +290,12 @@ ControlFlowGraph::debugPrint() const
 std::string
 ControlFlowGraph::debugPrintVariables() const
 {
-  std::string out = "[Variables]\n";
+  std::string out = "[Inputs]\n";
+  for (auto i = inputs_.cbegin(), end = inputs_.cend(); i != end; ++i) {
+    out += (*i)->debugPrint();
+  };
+
+  out += "[Variables]\n";
   for (auto i = variables_.cbegin(), end = variables_.cend(); i != end; ++i) {
     out += (*i)->debugPrint();
   };

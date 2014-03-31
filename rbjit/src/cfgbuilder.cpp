@@ -45,6 +45,7 @@ CfgBuilder::buildMethod(const RNode* rootNode, MethodInfo* methodInfo)
   OpcodeFactory factory(cfg_);
   factory.createEntryExitBlocks();
 
+  buildArguments(&factory, rootNode);
   buildProcedureBody(&factory, rootNode, true);
 
   return cfg_;
@@ -59,6 +60,40 @@ CfgBuilder::buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool u
   if (factory->continues()) {
     factory->addJumpToReturnBlock(v);
   }
+}
+
+void
+CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
+{
+  assert(nd_type(node) == NODE_SCOPE);
+
+  // self
+  Variable* self = buildNamedVariable(factory, mri::Id("<self>"));
+  cfg_->inputs()->push_back(self);
+
+  RNode* argNode = node->nd_args;
+  int requiredArgCount = argNode->nd_ainfo->pre_args_num;
+  bool hasOptionalArg = !!argNode->nd_ainfo->opt_args;
+  bool hasRestArg = !!argNode->nd_ainfo->rest_arg;
+
+  cfg_->setRequiredArgCount(requiredArgCount);
+  cfg_->setHasOptionalArg(hasOptionalArg);
+  cfg_->setHasRestArg(hasRestArg);
+
+  if (!hasOptionalArg && !hasRestArg) {
+    // Method has the fixed number of arguments
+    IdTable idTable(node->nd_tbl);
+    for (int i = 0; i < requiredArgCount; ++i) {
+      Variable* v = buildNamedVariable(factory, idTable.idAt(i));
+      cfg_->inputs()->push_back(v);
+    }
+    return;
+  }
+
+  Variable* argc = buildNamedVariable(factory, mri::Id("<argc>"));
+  Variable* argv = buildNamedVariable(factory, mri::Id("<argv>"));
+  cfg_->inputs()->push_back(argc);
+  cfg_->inputs()->push_back(argv);
 }
 
 Variable*

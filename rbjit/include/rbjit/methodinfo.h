@@ -48,6 +48,7 @@ public:
     : MethodInfo(), node_(node), methodName_(methodName), cfg_(0), methodBody_(0)
   {}
 
+  ControlFlowGraph* cfg() const { return cfg_; }
   void* methodBody() { return methodBody_; }
 
   void compile();

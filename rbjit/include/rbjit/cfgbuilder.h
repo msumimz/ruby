@@ -25,7 +25,7 @@ public:
     {}
 
   size_t size() const { return size_; }
-  ID id(size_t i) const { return table_[i]; }
+  ID idAt(size_t i) const { return table_[i]; }
 
 private:
 
@@ -48,6 +48,7 @@ private:
   Variable* buildNamedVariable(OpcodeFactory* factory, ID name);
 
   void buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool useResult);
+  void buildArguments(OpcodeFactory* factory, const RNode* node);
   Variable* buildNode(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildAssignment(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult);

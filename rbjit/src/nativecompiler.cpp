@@ -168,11 +168,26 @@ NativeCompiler::compileMethod(ControlFlowGraph* cfg, const char* name)
 void
 NativeCompiler::translateToBitcode()
 {
+  // Set up a value vector
+  size_t varCount = cfg_->variables()->size();
+  llvmValues_.assign(varCount, 0);
+
+  // Define a function object
   std::vector<llvm::Type*> argTypes;
+  for (auto i = cfg_->inputs()->cbegin(), end = cfg_->inputs()->cend(); i != end; ++i) {
+    argTypes.push_back(valueType_);
+  }
   llvm::FunctionType *ft = llvm::FunctionType::get(valueType_, argTypes, false);
 
   std::string name = getUniqueName(funcName_);
   func_ = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module_);
+
+  // Initialize arguments
+  std::vector<Variable*>* inputs = cfg_->inputs();
+  int count = 0;
+  for (auto i = func_->arg_begin(), end = func_->arg_end(); i != end; ++i, ++count) {
+    llvmValues_[(*inputs)[count]->index()] = &*i;
+  }
 
   // Create basic blocks in advance
   size_t blockCount = cfg_->blocks()->size();
@@ -180,10 +195,6 @@ NativeCompiler::translateToBitcode()
   for (size_t i = 0; i < blockCount; ++i) {
     llvmBlocks_[i] = llvm::BasicBlock::Create(*ctx_, "", func_);
   }
-
-  // Set up a value vector
-  size_t varCount = cfg_->variables()->size();
-  llvmValues_.assign(varCount, 0);
 
   // Set up a phi list
   phis_.clear();

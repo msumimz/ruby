@@ -46,6 +46,7 @@ private:
 
 class TypeNone;
 class TypeAny;
+class TypeInteger;
 class TypeConstant;
 class TypeEnv;
 class TypeLookup;
@@ -58,6 +59,7 @@ public:
 
   virtual bool visitType(TypeNone* type) = 0;
   virtual bool visitType(TypeAny* type) = 0;
+  virtual bool visitType(TypeInteger* type) = 0;
   virtual bool visitType(TypeConstant* type) = 0;
   virtual bool visitType(TypeEnv* type) = 0;
   virtual bool visitType(TypeLookup* type) = 0;
@@ -111,6 +113,7 @@ public:
   // Implication testers
   virtual bool isImpliedBy(const TypeNone* type) const = 0;
   virtual bool isImpliedBy(const TypeAny* type) const = 0;
+  virtual bool isImpliedBy(const TypeInteger* type) const = 0;
   virtual bool isImpliedBy(const TypeConstant* type) const = 0;
   virtual bool isImpliedBy(const TypeEnv* type) const = 0;
   virtual bool isImpliedBy(const TypeMethodEntry* type) const = 0;
@@ -156,6 +159,32 @@ public:
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
 //  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
+};
+
+// Just an integer, not a Fixnum; Internal use only.
+// Used for an argument count in variable-length argument methods.
+class TypeInteger : public TypeConstraint {
+public:
+
+  TypeInteger(intptr_t integer) : integer_(integer) {}
+  TypeInteger* clone() const { return new TypeInteger(integer_); }
+
+  bool operator==(const TypeConstraint& other) const;
+
+  intptr_t integer() const { return integer_; }
+
+  bool isSameValueAs(Variable* v);
+  Boolean evaluatesToBoolean();
+  mri::Class evaluateClass();
+  TypeList* resolve();
+  std::string debugPrint() const;
+
+  bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
+//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
+
+private:
+
+  intptr_t integer_;
 };
 
 class TypeConstant : public TypeConstraint {

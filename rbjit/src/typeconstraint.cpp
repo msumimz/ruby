@@ -86,6 +86,50 @@ TypeAny::debugPrint() const
 }
 
 ////////////////////////////////////////////////////////////
+// TypeInteger
+
+bool
+TypeInteger::operator==(const TypeConstraint& other) const
+{
+  return typeid(other) == typeid(TypeInteger) &&
+    static_cast<const TypeInteger&>(other).integer_ == integer_;
+}
+
+bool
+TypeInteger::isSameValueAs(Variable* v)
+{
+  return this == v->typeConstraint();
+}
+
+TypeConstraint::Boolean
+TypeInteger::evaluatesToBoolean()
+{
+  // Not defined because this is not a ruby object
+  return TRUE_OR_FALSE;
+}
+
+mri::Class
+TypeInteger::evaluateClass()
+{
+  // Not defined because this is not a ruby object
+  return mri::Class();
+}
+
+TypeList*
+TypeInteger::resolve()
+{
+  return new TypeList(TypeList::ANY);
+}
+
+std::string
+TypeInteger::debugPrint() const
+{
+  char buf[256];
+  sprintf(buf, "Integer(%Ix)", integer_);
+  return buf;
+}
+
+////////////////////////////////////////////////////////////
 // TypeConstant
 
 bool

@@ -48,6 +48,20 @@ public:
   void removeVariables(const std::vector<Variable*>* toBeRemoved);
   void clearDefInfo();
 
+  // Method arguments
+
+  const std::vector<Variable*>* inputs() const { return &inputs_; }
+  std::vector<Variable*>* inputs() { return &inputs_; }
+
+  int requiredArgCount() const { return requiredArgCount_; }
+  void setRequiredArgCount(int requiredArgCount) { requiredArgCount_ = requiredArgCount; }
+
+  bool hasOptionalArg() const { return hasOptionalArg_; }
+  void setHasOptionalArg(bool hasOptionalArg) { hasOptionalArg_ = hasOptionalArg; }
+
+  bool hasRestArg() const { return hasRestArg_; }
+  void setHasRestArg(bool hasRestArg) { hasRestArg_ = hasRestArg; }
+
   // Modifiers
 
   void removeOpcodeAfter(Opcode* prev);
@@ -73,11 +87,14 @@ private:
   // Loop preheaders
   std::vector<BlockHeader*> loops_;
 
-  // Variables used in the CFG, including input_ and output_
+  // Variables used in the CFG, including inputs_ and output_
   std::vector<Variable*> variables_;
 
-  // Variables that should be initialized with call arguments.
-  std::vector<Variable*> input_;
+  // Method arguments
+  std::vector<Variable*> inputs_;
+  int requiredArgCount_;
+  bool hasOptionalArg_;
+  bool hasRestArg_;
 
   // Return value
   Variable* output_;
