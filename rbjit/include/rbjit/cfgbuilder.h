@@ -53,6 +53,7 @@ private:
   Variable* buildAssignment(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildImmediate(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildSelf(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildTrue(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNil(OpcodeFactory* factory, const RNode* node, bool useResult);

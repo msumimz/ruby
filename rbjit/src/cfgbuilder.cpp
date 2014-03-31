@@ -130,6 +130,10 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildImmediate(factory, node, useResult);
     break;
 
+  case NODE_SELF:
+    v = buildSelf(factory, node, useResult);
+    break;
+
   case NODE_TRUE:
     v = buildTrue(factory, node, useResult);
     break;
@@ -195,6 +199,16 @@ CfgBuilder::buildImmediate(OpcodeFactory* factory, const RNode* node, bool useRe
 {
   assert(nd_type(node) == NODE_LIT);
   return factory->addImmediate((VALUE)node->nd_lit, useResult);
+}
+
+Variable*
+CfgBuilder::buildSelf(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  if (!useResult) {
+    return nullptr;
+  }
+
+  return buildNamedVariable(factory, mri::Id("<self>"));
 }
 
 Variable*
