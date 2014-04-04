@@ -13,11 +13,11 @@ OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg)
     file_(0), line_(0), depth_(0), halted_(false)
 {}
 
-OpcodeFactory::OpcodeFactory(OpcodeFactory& factory, BlockHeader* idom)
+OpcodeFactory::OpcodeFactory(OpcodeFactory& factory, int)
   : cfg_(factory.cfg_), file_(factory.file_), line_(factory.line_),
     depth_(factory.depth_), halted_(false)
 {
-  lastBlock_ = createFreeBlockHeader(idom);
+  lastBlock_ = createFreeBlockHeader(0);
   lastOpcode_ = lastBlock_;
 }
 
