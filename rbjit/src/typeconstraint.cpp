@@ -472,19 +472,18 @@ TypeSelection::resolve()
     return new TypeList(TypeList::NONE);
   }
 
-  TypeList* type = types_[0]->resolve();
+  std::unique_ptr<TypeList> type(types_[0]->resolve());
 
   for (size_t i = 1; i < types_.size(); ++i) {
 
     if (type->lattice() == TypeList::ANY) {
-      return type;
+      return type.release();
     }
 
-    TypeList* otherType = types_[i]->resolve();
+    std::unique_ptr<TypeList> otherType(types_[i]->resolve());
     switch (type->lattice()) {
     case TypeList::NONE:
-      delete type;
-      type = otherType;
+      type = std::move(otherType);
       break;
 
     case TypeList::DETERMINED:
@@ -493,13 +492,11 @@ TypeSelection::resolve()
         break;
 
       case TypeList::ANY:
-        delete type;
-        type = otherType;
+        type = std::move(otherType);
         break;
 
       case TypeList::DETERMINED:
-        type->join(otherType);
-        delete otherType;
+        type->join(otherType.get());
         break;
 
       default:
@@ -512,7 +509,7 @@ TypeSelection::resolve()
     }
   }
 
-  return type;
+  return type.release();
 }
 
 std::string
