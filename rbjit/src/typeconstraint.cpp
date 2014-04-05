@@ -448,9 +448,8 @@ TypeSelection::evaluatesToBoolean()
 mri::Class
 TypeSelection::evaluateClass()
 {
-  TypeList* list = resolve();
+  std::unique_ptr<TypeList> list(resolve());
   if (list->typeList().empty()) {
-    delete list;
     return mri::Class();
   }
 
@@ -459,11 +458,9 @@ TypeSelection::evaluateClass()
   mri::Class cls = *i++;
   for (; i != end; ++i) {
     if (*i != cls) {
-      delete list;
       return mri::Class();
     }
   }
-  delete list;
 
   return cls;
 }
