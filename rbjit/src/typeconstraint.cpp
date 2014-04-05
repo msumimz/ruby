@@ -385,7 +385,7 @@ TypeSelection::~TypeSelection()
   auto i = types_.cbegin();
   auto end = types_.cend();
   for (; i != end; ++i) {
-    delete *i;
+    (*i)->destroy();
   }
 }
 

@@ -81,6 +81,9 @@ public:
   // Create an object by cloning
   virtual TypeConstraint* clone() const = 0;
 
+  // Destroy this
+  virtual void destroy() { delete this; }
+
   // Test C++ equality
   virtual bool operator==(const TypeConstraint& other) const =  0;
 
@@ -123,13 +126,20 @@ public:
 
   virtual bool implies(const TypeConstraint* other) const = 0;
 #endif
+
+protected:
+
+  void* operator new(size_t s) { return ::operator new(s); }
+  void operator delete(void* p) { ::delete p; }
 };
 
 class TypeNone : public TypeConstraint {
 public:
 
   TypeNone() {}
-  TypeNone* clone() const { return new TypeNone(); }
+  static TypeNone* create() { static TypeNone none; return &none; }
+  TypeNone* clone() const { return create(); }
+  void destroy() {}
 
   bool operator==(const TypeConstraint& other) const;
 
@@ -147,7 +157,9 @@ class TypeAny : public TypeConstraint {
 public:
 
   TypeAny() {}
-  TypeAny* clone() const { return new TypeAny(); }
+  static TypeAny* create() { static TypeAny any; return &any; }
+  TypeAny* clone() const { return create(); }
+  void destroy() {}
 
   bool operator==(const TypeConstraint& other) const;
 
@@ -216,7 +228,9 @@ class TypeEnv : public TypeConstraint {
 public:
 
   TypeEnv() {}
-  TypeEnv* clone() const { return new TypeEnv(); }
+  static TypeEnv* create() { static TypeEnv env; return &env; }
+  TypeEnv* clone() const { return create(); }
+  void destroy() {}
 
   bool operator==(const TypeConstraint& other) const;
 
@@ -307,7 +321,8 @@ class TypeExactClass : public TypeConstraint {
 public:
 
   TypeExactClass(mri::Class cls) : cls_(cls) {}
-  TypeExactClass* clone() const { return new TypeExactClass(cls_); }
+  static TypeExactClass* create(mri::Class cls) { return new TypeExactClass(cls); }
+  TypeExactClass* clone() const { return create(cls_); }
 
   bool operator==(const TypeConstraint& other) const;
 
@@ -355,6 +370,11 @@ public:
 
   ~TypeSelection();
 
+  static TypeSelection* create() { return new TypeSelection(); }
+  static TypeSelection* create(std::vector<TypeConstraint*> types) { return new TypeSelection(types); }
+  static TypeSelection* create(TypeConstraint* type1) { return new TypeSelection(type1); }
+  static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2) { return new TypeSelection(type1, type2); }
+  static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3) { return new TypeSelection(type1, type2, type3); }
   TypeSelection* clone() const;
 
   void addOption(TypeConstraint* type);

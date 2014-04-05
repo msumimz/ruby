@@ -88,7 +88,7 @@ Init_rbjit()
   MethodInfo::addToNativeMethod(mri::Class::fixnumClass(), "+",
     MethodInfo::NO, // hasDef
     MethodInfo::NO, // hasEval
-    new TypeSelection(new TypeExactClass(mri::Class::fixnumClass()),
-                      new TypeExactClass(mri::Class::bignumClass())));
+    TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
+                          TypeExactClass::create(mri::Class::bignumClass())));
 }
 

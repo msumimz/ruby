@@ -26,7 +26,7 @@ TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
   }
 
   TypeConstraint* type = newType.clone();
-  delete v->typeConstraint();
+  v->typeConstraint()->destroy();
   v->setTypeConstraint(type);
   variables_.push_back(v);
 }
@@ -60,8 +60,10 @@ TypeAnalyzer::analyze()
 {
   // Initialize type constraints
   for (auto i = cfg_->variables()->cbegin(), end =cfg_->variables()->cend(); i != end; ++i) {
-    delete (*i)->typeConstraint();
-    (*i)->setTypeConstraint(new TypeAny());
+    if ((*i)->typeConstraint()) {
+      (*i)->typeConstraint()->destroy();
+    }
+    (*i)->setTypeConstraint(TypeAny::create());
   };
 
   blocks_.push_back(cfg_->entry());
