@@ -5,9 +5,12 @@
 #define RBJIT_NAMESPACE_BEGIN namespace rbjit {
 #define RBJIT_NAMESPACE_END   }
 
-// Unreachable code path
+// Assertion
 #ifdef RBJIT_DEBUG
-# define RBJIT_UNREACHABLE assert(!"Unreachable code path")
+# define RBJIT_ASSERT(c) assert(c)
 #else
-# define RBJIT_UNREACHABLE __assume(false)
+# define RBJIT_ASSERT(c) __assume(c)
 #endif
+
+// Unreachable code path
+#define RBJIT_UNREACHABLE RBJIT_ASSERT(!"Unreachable code path")
