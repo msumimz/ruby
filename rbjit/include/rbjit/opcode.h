@@ -165,6 +165,7 @@ public:
 
   void setRhs(int i, Variable* v) { rhs_[i] = v; }
 
+  int rhsSize() const { return rhsSize_;  }
   Variable*const* rhsBegin() const { return rhs_; }
   Variable*const* rhsEnd() const { return rhs_ + rhsSize_; }
   Variable** rhsBegin() { return rhs_; }
@@ -188,6 +189,9 @@ public:
   {}
 
   ~BlockHeader();
+
+  BlockHeader* clone(int baseDepth)
+  { return new BlockHeader(file_, line_, 0, 0, index_, depth_ + baseDepth, 0); }
 
   int index() const { return index_; }
   int depth() const { return depth_; }
