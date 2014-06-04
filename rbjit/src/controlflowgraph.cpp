@@ -22,7 +22,7 @@ RBJIT_NAMESPACE_BEGIN
 // ControlFlowGraph
 
 ControlFlowGraph::ControlFlowGraph()
-  : opcodeCount_(0), entry_(0), exit_(0),
+  : entry_(0), exit_(0),
     requiredArgCount_(0), hasOptionalArg_(false), hasRestArg_(false),
     output_(0), undefined_(0),
     domTree_(0)
@@ -258,8 +258,8 @@ Dumper::visitOpcode(OpcodeExit* op)
 void
 Dumper::dumpCfgInfo(const ControlFlowGraph* cfg)
 {
-  put("[CFG: %Ix]\nentry=%Ix exit=%Ix opcodeCount=%d output=%Ix env=%Ix\n",
-    cfg, cfg->entry(), cfg->exit(), cfg->opcodeCount(), cfg->output(), cfg->env());
+  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix env=%Ix\n",
+    cfg, cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
 }
 
 void

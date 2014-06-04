@@ -26,7 +26,6 @@ OpcodeFactory::createFreeBlockHeader(BlockHeader* idom)
 {
   BlockHeader* block = new BlockHeader(file_, line_, 0, 0, cfg_->blocks()->size(), depth_, idom);
   cfg_->blocks_.push_back(block);
-  ++cfg_->opcodeCount_;
 
   return block;
 }
@@ -69,7 +68,6 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
   }
 
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, 0, rhs);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -83,7 +81,6 @@ Variable*
 OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
-  ++cfg_->opcodeCount_;
   lhs->defInfo()->addDefSite(lastBlock_);
 
   lastOpcode_ = op;
@@ -99,7 +96,6 @@ OpcodeFactory::addJump(BlockHeader* dest)
   }
 
   OpcodeJump* op = new OpcodeJump(file_, line_, lastOpcode_, dest);
-  ++cfg_->opcodeCount_;
 
   dest->addBackedge(lastBlock_);
 
@@ -125,7 +121,6 @@ OpcodeFactory::addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFal
   }
 
   OpcodeJumpIf* op = new OpcodeJumpIf(file_, line_, lastOpcode_, cond, ifTrue, ifFalse);
-  ++cfg_->opcodeCount_;
 
   ifTrue->addBackedge(lastBlock_);
   ifFalse->addBackedge(lastBlock_);
@@ -144,7 +139,6 @@ OpcodeFactory::addImmediate(VALUE value, bool useResult)
   }
 
   OpcodeImmediate* op = new OpcodeImmediate(file_, line_, lastOpcode_, 0, value);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -162,7 +156,6 @@ OpcodeFactory::addEnv(bool useResult)
   }
 
   OpcodeEnv* op = new OpcodeEnv(file_, line_, lastOpcode_, 0);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createNamedVariable(OpcodeEnv::envName());
@@ -176,7 +169,6 @@ Variable*
 OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 {
   OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->env());
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -193,7 +185,6 @@ OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variabl
 
   Variable* env = cfg_->env();
   OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n, env);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);
@@ -219,7 +210,6 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
   int n = 1 + (rhsEnd - rhsBegin);
 
   OpcodePhi* op = new OpcodePhi(file_, line_, lastOpcode_, 0, n, lastBlock_);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -244,7 +234,6 @@ OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* 
 
   int n = argsEnd - argsBegin;
   OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, name, n);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -263,7 +252,6 @@ Variable*
 OpcodeFactory::addPrimitive(const char* name, int argCount, ...)
 {
   OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, mri::Id(name).id(), argCount);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -285,7 +273,6 @@ OpcodeFactory::addJumpToReturnBlock(Variable* returnValue)
 {
   if (returnValue) {
     OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, 0, returnValue);
-    ++cfg_->opcodeCount_;
     lastOpcode_ = op;
     if (!cfg_->output_) {
       cfg_->output_ = createTemporary(true);
@@ -303,7 +290,6 @@ Variable*
 OpcodeFactory::addCallClone(OpcodeCall* source, Variable* methodEntry)
 {
   OpcodeCall* op = source->clone(lastOpcode_, methodEntry);
-  ++cfg_->opcodeCount_;
   lastOpcode_ = op;
 
   Variable* lhs = 0;
@@ -326,7 +312,6 @@ OpcodeFactory::createEntryExitBlocks()
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);
   OpcodeExit* op = new OpcodeExit(0, 0, exit);
-  ++cfg_->opcodeCount_;
   exit->setFooter(op);
   cfg_->exit_ = exit;
 }

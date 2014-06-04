@@ -75,9 +75,6 @@ CodeDuplicator::duplicateCfg()
   for (auto i = source_->blocks()->cbegin(), end = source_->blocks()->cend(); i != end; ++i) {
     (*i)->visitEachOpcode(this);
   }
-
-  // Set opcode count
-  dest_->setOpcodeCount(dest_->opcodeCount() + source_->opcodeCount());
 }
 
 bool
@@ -209,7 +206,7 @@ CodeDuplicator::visitOpcode(OpcodePhi* op)
 bool
 CodeDuplicator::visitOpcode(OpcodeExit* op)
 {
-  // Emit nothing, because it is more useful when duplicated code will be inlined.
+  // Emit nothing, because it is more useful when the duplicated code will be inlined.
   return true;
 }
 

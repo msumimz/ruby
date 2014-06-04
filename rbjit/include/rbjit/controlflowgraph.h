@@ -22,9 +22,6 @@ public:
 
   // Accessors
 
-  int opcodeCount() const { return opcodeCount_; }
-  void setOpcodeCount(int count) { opcodeCount_ = count; }
-
   BlockHeader* entry() const { return entry_; }
   BlockHeader* exit() const { return exit_; }
 
@@ -78,8 +75,6 @@ private:
 
   BlockHeader* entry_;
   BlockHeader* exit_;
-
-  int opcodeCount_;
 
   // Basic blocks
   std::vector<BlockHeader*> blocks_;
