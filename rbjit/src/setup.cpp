@@ -49,16 +49,10 @@ dumptree(VALUE self, VALUE cls, VALUE methodName)
 static VALUE
 precompile(VALUE self, VALUE cls, VALUE methodName)
 {
-  mri::MethodEntry me(mri::Class(cls), mri::Symbol(methodName).id());
-  mri::MethodDefinition def = me.methodDefinition();
-
-  if (!def.hasAstNode()) {
+  PrecompiledMethodInfo* mi = PrecompiledMethodInfo::addToExistingMethod(mri::Class(cls), mri::Symbol(methodName).id());
+  if (!mi) {
     rb_raise(rb_eArgError, "method does not have the source code to be compiled");
   }
-
-  PrecompiledMethodInfo* mi =
-    new PrecompiledMethodInfo(def.astNode(), mri::Symbol(methodName).name());
-  def.setMethodInfo(mi);
 
   mi->compile();
   void* func = mi->methodBody();

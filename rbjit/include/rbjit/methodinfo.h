@@ -20,9 +20,12 @@ public:
     : hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
   {}
 
+  virtual ~MethodInfo() {}
+
   unsigned hasDef() const { return hasDef_; }
   unsigned hasEval() const { return hasEval_; }
-  TypeConstraint* returnType() const { return returnType_; }
+
+  virtual TypeConstraint* returnType() { return returnType_; }
 
   void setHasDef(int state) { hasDef_ = state; }
   void setHasEval(int state) { hasEval_ = state; }
@@ -32,7 +35,7 @@ public:
   static void addToNativeMethod(mri::Class cls, const char* methodName,
     unsigned hasDef, unsigned hasEval, TypeConstraint* returnType);
 
-private:
+protected:
 
   unsigned hasDef_ : 2;
   unsigned hasEval_ : 2;
@@ -45,22 +48,30 @@ class PrecompiledMethodInfo : public MethodInfo {
 public:
 
   PrecompiledMethodInfo(RNode* node, const char* methodName)
-    : MethodInfo(), node_(node), methodName_(methodName), cfg_(0), methodBody_(0)
+    : MethodInfo(), node_(node), methodName_(methodName), cfg_(0), methodBody_(0),
+      lock_(false)
   {}
 
   ControlFlowGraph* cfg() const { return cfg_; }
   void* methodBody() { return methodBody_; }
 
+  void buildCfg();
+  void analyzeTypes();
   void compile();
+
+  TypeConstraint* returnType();
+
+  static PrecompiledMethodInfo* addToExistingMethod(mri::Class cls, ID methodName);
 
 private:
 
-  RNode* node_;
+  RNode* node_; // method definition
   const char* methodName_;
   ControlFlowGraph* cfg_;
 
-  void* methodBody_;
+  void* methodBody_; // precompiled code
 
+  bool lock_;
 };
 
 RBJIT_NAMESPACE_END
