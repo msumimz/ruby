@@ -54,7 +54,7 @@ PrecompiledMethodInfo::buildCfg()
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
-  RBJIT_ASSERT(cfg_->checkSanityAndPrintErrors());
+  assert(cfg_->checkSanityAndPrintErrors());
 
   LTDominatorFinder domFinder(cfg_);
   domFinder.setDominatorsToCfg();

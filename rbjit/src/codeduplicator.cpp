@@ -88,7 +88,7 @@ bool
 CodeDuplicator::visitOpcode(OpcodeCopy* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  RBJIT_ASSERT(lhs);
+  RBJIT_ASSUME(lhs);
   OpcodeCopy* newOp = new OpcodeCopy(op->file(), op->line(), lastOpcode_, lhs, op->rhs());
   setDefInfo(lhs, newOp);
   lastOpcode_ = newOp;
@@ -126,7 +126,7 @@ bool
 CodeDuplicator::visitOpcode(OpcodeImmediate* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  RBJIT_ASSERT(lhs);
+  RBJIT_ASSUME(lhs);
   OpcodeImmediate* newOp = new OpcodeImmediate(op->file(), op->line(), lastOpcode_, lhs, op->value());
 
   setDefInfo(lhs, newOp);
@@ -139,7 +139,7 @@ bool
 CodeDuplicator::visitOpcode(OpcodeEnv* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  RBJIT_ASSERT(lhs);
+  RBJIT_ASSUME(lhs);
   OpcodeEnv* newOp = new OpcodeEnv(op->file(), op->line(), lastOpcode_, lhs);
 
   setDefInfo(lhs, op);
@@ -152,7 +152,7 @@ bool
 CodeDuplicator::visitOpcode(OpcodeLookup* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  RBJIT_ASSERT(lhs);
+  RBJIT_ASSUME(lhs);
   OpcodeLookup* newOp = new OpcodeLookup(op->file(), op->line(), lastOpcode_, lhs, op->receiver(), op->methodName(), variableOf(op->env()));
 
   setDefInfo(lhs, op);
