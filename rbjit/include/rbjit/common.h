@@ -8,9 +8,12 @@
 // Assertion
 #ifdef RBJIT_DEBUG
 # define RBJIT_ASSERT(c) assert(c)
+# define RBJIT_ASSUME(c) assert(c)
 #else
-# define RBJIT_ASSERT(c) __assume(c)
+# define RBJIT_ASSERT(c)
+# define RBJIT_ASSUME(c) __assume(c)
 #endif
+
 
 // Unreachable code path
 #define RBJIT_UNREACHABLE RBJIT_ASSERT(!"Unreachable code path")
