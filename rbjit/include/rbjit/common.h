@@ -16,4 +16,4 @@
 
 
 // Unreachable code path
-#define RBJIT_UNREACHABLE RBJIT_ASSERT(!"Unreachable code path")
+#define RBJIT_UNREACHABLE RBJIT_ASSUME(!"Unreachable code path")
