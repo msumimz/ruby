@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "rbjit/opcode.h"
+#include "rbjit/controlflowgraph.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -13,7 +14,10 @@ public:
 
   CodeDuplicator(ControlFlowGraph* source, ControlFlowGraph* dest);
 
-  void insert(ControlFlowGraph* source, ControlFlowGraph* dest, Opcode* where);
+  void duplicateCfg();
+
+  BlockHeader* entry() { return blockOf(source_->entry()); }
+  BlockHeader* exit() { return blockOf(source_->exit()); }
 
   bool visitOpcode(BlockHeader* op);
   bool visitOpcode(OpcodeCopy* op);
@@ -33,8 +37,6 @@ private:
   Variable* variableOf(Variable* sourceVariable);
   void setDefInfo(Variable* lhs, Opcode* op);
   void copyRhs(OpcodeVa* dest, OpcodeVa* source);
-
-  void duplicateCfg();
 
   BlockHeader* lastBlock_;
   Opcode* lastOpcode_;
