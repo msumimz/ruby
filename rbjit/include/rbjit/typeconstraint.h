@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <utility> // std::move
+#include <unordered_map>
 #include "rbjit/common.h"
 #include "rbjit/rubyobject.h"
 #include "rbjit/rubymethod.h"
@@ -11,6 +12,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class Variable;
 class TypeConstraint;
+class MethodInfo;
 
 ////////////////////////////////////////////////////////////
 // TypeList
@@ -53,6 +55,7 @@ class TypeLookup;
 class TypeSameAs;
 class TypeExactClass;
 class TypeSelection;
+class TypeRecursion;
 
 class TypeVisitor {
 public:
@@ -66,6 +69,7 @@ public:
   virtual bool visitType(TypeSameAs* type) = 0;
   virtual bool visitType(TypeExactClass* type) = 0;
   virtual bool visitType(TypeSelection* type) = 0;
+  virtual bool visitType(TypeRecursion* type) = 0;
 
 };
 
@@ -398,6 +402,33 @@ private:
   TypeSelection(const TypeSelection&);
 
   std::vector<TypeConstraint*> types_;
+
+};
+
+class TypeRecursion : public TypeConstraint {
+public:
+
+  TypeRecursion(MethodInfo* mi) : mi_(mi) {}
+  static TypeRecursion* create(MethodInfo* mi);
+  TypeRecursion* clone() const { return create(mi_); }
+
+  bool operator==(const TypeConstraint& other) const;
+
+  MethodInfo* methodInfo() const { return mi_; }
+
+  bool isSameValueAs(Variable* v);
+  Boolean evaluatesToBoolean();
+  mri::Class evaluateClass();
+  TypeList* resolve();
+  std::string debugPrint() const;
+
+  bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
+
+private:
+
+  static std::unordered_map<MethodInfo*, TypeRecursion*> cache_;
+
+  MethodInfo* mi_;
 
 };
 

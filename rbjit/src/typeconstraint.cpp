@@ -98,6 +98,7 @@ TypeInteger::operator==(const TypeConstraint& other) const
 bool
 TypeInteger::isSameValueAs(Variable* v)
 {
+  // Comparison by pointer
   return this == v->typeConstraint();
 }
 
@@ -142,6 +143,7 @@ TypeConstant::operator==(const TypeConstraint& other) const
 bool
 TypeConstant::isSameValueAs(Variable* v)
 {
+  // Comparison by pointer
   return this == v->typeConstraint();
 }
 
@@ -236,6 +238,7 @@ TypeLookup::operator==(const TypeConstraint& other) const
 bool
 TypeLookup::isSameValueAs(Variable* v)
 {
+  // Comparison by value
   return *this == *v->typeConstraint();
 }
 
@@ -524,6 +527,66 @@ TypeSelection::debugPrint() const
     out += (*i)->debugPrint();
   };
   return out;
+}
+
+////////////////////////////////////////////////////////////
+// TypeRecursion
+
+std::unordered_map<MethodInfo*, TypeRecursion*> TypeRecursion::cache_;
+
+TypeRecursion*
+TypeRecursion::create(MethodInfo* mi)
+{
+  TypeRecursion* t = cache_[mi];
+  if (t) {
+    return t;
+  }
+
+  t = new TypeRecursion(mi);
+  cache_[mi] = t;
+
+  return t;
+}
+
+bool
+TypeRecursion::operator==(const TypeConstraint& other) const
+{
+  return typeid(other) == typeid(TypeRecursion) &&
+    static_cast<const TypeRecursion&>(other).mi_ == mi_;
+}
+
+bool
+TypeRecursion::isSameValueAs(Variable* v)
+{
+  // Comparison by pointer
+  return this == v->typeConstraint();
+}
+
+TypeConstraint::Boolean
+TypeRecursion::evaluatesToBoolean()
+{
+  return TRUE_OR_FALSE;
+}
+
+mri::Class
+TypeRecursion::evaluateClass()
+{
+  return mri::Class();
+}
+
+TypeList*
+TypeRecursion::resolve()
+{
+  // Resolved to a determined, but empty type list
+  return new TypeList(TypeList::DETERMINED);
+}
+
+std::string
+TypeRecursion::debugPrint() const
+{
+  char buf[256];
+  sprintf(buf, "TypeRecursion(%Ix)", mi_);
+  return buf;
 }
 
 RBJIT_NAMESPACE_END
