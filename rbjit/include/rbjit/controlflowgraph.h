@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <algorithm>
 #include "rbjit/common.h"
 
 RBJIT_NAMESPACE_BEGIN
@@ -37,6 +38,9 @@ public:
   const std::vector<BlockHeader*>* blocks() const { return &blocks_; }
   std::vector<BlockHeader*>* blocks() { return &blocks_; }
 
+  bool containsBlock(const BlockHeader* block) const
+  { return std::find(blocks_.cbegin(), blocks_.cend(), block) != blocks_.cend(); }
+
   // Variables
 
   const std::vector<Variable*>* variables() const { return &variables_; }
@@ -44,6 +48,9 @@ public:
   Variable* copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source);
   void removeVariables(const std::vector<Variable*>* toBeRemoved);
   void clearDefInfo();
+
+  bool containsVariable(const Variable* block) const
+  { return std::find(variables_.cbegin(), variables_.cend(), block) != variables_.cend(); }
 
   // Method arguments
 
@@ -64,6 +71,13 @@ public:
   void removeOpcodeAfter(Opcode* prev);
   void inlineAnotherCFG(Opcode* where, ControlFlowGraph* cfg);
   Variable* duplicateCall(OpcodeCall* source, Variable* methodEntry);
+
+  // Sanity check for debugging
+
+  bool checkSanity() const;
+  bool checkSanityAndPrintErrors() const;
+
+  // debug print
 
   std::string debugPrint() const;
   std::string debugPrintVariables() const;

@@ -1,5 +1,6 @@
 #include <cstdarg>
 #include <algorithm>
+#include <iterator> // std::distance
 #include "rbjit/opcode.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/domtree.h"
@@ -81,7 +82,387 @@ ControlFlowGraph::removeOpcodeAfter(Opcode* prev)
 }
 
 ////////////////////////////////////////////////////////////
-// Debugging tool
+// Debugging tool: sanity checker
+
+namespace {
+
+class SanityChecker : public OpcodeVisitor {
+public:
+
+  SanityChecker(const ControlFlowGraph* cfg);
+
+  bool visitOpcode(BlockHeader* op);
+  bool visitOpcode(OpcodeCopy* op);
+  bool visitOpcode(OpcodeJump* op);
+  bool visitOpcode(OpcodeJumpIf* op);
+  bool visitOpcode(OpcodeImmediate* op);
+  bool visitOpcode(OpcodeEnv* op);
+  bool visitOpcode(OpcodeLookup* op);
+  bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodePrimitive* op);
+  bool visitOpcode(OpcodePhi* op);
+  bool visitOpcode(OpcodeExit* op);
+
+  void check();
+
+  const std::vector<std::string>& errors() const { return errors_; }
+
+private:
+
+  void addBlock(BlockHeader* block);
+  bool canContinue();
+  void addError(const char* format, ...);
+  void addError(Opcode* op, const char* format, ...);
+
+  void checkLhs(OpcodeL* op, bool nullable);
+  template <class OP> void checkRhs(OP op, bool nullable);
+
+  const ControlFlowGraph* cfg_;
+  std::vector<bool> visitedVariables_;
+  std::vector<bool> visitedBlocks_;
+
+  std::vector<BlockHeader*> work_;
+  BlockHeader* current_;
+
+  std::vector<std::string> errors_;
+};
+
+SanityChecker::SanityChecker(const ControlFlowGraph* cfg)
+  : cfg_(cfg),
+    visitedVariables_(cfg->variables()->size(), false),
+    visitedBlocks_(cfg->blocks()->size(), false),
+    current_(0)
+{}
+
+void
+SanityChecker::addBlock(BlockHeader* block)
+{
+  if (!visitedBlocks_[block->index()]) {
+    work_.push_back(block);
+  }
+}
+
+bool
+SanityChecker::canContinue()
+{
+  if (errors_.size() >= 10) {
+    errors_.push_back(std::string("Too many inconsistencies. Aborted."));
+    return false;
+  }
+  return true;
+}
+
+void
+SanityChecker::addError(const char* format, ...)
+{
+  char buf[256];
+
+  // header
+  _snprintf(buf, 255, "Block %d(%Ix): ", current_->index(), current_);
+  std::string error = buf;
+
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buf, 255, format, args);
+  buf[255] = 0;
+  error += buf;
+
+  errors_.push_back(error);
+}
+
+void
+SanityChecker::addError(Opcode* op, const char* format, ...)
+{
+  char buf[256];
+
+  // header
+  _snprintf(buf, 255, "Block %d(%Ix):%s: ", current_->index(), current_, op->typeName());
+  std::string error = buf;
+
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buf, 255, format, args);
+  buf[255] = 0;
+  error += buf;
+
+  errors_.push_back(error);
+}
+
+void
+SanityChecker::checkLhs(OpcodeL* op, bool nullable)
+{
+  if (!op->lhs()) {
+    if (!nullable) {
+      addError(op, "lhs is null");
+    }
+  }
+  else if (!cfg_->containsVariable(op->lhs())) {
+    addError(op, "lhs variable does not belong to the cfg");
+  }
+}
+
+template <class OP> void
+SanityChecker::checkRhs(OP op, bool nullable)
+{
+  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i) {
+    if (!*i) {
+      if (!nullable) {
+        addError(op, "rhs variable at %d is null", i - op->rhsBegin());
+      }
+    }
+    else if (!cfg_->containsVariable(*i)) {
+      addError(op, "rhs variable %d does not belong to the cfg");
+    }
+  }
+}
+
+bool
+SanityChecker::visitOpcode(BlockHeader* op)
+{
+  visitedBlocks_[op->index()] =  true;
+
+  if (op->depth() < 0) {
+    addError(op, "depth is %d, a negative number", op->depth());
+  }
+  if (op->idom() && !cfg_->containsBlock(op->idom())) {
+    addError(op, "idom does not belong to the cfg");
+  }
+
+  Opcode* footer = op->footer();
+  if (!op->footer()) {
+    addError(op, "footer is null", op);
+  }
+  else if (!footer->isTerminator()) {
+    addError(op, "footer is not a terminator");
+  }
+  else {
+    Opcode* o;
+    for (o = op->next(); o && !o->isTerminator(); o = o->next())
+      ;
+    if (!o) {
+      addError(op, "footer is null");
+    }
+    else if (o != footer) {
+      addError(op, "footer %Ix is different from the actual footer %Ix", footer, o);
+    }
+  }
+
+  // Check backedge consistency
+
+  if (op->backedge()->block()) {
+    for (const BlockHeader::Backedge* edge = op->backedge(); edge; edge = edge->next()) {
+      BlockHeader* block = edge->block();
+      if (!edge->block()) {
+        addError(op, "Backedge %Ix's block is null");
+      }
+      else if (!cfg_->containsBlock(edge->block())) {
+        addError(op, "Backedge %Ix does not belong to the cfg");
+      }
+      else if (block->footer()->nextBlock() != op && block->footer()->nextAltBlock() != op) {
+        addError(op, "Backedge %Ix refers to the block %d(%Ix), which has no edges to this block", edge, block->index(), block);
+      }
+    }
+  }
+
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeCopy* op)
+{
+  checkLhs(op, false);
+  checkRhs(op, false);
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeJump* op)
+{
+  if (!op->nextBlock()) {
+    addError(op, "next block is null");
+  }
+  else if (!cfg_->containsBlock(op->nextBlock())) {
+    addError(op, "next block does not belong to the cfg");
+  }
+  else {
+    addBlock(op->nextBlock());
+  }
+
+  if (op->nextAltBlock()) {
+    addError(op, "next alt block is defined");
+  }
+
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeJumpIf* op)
+{
+  if (!op->nextBlock()) {
+    addError(op, "true block is null");
+  }
+  else if (!cfg_->containsBlock(op->nextBlock())) {
+    addError(op, "true block does not belong to the cfg");
+  }
+  else {
+    addBlock(op->nextBlock());
+  }
+
+  if (!op->nextAltBlock()) {
+    addError(op, "false block is null");
+  }
+  else if (!cfg_->containsBlock(op->nextAltBlock())) {
+    addError(op, "false block does not belong to the cfg");
+  }
+  else {
+    addBlock(op->nextAltBlock());
+  }
+
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeImmediate* op)
+{
+  checkLhs(op, false);
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeEnv* op)
+{
+  checkLhs(op, false);
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeLookup* op)
+{
+  checkLhs(op, false);
+  checkRhs(op, false);
+  return canContinue();
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeCall* op)
+{
+  checkLhs(op, true);
+  checkRhs(op, false);
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodePrimitive* op)
+{
+  checkLhs(op, true);
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodePhi* op)
+{
+  checkLhs(op, false);
+  checkRhs(op, false);
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeExit* op)
+{
+  return true;
+}
+
+void
+SanityChecker::check()
+{
+  // Check BlockHeader consistency
+
+  int index = 0;
+  for (auto i = cfg_->blocks()->cbegin(), end = cfg_->blocks()->cend(); i != end; ++i, ++index) {
+    BlockHeader* block = *i;
+    if (!block) {
+      addError("block %d is null", index);
+      continue;
+    }
+    if (typeid(*block) != typeid(BlockHeader)) {
+      addError("block %d is not a BlockHeader instance", index);
+      continue;
+    }
+    if (block->index() != index) {
+      addError("block %d(%Ix)'s index %d is inconsistent with its position", index, block, block->index());
+      continue;
+    }
+  }
+
+  // Check Variable consistency
+
+  index = 0;
+  for (auto i = cfg_->variables()->cbegin(), end = cfg_->variables()->cend(); i != end; ++i, ++index) {
+    Variable* v = *i;
+    if (!v) {
+      addError("variable %d is null", index);
+      continue;
+    }
+    if (typeid(*v) != typeid(Variable)) {
+      addError("variable %d is not a BlockHeader instance", index);
+      continue;
+    }
+    if (v->index() != index) {
+      addError("variable %d(%Ix)'s index %d is inconsistent with its position", index, v, v->index());
+      continue;
+    }
+  }
+
+  if (!errors_.empty()) {
+    return;
+  }
+
+  // Traverse opcodes
+
+  work_.push_back(cfg_->entry());
+  while (!work_.empty()) {
+    current_ = work_.back();
+    work_.pop_back();
+
+    current_->visitEachOpcode(this);
+  }
+
+  for (auto i = visitedBlocks_.cbegin(), end = visitedBlocks_.cend(); i != end; ++i) {
+    if (!*i) {
+      int index = std::distance(visitedBlocks_.cbegin(), i);
+
+      current_ = (*cfg_->blocks())[index];
+      addError("referred to by no blocks");
+    }
+  }
+}
+
+} // anonymous namespace
+
+bool
+ControlFlowGraph::checkSanity() const
+{
+  SanityChecker checker(this);
+  checker.check();
+
+  return checker.errors().empty();
+}
+
+bool
+ControlFlowGraph::checkSanityAndPrintErrors() const
+{
+  SanityChecker checker(this);
+  checker.check();
+
+  for (auto i = checker.errors().cbegin(), end = checker.errors().cend(); i != end; ++i) {
+    fprintf(stderr, "%s\n", i->c_str());
+  }
+
+  return checker.errors().empty();
+}
+
+////////////////////////////////////////////////////////////
+// Debugging tool: printing cfg
 
 namespace {
 
@@ -148,7 +529,8 @@ Dumper::put(const char* format, ...)
 {
   va_list args;
   va_start(args, format);
-  vsprintf(buf_, format, args);
+  vsnprintf(buf_, 255, format, args);
+  buf_[255] = 0;
   out_ += buf_;
 }
 

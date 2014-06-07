@@ -6,6 +6,35 @@
 RBJIT_NAMESPACE_BEGIN
 
 ////////////////////////////////////////////////////////////
+// Opcode
+
+const char*
+Opcode::typeName() const
+{
+  if (typeid(*this) == typeid(BlockHeader)) {
+    return "BlockHeader";
+  }
+  else {
+    const int skip = strlen("const rbjit::Opcode"); // hopefully expaneded to constant at compile time
+    return typeid(*this).name() + skip;
+  }
+}
+
+const char*
+Opcode::shortTypeName() const
+{
+  if (typeid(*this) == typeid(BlockHeader)) {
+    return "Block";
+  }
+  else if (typeid(*this) == typeid(OpcodeImmediate)) {
+    return "Imm";
+  }
+  else {
+    return typeName();
+  }
+}
+
+////////////////////////////////////////////////////////////
 // Call
 
 OpcodeCall*

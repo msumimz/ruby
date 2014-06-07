@@ -77,6 +77,11 @@ public:
 
   virtual bool accept(OpcodeVisitor* visitor) = 0;
 
+  virtual bool isTerminator() const { return false; }
+
+  const char* typeName() const;
+  const char* shortTypeName() const;
+
 protected:
 
   int file_ : 8;
@@ -224,6 +229,7 @@ public:
   };
 
   Backedge* backedge() { return &backedge_; }
+  const Backedge* backedge() const { return &backedge_; }
 
   void addBackedge(BlockHeader* block);
   bool hasBackedge() const { return backedge_.block_ != 0; }
@@ -285,6 +291,8 @@ public:
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
+  bool isTerminator() const { return true; }
+
 };
 
 class OpcodeJumpIf : public OpcodeR<1> {
@@ -305,6 +313,8 @@ public:
   BlockHeader* nextAltBlock() const { return ifFalse(); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+  bool isTerminator() const { return true; }
 
 private:
 
@@ -430,6 +440,8 @@ public:
     : Opcode(file, line, prev) {}
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+  bool isTerminator() const { return true; }
 
 };
 
