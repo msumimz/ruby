@@ -159,6 +159,7 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     break;
 
   case NODE_FCALL:
+  case NODE_VCALL:
     v = buildFuncall(factory, node, useResult);
     break;
 
@@ -179,9 +180,9 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
 
   Variable* value = factory->addCopy(lhs, rhs, useResult);
 
-  // By copy propagation optimization during SSA translation, the copy opcode will be possibly
-  // removed and the variable name will be lost. To avoid this, set the name to
-  // the temporary.
+  // By copy propagation optimization during SSA translation, the copy opcode
+  // will be possibly removed and the variable name will be lost. To keep the
+  // variable name, set the name to the temporary.
   rhs->setName(lhs->name());
 
   return value;
@@ -393,23 +394,43 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
 Variable*
 CfgBuilder::buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
+  assert(nd_type(node) == NODE_FCALL || nd_type(node) == NODE_VCALL);
+
+  bool isPrimitive = PrimitiveStore::instance()->isPrimitive(node->nd_mid);
+
+  // Argument count
+  int argCount = 0;
+  if (nd_type(node) == NODE_FCALL) {
+    argCount = node->nd_args->nd_alen;
+  }
+  if (!isPrimitive) {
+    argCount += 1; // count up for the implicit receiver
+  }
+
+  Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
+  Variable** a = args;
+  if (!isPrimitive) {
+    *a++ = buildSelf(factory, 0, true);
+  }
+  for (RNode* n = node->nd_args; n; n = n->nd_next) {
+    *a++ = buildNode(factory, n->nd_head, true);
+  }
+
   Variable* value;
-  if (PrimitiveStore::instance()->isPrimitive(node->nd_mid)) {
+  if (isPrimitive) {
     // Primitive
-
-    // Arguments
-    int argCount = node->nd_args->nd_alen;
-    Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
-    Variable** a = args;
-    for (RNode* n = node->nd_args; n; n = n->nd_next) {
-      *a++ = buildNode(factory, n->nd_head, true);
-    }
-
-    // Call a primitive
     value = factory->addPrimitive(node->nd_mid, args, args + argCount, useResult);
   }
   else {
-    assert(!"funcall is not implemented");
+    // Find a method
+    Variable* lookup = factory->addLookup(*args, node->nd_mid);
+
+    // Call a method
+    value = factory->addCall(lookup, args, args + argCount, useResult);
+
+    // Set properties
+    methodInfo_->setHasDef(MethodInfo::UNKNOWN);
+    methodInfo_->setHasDef(MethodInfo::UNKNOWN);
   }
 
   return value;
