@@ -353,27 +353,12 @@ private:
 class TypeSelection : public TypeConstraint {
 public:
 
-  TypeSelection() {}
+  TypeSelection();
+  TypeSelection(std::vector<TypeConstraint*> types);
 
-  TypeSelection(std::vector<TypeConstraint*> types) : types_(std::move(types)) {}
-
-  TypeSelection(TypeConstraint* type1)
-  {
-    types_.push_back(type1);
-  }
-
-  TypeSelection(TypeConstraint* type1, TypeConstraint* type2)
-  {
-    types_.push_back(type1);
-    types_.push_back(type2);
-  }
-
-  TypeSelection(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3)
-  {
-    types_.push_back(type1);
-    types_.push_back(type2);
-    types_.push_back(type3);
-  }
+  TypeSelection(TypeConstraint* type1);
+  TypeSelection(TypeConstraint* type1, TypeConstraint* type2);
+  TypeSelection(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3);
 
   ~TypeSelection();
 
