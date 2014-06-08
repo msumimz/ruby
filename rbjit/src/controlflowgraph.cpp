@@ -685,25 +685,4 @@ ControlFlowGraph::debugPrintVariables() const
   return out;
 }
 
-std::string
-ControlFlowGraph::debugPrintTypeConstraints() const
-{
-  char buf[256];
-  std::string out = "[Type Constraints]\n";
-  for (auto i = variables_.cbegin(), end = variables_.cend(); i != end; ++i) {
-    Variable* v = *i;
-    sprintf(buf, "%Ix: ", v);
-    out += buf;
-    if (v->typeConstraint()) {
-      out += v->typeConstraint()->debugPrint();
-    }
-    else {
-      out += "(null)";
-    }
-    out += '\n';
-  };
-
-  return out;
-}
-
 RBJIT_NAMESPACE_END

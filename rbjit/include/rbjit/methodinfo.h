@@ -6,6 +6,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class TypeConstraint;
 class ControlFlowGraph;
+class TypeContext;
 
 class MethodInfo {
 public:
@@ -68,6 +69,7 @@ private:
   RNode* node_; // method definition
   const char* methodName_;
   ControlFlowGraph* cfg_;
+  TypeContext* typeContext_;
 
   void* methodBody_; // precompiled code
 

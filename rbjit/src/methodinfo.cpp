@@ -9,6 +9,8 @@
 #include "rbjit/typeanalyzer.h"
 #include "rbjit/variable.h"
 #include "rbjit/typeconstraint.h"
+#include "rbjit/debugprint.h"
+#include "rbjit/typecontext.h"
 
 #ifdef RBJIT_DEBUG
 #include "rbjit/domtree.h"
@@ -81,12 +83,12 @@ PrecompiledMethodInfo::analyzeTypes()
 
   lock_ = true;
   TypeAnalyzer ta(cfg_);
-  ta.analyze();
+  typeContext_ = ta.analyze();
   lock_ = false;
 
-  returnType_ = cfg_->output()->typeConstraint();
+  returnType_ = typeContext_->typeConstraintOf(cfg_->output());
 
-  RBJIT_DPRINT(cfg_->debugPrintTypeConstraints());
+  RBJIT_DPRINT(typeContext_->debugPrint());
 }
 
 void
@@ -98,7 +100,7 @@ PrecompiledMethodInfo::compile()
 
   analyzeTypes();
 
-  methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, methodName_);
+  methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
 }
 
 TypeConstraint*

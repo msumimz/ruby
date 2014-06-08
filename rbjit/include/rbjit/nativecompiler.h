@@ -23,6 +23,7 @@ RBJIT_NAMESPACE_BEGIN
 class IRBuilder;
 
 class ControlFlowGraph;
+class TypeContext;
 
 class NativeCompiler : public OpcodeVisitor {
 public:
@@ -33,7 +34,7 @@ public:
   static void setup();
   static NativeCompiler* instance() { return nativeCompiler_; }
 
-  void* compileMethod(ControlFlowGraph* cfg, const char* name);
+  void* compileMethod(ControlFlowGraph* cfg, TypeContext* typeContext, const char* name);
 
   // Compile opcode
   bool visitOpcode(BlockHeader* opcode);
@@ -84,6 +85,7 @@ private:
   // Updated with each compilation session
 
   ControlFlowGraph* cfg_;
+  TypeContext* typeContext_;
   const char* funcName_;
 
   llvm::Function* func_;

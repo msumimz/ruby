@@ -10,6 +10,7 @@ RBJIT_NAMESPACE_BEGIN
 class ControlFlowGraph;
 class TypeConstraint;
 class BlockHeader;
+class TypeContext;
 
 RBJIT_NAMESPACE_END
 
@@ -31,7 +32,8 @@ class TypeAnalyzer : public OpcodeVisitor {
 public:
 
   TypeAnalyzer(ControlFlowGraph* cfg);
-  void analyze();
+
+  TypeContext* analyze();
 
   // Evaluate expressions
   bool visitOpcode(BlockHeader* opcode);
@@ -66,6 +68,9 @@ protected:
   std::unordered_map<std::pair<BlockHeader*, BlockHeader*>, char> reachEdges_;
 
   DefUseChain defUseChain_;
+
+  TypeContext* typeContext_;
+
 };
 
 RBJIT_NAMESPACE_END

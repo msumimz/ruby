@@ -41,11 +41,6 @@ public:
   int defCount() const { return defInfo_ ? defInfo_->defCount() : 0; }
   void clearDefInfo();
 
-  // TypeConstraint
-  TypeConstraint* typeConstraint() const { return typeConstraint_; }
-  void setTypeConstraint(TypeConstraint* type) { typeConstraint_ = type; }
-  bool isSameValueAs(Variable* v);
-
   std::string debugPrint() const;
 
 private:
@@ -69,7 +64,6 @@ private:
   int index_;
 
   DefInfo* defInfo_;
-  TypeConstraint* typeConstraint_;
 
 };
 

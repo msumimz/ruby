@@ -4,6 +4,7 @@
 #include "rbjit/typeconstraint.h"
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
+#include "rbjit/typecontext.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -17,7 +18,7 @@ TypeNone::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeNone::isSameValueAs(Variable* v)
+TypeNone::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   return false;
 }
@@ -56,7 +57,7 @@ TypeAny::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeAny::isSameValueAs(Variable* v)
+TypeAny::isSameValueAs(TypeContext* type, Variable* v)
 {
   return false;
 }
@@ -96,10 +97,10 @@ TypeInteger::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeInteger::isSameValueAs(Variable* v)
+TypeInteger::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
-  // Comparison by pointer
-  return this == v->typeConstraint();
+  // Comparison by value
+  return *this == *typeContext->typeConstraintOf(v);
 }
 
 TypeConstraint::Boolean
@@ -141,10 +142,10 @@ TypeConstant::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeConstant::isSameValueAs(Variable* v)
+TypeConstant::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   // Comparison by pointer
-  return this == v->typeConstraint();
+  return this == typeContext->typeConstraintOf(v);
 }
 
 TypeConstraint::Boolean
@@ -188,7 +189,7 @@ TypeEnv::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeEnv::isSameValueAs(Variable* v)
+TypeEnv::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   // Each TypeEnv is regarded as different from the other.
   return false;
@@ -236,10 +237,10 @@ TypeLookup::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeLookup::isSameValueAs(Variable* v)
+TypeLookup::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   // Comparison by value
-  return *this == *v->typeConstraint();
+  return *this == *typeContext->typeConstraintOf(v);
 }
 
 TypeConstraint::Boolean
@@ -286,34 +287,34 @@ TypeSameAs::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeSameAs::isSameValueAs(Variable* v)
+TypeSameAs::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
-  return source_ == v || isSameValueAs(source_);
+  return source_ == v || typeContext->typeConstraintOf(source_)->isSameValueAs(typeContext, v);
 }
 
 TypeConstraint::Boolean
 TypeSameAs::evaluatesToBoolean()
 {
-  return source_->typeConstraint()->evaluatesToBoolean();
+  return typeContext_->typeConstraintOf(source_)->evaluatesToBoolean();
 }
 
 mri::Class
 TypeSameAs::evaluateClass()
 {
-  return source_->typeConstraint()->evaluateClass();
+  return typeContext_->typeConstraintOf(source_)->evaluateClass();
 }
 
 TypeList*
 TypeSameAs::resolve()
 {
-  return source_->typeConstraint()->resolve();
+  return typeContext_->typeConstraintOf(source_)->resolve();
 }
 
 std::string
 TypeSameAs::debugPrint() const
 {
   char buf[256];
-  sprintf(buf, "SameAs(%Ix)", source_);
+  sprintf(buf, "SameAs(%Ix, %Ix)", typeContext_, source_);
   return buf;
 }
 
@@ -328,7 +329,7 @@ TypeExactClass::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeExactClass::isSameValueAs(Variable* v)
+TypeExactClass::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   return false;
 }
@@ -372,10 +373,8 @@ TypeSelection::clone() const
 {
   std::vector<TypeConstraint*> types(types_.size());
 
-  auto i = types_.cbegin();
-  auto end = types_.cend();
   auto p = types.begin();
-  for (; i != end; ++i) {
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
     *p++ = (*i)->clone();
   }
   assert(p == types.end());
@@ -409,7 +408,7 @@ TypeSelection::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeSelection::isSameValueAs(Variable* v)
+TypeSelection::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   return false;
 }
@@ -556,10 +555,10 @@ TypeRecursion::operator==(const TypeConstraint& other) const
 }
 
 bool
-TypeRecursion::isSameValueAs(Variable* v)
+TypeRecursion::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
   // Comparison by pointer
-  return this == v->typeConstraint();
+  return this == typeContext->typeConstraintOf(v);
 }
 
 TypeConstraint::Boolean
@@ -577,7 +576,7 @@ TypeRecursion::evaluateClass()
 TypeList*
 TypeRecursion::resolve()
 {
-  // Resolved to a determined, but empty type list
+  // Resolved to an empty type list
   return new TypeList(TypeList::DETERMINED);
 }
 

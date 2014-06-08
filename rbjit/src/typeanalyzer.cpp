@@ -6,6 +6,7 @@
 #include "rbjit/typeconstraint.h"
 #include "rbjit/variable.h"
 #include "rbjit/methodinfo.h"
+#include "rbjit/typecontext.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -15,20 +16,20 @@ RBJIT_NAMESPACE_BEGIN
 TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg)
   : cfg_(cfg),
     reachBlocks_(cfg->blocks()->size(), UNKNOWN),
-    defUseChain_(cfg)
+    defUseChain_(cfg),
+    typeContext_(new TypeContext(cfg))
 {}
 
 void
 TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
 {
-  if (!v || *v->typeConstraint() == newType) {
+  if (!v) {
     return;
   }
 
-  TypeConstraint* type = newType.clone();
-  v->typeConstraint()->destroy();
-  v->setTypeConstraint(type);
-  variables_.push_back(v);
+  if (typeContext_->updateTypeConstraint(v, newType)) {
+    variables_.push_back(v);
+  }
 }
 
 void
@@ -55,15 +56,12 @@ TypeAnalyzer::makeEdgeUnreachable(BlockHeader* from, BlockHeader* to)
   reachEdges_[std::make_pair(from, to)] = UNREACHABLE;
 }
 
-void
+TypeContext*
 TypeAnalyzer::analyze()
 {
   // Initialize type constraints
-  for (auto i = cfg_->variables()->cbegin(), end =cfg_->variables()->cend(); i != end; ++i) {
-    if ((*i)->typeConstraint()) {
-      (*i)->typeConstraint()->destroy();
-    }
-    (*i)->setTypeConstraint(TypeAny::create());
+  for (auto i = cfg_->variables()->cbegin(), end = cfg_->variables()->cend(); i != end; ++i) {
+    typeContext_->setTypeConstraint(*i, TypeAny::create());
   };
 
   blocks_.push_back(cfg_->entry());
@@ -91,6 +89,8 @@ TypeAnalyzer::analyze()
       } while (!variables_.empty());
     }
   } while (changed);
+
+  return typeContext_;
 }
 
 void
@@ -114,7 +114,7 @@ TypeAnalyzer::visitOpcode(BlockHeader* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeCopy* op)
 {
-  updateTypeConstraint(op->lhs(), TypeSameAs(op->rhs()));
+  updateTypeConstraint(op->lhs(), TypeSameAs(typeContext_, op->rhs()));
   return true;
 }
 
@@ -130,7 +130,7 @@ TypeAnalyzer::visitOpcode(OpcodeJump* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeJumpIf* op)
 {
-  auto* condType = op->cond()->typeConstraint();
+  TypeConstraint* condType = typeContext_->typeConstraintOf(op->cond());
   assert(condType);
 
   switch (condType->evaluatesToBoolean()) {
@@ -175,13 +175,13 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 {
   // If the 'environment' is changed between the method entry and the call
   // site, it is impossible to decide actual methods.
-  if (!op->env()->isSameValueAs(cfg_->env())) {
+  if (!typeContext_->isSameValueAs(op->env(), cfg_->env())) {
     updateTypeConstraint(op->lhs(), TypeLookup()); // empty TypeLookup instance
     return true;
   }
 
   // The list of the receiver's possible classes
-  std::unique_ptr<TypeList> list(op->receiver()->typeConstraint()->resolve());
+  std::unique_ptr<TypeList> list(typeContext_->typeConstraintOf(op->receiver())->resolve());
 
   if (list->lattice() != TypeList::DETERMINED) {
     updateTypeConstraint(op->lhs(), TypeLookup());
@@ -206,7 +206,7 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeCall* op)
 {
-  auto lookup = static_cast<TypeLookup*>(op->lookup()->typeConstraint());
+  auto lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   int count = lookup->candidates().size();
 
   if (count == 0) {
@@ -244,7 +244,7 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   }
   else {
     updateTypeConstraint(op->env(),
-      TypeSameAs(static_cast<OpcodeLookup*>(op->lookup()->defOpcode())->env()));
+      TypeSameAs(typeContext_, static_cast<OpcodeLookup*>(op->lookup()->defOpcode())->env()));
   }
 
   return true;
@@ -267,10 +267,10 @@ TypeAnalyzer::visitOpcode(OpcodePhi* op)
   BlockHeader::Backedge* e = block_->backedge();
   for (; i < end; ++i, e = e->next()) {
     assert(e->block());
-    if ((*i)->typeConstraint()) {
+    if (typeContext_->typeConstraintOf(*i)) {
       auto r = reachEdges_.find(std::make_pair(e->block(), block_));
       if (r != reachEdges_.end() && r->second == REACHABLE) {
-        types.addOption((*i)->typeConstraint()->clone());
+        types.addOption(typeContext_->typeConstraintOf(*i)->clone());
       }
     }
   }

@@ -31,6 +31,7 @@
 #include "rbjit/runtime_methodcall.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/primitivestore.h"
+#include "rbjit/typecontext.h"
 
 #include "ruby.h"
 
@@ -157,9 +158,10 @@ NativeCompiler::updateValue(OpcodeL* op, llvm::Value* value)
 // Translating blocks
 
 void*
-NativeCompiler::compileMethod(ControlFlowGraph* cfg, const char* name)
+NativeCompiler::compileMethod(ControlFlowGraph* cfg, TypeContext* typeContext, const char* name)
 {
   cfg_ = cfg;
+  typeContext_ = typeContext;
   funcName_ = name;
   translateToBitcode();
   return ee_->getPointerToFunction(func_);
@@ -340,7 +342,7 @@ NativeCompiler::visitOpcode(OpcodeLookup* op)
   llvm::Value* value = 0;
 
   // Try compile-time lookup
-  TypeLookup* type = dynamic_cast<TypeLookup*>(op->lhs()->typeConstraint());
+  TypeLookup* type = dynamic_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lhs()));
   if (type && type->candidates().size() == 1) {
     mri::MethodEntry me = type->candidates()[0].methodEntry();
     if (!me.isNull()) {

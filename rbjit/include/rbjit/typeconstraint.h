@@ -13,6 +13,7 @@ RBJIT_NAMESPACE_BEGIN
 class Variable;
 class TypeConstraint;
 class MethodInfo;
+class TypeContext;
 
 ////////////////////////////////////////////////////////////
 // TypeList
@@ -94,8 +95,8 @@ public:
   // Test live equality
   // [NOTE] Don't call this method directly because it doesn't consider the
   // case when the owner of the TypeConstraint is v. Intead, call
-  // Variable::isSameValueAs().
-  virtual bool isSameValueAs(Variable* v) = 0;
+  // TypeContext::isSameValueAs().
+  virtual bool isSameValueAs(TypeContext* typeContext, Variable* v) = 0;
 
   // Evaluate to the boolean value
   enum Boolean { TRUE_OR_FALSE, ALWAYS_TRUE, ALWAYS_FALSE };
@@ -147,7 +148,7 @@ public:
 
   bool operator==(const TypeConstraint& other) const;
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -167,7 +168,7 @@ public:
 
   bool operator==(const TypeConstraint& other) const;
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -189,7 +190,7 @@ public:
 
   intptr_t integer() const { return integer_; }
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -213,7 +214,7 @@ public:
 
   mri::Object value() const { return value_; }
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -238,7 +239,7 @@ public:
 
   bool operator==(const TypeConstraint& other) const;
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -281,7 +282,7 @@ public:
   std::vector<Candidate>& candidates() { return candidates_; }
   const std::vector<Candidate>& candidates() const { return candidates_; }
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -299,15 +300,16 @@ private:
 class TypeSameAs : public TypeConstraint {
 public:
 
-  TypeSameAs(Variable* source) : source_(source) {}
-  TypeSameAs* clone() const { return new TypeSameAs(source_); }
+  TypeSameAs(TypeContext* typeContext, Variable* source)
+    : typeContext_(typeContext), source_(source) {}
+  TypeSameAs* clone() const { return new TypeSameAs(typeContext_, source_); }
 
   bool operator==(const TypeConstraint& other) const;
 
   Variable* source() const { return source_; }
 
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
-  bool isSameValueAs(Variable* v);
   mri::Class evaluateClass();
   TypeList* resolve();
   std::string debugPrint() const;
@@ -317,6 +319,7 @@ public:
 
 private:
 
+  TypeContext* typeContext_;
   Variable* source_;
 
 };
@@ -332,7 +335,7 @@ public:
 
   mri::Class class_() const { return cls_; }
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -387,7 +390,7 @@ public:
 
   const std::vector<TypeConstraint*>& types() const { return types_; }
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
@@ -416,7 +419,7 @@ public:
 
   MethodInfo* methodInfo() const { return mi_; }
 
-  bool isSameValueAs(Variable* v);
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
   TypeList* resolve();
