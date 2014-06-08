@@ -366,6 +366,54 @@ TypeExactClass::debugPrint() const
 }
 
 ////////////////////////////////////////////////////////////
+// TypeClassOrSubclass
+
+bool
+TypeClassOrSubclass::operator==(const TypeConstraint& other) const
+{
+  return typeid(other) == typeid(TypeClassOrSubclass) &&
+    static_cast<const TypeClassOrSubclass&>(other).cls_ == cls_;
+}
+
+bool
+TypeClassOrSubclass::isSameValueAs(TypeContext* typeContext, Variable* v)
+{
+  return false;
+}
+
+TypeConstraint::Boolean
+TypeClassOrSubclass::evaluatesToBoolean()
+{
+  if (cls_ == mri::Class::falseClass() || cls_ == mri::Class::nilClass()) {
+    return ALWAYS_FALSE;
+  }
+  return ALWAYS_TRUE;
+}
+
+mri::Class
+TypeClassOrSubclass::evaluateClass()
+{
+  return cls_;
+}
+
+TypeList*
+TypeClassOrSubclass::resolve()
+{
+  // ***************
+  auto list = new TypeList(TypeList::DETERMINED);
+  list->addType(cls_);
+  return list;
+}
+
+std::string
+TypeClassOrSubclass::debugPrint() const
+{
+  char buf[256];
+  sprintf(buf, "ClassOrSubclass(%Ix)", cls_);
+  return buf;
+}
+
+////////////////////////////////////////////////////////////
 // TypeSelection
 
 TypeSelection::TypeSelection()

@@ -55,6 +55,7 @@ class TypeEnv;
 class TypeLookup;
 class TypeSameAs;
 class TypeExactClass;
+class TypeClassOrSubclass;
 class TypeSelection;
 class TypeRecursion;
 
@@ -69,6 +70,7 @@ public:
   virtual bool visitType(TypeLookup* type) = 0;
   virtual bool visitType(TypeSameAs* type) = 0;
   virtual bool visitType(TypeExactClass* type) = 0;
+  virtual bool visitType(TypeClassOrSubclass* type) = 0;
   virtual bool visitType(TypeSelection* type) = 0;
   virtual bool visitType(TypeRecursion* type) = 0;
 
@@ -330,6 +332,32 @@ public:
   TypeExactClass(mri::Class cls) : cls_(cls) {}
   static TypeExactClass* create(mri::Class cls) { return new TypeExactClass(cls); }
   TypeExactClass* clone() const { return create(cls_); }
+
+  bool operator==(const TypeConstraint& other) const;
+
+  mri::Class class_() const { return cls_; }
+
+  bool isSameValueAs(TypeContext* typeContext, Variable* v);
+  Boolean evaluatesToBoolean();
+  mri::Class evaluateClass();
+  TypeList* resolve();
+  std::string debugPrint() const;
+
+  bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
+//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
+
+private:
+
+  mri::Class cls_;
+
+};
+
+class TypeClassOrSubclass : public TypeConstraint {
+public:
+
+  TypeClassOrSubclass(mri::Class cls) : cls_(cls) {}
+  static TypeClassOrSubclass* create(mri::Class cls) { return new TypeClassOrSubclass(cls); }
+  TypeClassOrSubclass* clone() const { return create(cls_); }
 
   bool operator==(const TypeConstraint& other) const;
 
