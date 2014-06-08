@@ -14,14 +14,20 @@ public:
   enum { UNKNOWN = 0, YES = 1, NO = 2 };
 
   MethodInfo()
-    : hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
+    : cls_(), hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
   {}
 
-  MethodInfo(unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
-    : hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
+  MethodInfo(mri::Class cls)
+    : cls_(cls)
+  {}
+
+  MethodInfo(mri::Class cls, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
+    : cls_(cls), hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
   {}
 
   virtual ~MethodInfo() {}
+
+  mri::Class class_() const { return cls_; }
 
   unsigned hasDef() const { return hasDef_; }
   unsigned hasEval() const { return hasEval_; }
@@ -38,6 +44,8 @@ public:
 
 protected:
 
+  mri::Class cls_;
+
   unsigned hasDef_ : 2;
   unsigned hasEval_ : 2;
 
@@ -48,8 +56,8 @@ protected:
 class PrecompiledMethodInfo : public MethodInfo {
 public:
 
-  PrecompiledMethodInfo(RNode* node, const char* methodName)
-    : MethodInfo(), node_(node), methodName_(methodName), cfg_(0), methodBody_(0),
+  PrecompiledMethodInfo(mri::Class cls, RNode* node, const char* methodName)
+    : MethodInfo(cls), node_(node), methodName_(methodName), cfg_(0), methodBody_(0),
       lock_(false)
   {}
 

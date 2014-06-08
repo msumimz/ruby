@@ -25,7 +25,7 @@ void
 MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
 {
   auto me = cls.findMethod(methodName);
-  me.methodDefinition().setMethodInfo(new MethodInfo(hasDef, hasEval, returnType));
+  me.methodDefinition().setMethodInfo(new MethodInfo(cls, hasDef, hasEval, returnType));
 }
 
 ////////////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ PrecompiledMethodInfo::addToExistingMethod(mri::Class cls, ID methodName)
   }
 
   PrecompiledMethodInfo* mi =
-    new PrecompiledMethodInfo(def.astNode(), mri::Id(methodName).name());
+    new PrecompiledMethodInfo(cls, def.astNode(), mri::Id(methodName).name());
   def.setMethodInfo(mi);
 
   return mi;
