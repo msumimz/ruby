@@ -124,7 +124,7 @@ SsaTranslator::insertPhiFunctionsForSingleDefSite(int blockIndex, Variable* v)
       phiInserted_[i] = v;
     }
 
-    // Add definition site because phi function is a definition itself
+    // Add a definition site because phi function is a definition itself
     if (processed_[i] != v) {
       processed_[i] = v;
       insertPhiFunctionsForSingleDefSite(i, v);

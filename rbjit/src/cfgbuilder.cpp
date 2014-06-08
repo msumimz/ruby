@@ -69,6 +69,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
 
   // self
   Variable* self = buildNamedVariable(factory, mri::Id("<self>"));
+  self->defInfo()->addDefSite(factory->lastBlock()); // entry block
   cfg_->inputs()->push_back(self);
 
   RNode* argNode = node->nd_args;
@@ -85,15 +86,17 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
     IdTable idTable(node->nd_tbl);
     for (int i = 0; i < requiredArgCount; ++i) {
       Variable* v = buildNamedVariable(factory, idTable.idAt(i));
+      v->defInfo()->addDefSite(factory->lastBlock()); // entry block
       cfg_->inputs()->push_back(v);
     }
-    return;
   }
-
-  Variable* argc = buildNamedVariable(factory, mri::Id("<argc>"));
-  Variable* argv = buildNamedVariable(factory, mri::Id("<argv>"));
-  cfg_->inputs()->push_back(argc);
-  cfg_->inputs()->push_back(argv);
+  else {
+    // Vardiac arguments
+    Variable* argc = buildNamedVariable(factory, mri::Id("<argc>"));
+    Variable* argv = buildNamedVariable(factory, mri::Id("<argv>"));
+    cfg_->inputs()->push_back(argc);
+    cfg_->inputs()->push_back(argv);
+  }
 }
 
 Variable*
