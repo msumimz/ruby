@@ -236,7 +236,12 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
     updateTypeConstraint(op->lhs(), TypeAny());
   }
   else {
-    updateTypeConstraint(op->lhs(), TypeSelection(std::move(types)));
+    if (types.size() == 1) {
+      updateTypeConstraint(op->lhs(), *types[0]);
+    }
+    else {
+      updateTypeConstraint(op->lhs(), TypeSelection(std::move(types)));
+    }
   }
 
   if (mutator) {
