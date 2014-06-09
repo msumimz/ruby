@@ -18,7 +18,7 @@ public:
   {}
 
   MethodInfo(mri::Class cls)
-    : cls_(cls)
+    : cls_(cls), hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
   {}
 
   MethodInfo(mri::Class cls, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
