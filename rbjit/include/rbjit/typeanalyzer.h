@@ -33,6 +33,8 @@ public:
 
   TypeAnalyzer(ControlFlowGraph* cfg);
 
+  void setInputTypeConstraint(int index, const TypeConstraint& type);
+
   TypeContext* analyze();
 
   // Evaluate expressions

@@ -31,6 +31,8 @@ public:
 
   const std::vector<mri::Class>& typeList() const { return list_; }
 
+  size_t size() const { return list_.size(); }
+
   void addType(mri::Class type)
   { list_.push_back(type); }
 
@@ -81,6 +83,8 @@ public:
 
 class TypeConstraint {
 public:
+
+  enum { MAX_CANDIDATE_COUNT = 10 };
 
   TypeConstraint() {}
   virtual ~TypeConstraint() {}
@@ -373,6 +377,8 @@ public:
 //  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
+
+  static bool resolveInternal(mri::Class cls, TypeList* list);
 
   mri::Class cls_;
 

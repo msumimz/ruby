@@ -82,7 +82,11 @@ PrecompiledMethodInfo::analyzeTypes()
   }
 
   lock_ = true;
+
   TypeAnalyzer ta(cfg_);
+
+  // Set self's type
+  ta.setInputTypeConstraint(0, TypeClassOrSubclass(cls_));
   typeContext_ = ta.analyze();
   lock_ = false;
 

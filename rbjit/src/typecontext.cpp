@@ -5,33 +5,34 @@
 RBJIT_NAMESPACE_BEGIN
 
 TypeContext::TypeContext(ControlFlowGraph* cfg)
-  : cfg_(cfg), typeContext_(cfg->variables()->size(), 0)
+  : cfg_(cfg), types_(cfg->variables()->size(), 0)
 {}
 
-void
-TypeContext::addInputTypeConstraint(const TypeConstraint* type)
+TypeContext::~TypeContext()
 {
-  inputTypes_.push_back(type->clone());
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    (*i)->destroy();
+  }
 }
 
 void
 TypeContext::setTypeConstraint(Variable* v, TypeConstraint* type)
 {
-  typeContext_[v->index()] = type;
+  types_[v->index()] = type;
 }
 
 bool
 TypeContext::updateTypeConstraint(Variable* v, const TypeConstraint& type)
 {
   int i = v->index();
-  TypeConstraint* t = typeContext_[i];
+  TypeConstraint* t = types_[i];
   if (t) {
     if (*t == type) {
       return false;
     }
     t->destroy();
   }
-  typeContext_[i] = type.clone();
+  types_[i] = type.clone();
 
   return true;
 }
@@ -51,8 +52,8 @@ TypeContext::debugPrint() const
     Variable* v = *i;
     sprintf(buf, "%Ix: ", v);
     out += buf;
-    if (typeContext_[v->index()]) {
-      out += typeContext_[v->index()]->debugPrint();
+    if (types_[v->index()]) {
+      out += types_[v->index()]->debugPrint();
     }
     else {
       out += "(null)";

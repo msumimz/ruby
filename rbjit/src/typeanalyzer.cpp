@@ -21,6 +21,12 @@ TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg)
 {}
 
 void
+TypeAnalyzer::setInputTypeConstraint(int index, const TypeConstraint& type)
+{
+  typeContext_->updateTypeConstraint((*cfg_->inputs())[index], type);
+}
+
+void
 TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
 {
   if (!v) {
@@ -61,7 +67,9 @@ TypeAnalyzer::analyze()
 {
   // Initialize type constraints
   for (auto i = cfg_->variables()->cbegin(), end = cfg_->variables()->cend(); i != end; ++i) {
-    typeContext_->setTypeConstraint(*i, TypeAny::create());
+    if (!typeContext_->typeConstraintOf(*i)) {
+      typeContext_->setTypeConstraint(*i, TypeAny::create());
+    }
   };
 
   blocks_.push_back(cfg_->entry());

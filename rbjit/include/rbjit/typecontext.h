@@ -14,15 +14,16 @@ public:
 
   TypeContext(ControlFlowGraph* cfg);
 
-  void addInputTypeConstraint(const TypeConstraint* type);
+  ~TypeContext();
 
   // Simply set the type constraint
   void setTypeConstraint(Variable* v, TypeConstraint* type);
+
   // Update the existing type constraint value
   bool updateTypeConstraint(Variable* v, const TypeConstraint& type);
 
   TypeConstraint* typeConstraintOf(Variable* v) const
-  { return typeContext_[v->index()]; }
+  { return types_[v->index()]; }
 
   bool isSameValueAs(Variable* v1, Variable* v2);
 
@@ -31,8 +32,7 @@ public:
 private:
 
   ControlFlowGraph* cfg_;
-  std::vector<TypeConstraint*> inputTypes_;
-  std::vector<TypeConstraint*> typeContext_;
+  std::vector<TypeConstraint*> types_; // owned by this class
 
 };
 

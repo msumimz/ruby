@@ -1,14 +1,17 @@
 #include "rbjit/rubyobject.h"
 #include "rbjit/rubymethod.h"
 
+extern "C" {
 #include "ruby.h"
+#include "internal.h" // rb_classext_t, rb_subclass_entry_t
+}
 
 RBJIT_NAMESPACE_BEGIN
 
 namespace mri {
 
 ////////////////////////////////////////////////////////////
-// Object
+// mri::Object
 
 Class
 Object::class_() const
@@ -24,7 +27,7 @@ VALUE Object::nilObject() { return Qnil; }
 VALUE Object::undefObject() { return Qundef; }
 
 ////////////////////////////////////////////////////////////
-// Symbol
+// mri::Symbol
 
 const char*
 Symbol::name() const
@@ -45,7 +48,7 @@ Symbol::id() const
 }
 
 ////////////////////////////////////////////////////////////
-// Id
+// mri::Id
 
 Id::Id(const char* name)
   : id_(rb_intern(name))
@@ -64,7 +67,22 @@ Id::stringName() const
 }
 
 ////////////////////////////////////////////////////////////
-// Class
+// mri::SubclassEntry
+
+Class
+SubclassEntry::class_() const
+{
+  return entry_->klass;
+}
+
+SubclassEntry
+SubclassEntry::next() const
+{
+  return entry_->next;
+}
+
+////////////////////////////////////////////////////////////
+// mri::Class
 
 MethodEntry
 Class::findMethod(ID methodName) const
@@ -76,6 +94,13 @@ MethodEntry
 Class::findMethod(const char* methodName) const
 {
   return findMethod(mri::Id(methodName));
+}
+
+SubclassEntry
+Class::subclassEntry() const
+{
+  rb_classext_t* clsext = ((RClass*)value_)->ptr;
+  return SubclassEntry(clsext->subclasses);
 }
 
 // Builtin classes

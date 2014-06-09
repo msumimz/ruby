@@ -393,16 +393,32 @@ TypeClassOrSubclass::evaluatesToBoolean()
 mri::Class
 TypeClassOrSubclass::evaluateClass()
 {
-  return cls_;
+  return mri::Class();
 }
 
 TypeList*
 TypeClassOrSubclass::resolve()
 {
-  // ***************
   auto list = new TypeList(TypeList::DETERMINED);
   list->addType(cls_);
+  resolveInternal(cls_, list);
+
   return list;
+}
+
+bool
+TypeClassOrSubclass::resolveInternal(mri::Class cls, TypeList* list)
+{
+  for (mri::SubclassEntry entry = cls.subclassEntry(); !entry.isNull(); entry = entry.next()) {
+    list->addType(entry.class_());
+    if (list->size() >= MAX_CANDIDATE_COUNT) {
+      return false;
+    }
+    if (!resolveInternal(entry.class_(), list)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::string
