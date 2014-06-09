@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <utility> // std::move
+#include <algorithm> // std::find
 #include <unordered_map>
 #include "rbjit/common.h"
 #include "rbjit/rubyobject.h"
@@ -32,6 +33,9 @@ public:
   const std::vector<mri::Class>& typeList() const { return list_; }
 
   size_t size() const { return list_.size(); }
+
+  bool includes(mri::Class cls)
+  { return std::find(list_.cbegin(), list_.cend(), cls) != list_.cend(); }
 
   void addType(mri::Class type)
   { list_.push_back(type); }
@@ -84,7 +88,7 @@ public:
 class TypeConstraint {
 public:
 
-  enum { MAX_CANDIDATE_COUNT = 10 };
+  enum { MAX_CANDIDATE_COUNT = 3 };
 
   TypeConstraint() {}
   virtual ~TypeConstraint() {}
@@ -93,6 +97,7 @@ public:
   virtual TypeConstraint* clone() const = 0;
 
   // Destroy this
+  // Should be overwriten by classes having unusual life cycles
   virtual void destroy() { delete this; }
 
   // Test C++ equality
@@ -259,34 +264,23 @@ public:
 class TypeLookup : public TypeConstraint {
 public:
 
-  // Possible method entites at the call site
-  class Candidate {
-  public:
-    Candidate(mri::Class cls, mri::MethodEntry me) : cls_(cls), me_(me) {}
-    mri::Class class_() const { return cls_; }
-    mri::MethodEntry methodEntry() const { return me_; }
-    bool operator==(const Candidate& other) const
-    { return cls_ == other.cls_ && me_ == other.me_;  }
-  private:
-    mri::Class cls_;
-    mri::MethodEntry me_;
-  };
-
-
   TypeLookup() {}
-  TypeLookup(std::vector<Candidate> candidates)
-    : candidates_(std::move(candidates)) {}
+  TypeLookup(const std::vector<mri::MethodEntry>& candidates)
+    : candidates_(candidates)
+  {}
+
   TypeLookup* clone() const;
 
   bool operator==(const TypeConstraint& other) const;
 
-  void addCandidate(mri::Class cls, mri::MethodEntry me)
-  {
-    candidates_.push_back(Candidate(cls, me));
-  }
+  bool includes(mri::MethodEntry me)
+  { return std::find(candidates_.cbegin(), candidates_.cend(), me) != candidates_.cend(); }
 
-  std::vector<Candidate>& candidates() { return candidates_; }
-  const std::vector<Candidate>& candidates() const { return candidates_; }
+  void addCandidate(mri::MethodEntry me)
+  { candidates_.push_back(me); }
+
+  std::vector<mri::MethodEntry>& candidates() { return candidates_; }
+  const std::vector<mri::MethodEntry>& candidates() const { return candidates_; }
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
@@ -299,7 +293,7 @@ public:
 
 private:
 
-  std::vector<Candidate> candidates_;
+  std::vector<mri::MethodEntry> candidates_;
 
 };
 
@@ -433,6 +427,7 @@ public:
   TypeRecursion(MethodInfo* mi) : mi_(mi) {}
   static TypeRecursion* create(MethodInfo* mi);
   TypeRecursion* clone() const { return create(mi_); }
+  void destroy() {}
 
   bool operator==(const TypeConstraint& other) const;
 

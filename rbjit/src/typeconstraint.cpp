@@ -270,7 +270,7 @@ TypeLookup::debugPrint() const
   std::string out = buf;
 
   for (auto i = candidates_.cbegin(), end = candidates_.cend(); i != end; ++i) {
-    sprintf(buf, " (%Ix, %Ix)", i->class_().value(), i->methodEntry().methodEntry());
+    sprintf(buf, " (%Ix)", i->methodEntry());
     out += buf;
   };
   return out;
@@ -410,7 +410,9 @@ bool
 TypeClassOrSubclass::resolveInternal(mri::Class cls, TypeList* list)
 {
   for (mri::SubclassEntry entry = cls.subclassEntry(); !entry.isNull(); entry = entry.next()) {
-    list->addType(entry.class_());
+    if (!list->includes(entry.class_())) {
+      list->addType(entry.class_());
+    }
     if (list->size() >= MAX_CANDIDATE_COUNT) {
       return false;
     }

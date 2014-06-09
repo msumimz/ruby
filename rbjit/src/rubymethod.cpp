@@ -47,6 +47,12 @@ MethodEntry::methodName() const
   return me_->called_id;
 }
 
+Class
+MethodEntry::class_() const
+{
+  return me_->klass;
+}
+
 bool
 MethodEntry::canCall(CallType callType, Object self)
 {

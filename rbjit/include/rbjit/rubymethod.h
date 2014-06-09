@@ -62,6 +62,7 @@ public:
   bool isNull() const { return me_ == nullptr; }
   MethodDefinition methodDefinition() const;
   ID methodName() const;
+  Class class_() const;
 
   bool canCall(CallType callType, Object self);
 

@@ -83,13 +83,21 @@ PrecompiledMethodInfo::analyzeTypes()
 
   lock_ = true;
 
+  if (typeContext_) {
+    delete typeContext_;
+  }
+
   TypeAnalyzer ta(cfg_);
 
   // Set self's type
   ta.setInputTypeConstraint(0, TypeClassOrSubclass(cls_));
   typeContext_ = ta.analyze();
+
   lock_ = false;
 
+  if (returnType_) {
+    returnType_->destroy();
+  }
   returnType_ = typeContext_->typeConstraintOf(cfg_->output());
 
   RBJIT_DPRINT(typeContext_->debugPrint());
@@ -115,7 +123,8 @@ PrecompiledMethodInfo::returnType()
   }
 
   if (lock_) {
-    return TypeRecursion::create(this);
+    returnType_ = TypeRecursion::create(this);
+    return returnType_;
   }
 
   analyzeTypes();

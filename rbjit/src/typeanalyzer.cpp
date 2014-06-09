@@ -201,8 +201,8 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
   auto end = list->typeList().cend();
   for (; i != end; ++i) {
     mri::MethodEntry me = (*i).findMethod(op->methodName());
-    if (!me.isNull()) {
-      lookup.addCandidate(*i, me);
+    if (!me.isNull() && !lookup.includes(me)) {
+      lookup.addCandidate(me);
     }
   }
 
@@ -227,8 +227,8 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   auto end = lookup->candidates().cend();
   for (; i != end; ++i) {
     MethodInfo* mi;
-    if (!i->methodEntry().isNull() &&
-        (mi = i->methodEntry().methodDefinition().methodInfo())) {
+    if (!i->isNull() &&
+        (mi = i->methodDefinition().methodInfo())) {
       types.push_back(mi->returnType()->clone());
       mutator = mutator || mi->isMutator();
     }

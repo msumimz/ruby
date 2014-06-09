@@ -57,8 +57,8 @@ class PrecompiledMethodInfo : public MethodInfo {
 public:
 
   PrecompiledMethodInfo(mri::Class cls, RNode* node, const char* methodName)
-    : MethodInfo(cls), node_(node), methodName_(methodName), cfg_(0), methodBody_(0),
-      lock_(false)
+    : MethodInfo(cls), node_(node), methodName_(methodName), cfg_(0),
+      typeContext_(0), methodBody_(0), lock_(false)
   {}
 
   ControlFlowGraph* cfg() const { return cfg_; }
