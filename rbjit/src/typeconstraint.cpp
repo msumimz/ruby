@@ -266,7 +266,7 @@ std::string
 TypeLookup::debugPrint() const
 {
   char buf[256];
-  sprintf(buf, "Lookup (%d)", candidates_.size());
+  sprintf(buf, "Lookup[%d]", candidates_.size());
   std::string out = buf;
 
   for (auto i = candidates_.cbegin(), end = candidates_.cend(); i != end; ++i) {
@@ -609,7 +609,7 @@ std::string
 TypeSelection::debugPrint() const
 {
   char buf[256];
-  sprintf(buf, "Selection (%d)", types_.size());
+  sprintf(buf, "Selection[%d]", types_.size());
   std::string out = buf;
 
   for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
