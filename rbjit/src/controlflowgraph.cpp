@@ -155,17 +155,12 @@ SanityChecker::canContinue()
 void
 SanityChecker::addError(const char* format, ...)
 {
-  char buf[256];
-
   // header
-  _snprintf(buf, 255, "Block %d(%Ix): ", current_->index(), current_);
-  std::string error = buf;
+  std::string error = stringFormat("Block %d(%Ix): ", current_->index(), current_);
 
   va_list args;
   va_start(args, format);
-  vsnprintf(buf, 255, format, args);
-  buf[255] = 0;
-  error += buf;
+  error += stringFormatVarargs(format, args);
 
   errors_.push_back(error);
 }
@@ -176,14 +171,11 @@ SanityChecker::addError(Opcode* op, const char* format, ...)
   char buf[256];
 
   // header
-  _snprintf(buf, 255, "Block %d(%Ix):%s: ", current_->index(), current_, op->typeName());
-  std::string error = buf;
+  std::string error = stringFormat("Block %d(%Ix):%s: ", current_->index(), current_, op->typeName());
 
   va_list args;
   va_start(args, format);
-  vsnprintf(buf, 255, format, args);
-  buf[255] = 0;
-  error += buf;
+  error += stringFormatVarargs(format, args);
 
   errors_.push_back(error);
 }
@@ -494,7 +486,6 @@ private:
   void put(const char* format, ...);
 
   std::string out_;
-  char buf_[256];
 };
 
 void
@@ -512,16 +503,14 @@ Dumper::putCommonOutput(Opcode* op)
     opname = typeid(*op).name() + skip;
   }
 
-  sprintf(buf_, "  " PTRF " " PTRF " " PTRF " %d:%d ",
+  out_ += stringFormat("  " PTRF " " PTRF " " PTRF " %d:%d ",
     op, op->prev(), op->next(), op->file(), op->line());
-  out_ += buf_;
   if (op->lhs()) {
-    sprintf(buf_, PTRF " %-7s", op->lhs(), opname);
+    out_ += stringFormat(PTRF " %-7s", op->lhs(), opname);
   }
   else {
-    sprintf(buf_, SPCF " %-7s", opname);
+    out_ += stringFormat(SPCF " %-7s", opname);
   }
-  out_ += buf_;
 }
 
 void
@@ -529,9 +518,7 @@ Dumper::put(const char* format, ...)
 {
   va_list args;
   va_start(args, format);
-  vsnprintf(buf_, 255, format, args);
-  buf_[255] = 0;
-  out_ += buf_;
+  out_ += stringFormatVarargs(format, args);
 }
 
 bool

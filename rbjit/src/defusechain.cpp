@@ -132,17 +132,14 @@ DefUseChain::visitOpcode(OpcodeExit* op)
 std::string
 DefUseChain::debugPrint() const
 {
-  char buf[256];
   std::string out;
 
   size_t size = cfg_->variables()->size();
   for (size_t i = 0; i < size; ++i) {
-    sprintf(buf, "%Ix:", (*cfg_->variables())[i]);
-    out += buf;
+    out += stringFormat("%Ix:", (*cfg_->variables())[i]);
     const std::vector<std::pair<BlockHeader*, Variable*>>& uses = uses_[i];
     for (auto i = uses.cbegin(), end = uses.cend(); i != end; ++i) {
-      sprintf(buf, " %Ix:%Ix", i->first, i->second);
-      out += buf;
+      out += stringFormat(" %Ix:%Ix", i->first, i->second);
     };
     out += '\n';
   }

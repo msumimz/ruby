@@ -285,6 +285,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\codeduplicator.cpp" />
+    <ClCompile Include="..\..\src\common.cpp" />
     <ClCompile Include="..\..\src\controlflowgraph.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>

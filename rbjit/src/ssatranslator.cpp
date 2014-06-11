@@ -320,20 +320,14 @@ SsaTranslator::renameRhsOfPhiFunctions(BlockHeader* parent, BlockHeader* b)
 std::string
 SsaTranslator::debugPrintDf() const
 {
-  char buf[256];
-  std::string result;
-
-  sprintf(buf, "[Dominance Frontier: %x]\n", df_);
-  result += buf;
+  std::string result = stringFormat("[Dominance Frontier: %x]\n", df_);
 
   for (size_t i = 0; i < cfg_->blocks()->size(); ++i) {
     const std::vector<bool>& ba = df_[i];
-    sprintf(buf, "%d: size=%d df=", i, ba.size());
-    result += buf;
+    result += stringFormat("%d: size=%d df=", i, ba.size());
     for (size_t j = 0; j < cfg_->blocks()->size(); ++j) {
       if (ba[j]) {
-        sprintf(buf, "%d ", j);
-        result += buf;
+        result += stringFormat("%d ", j);
       }
     }
     result += "\n";

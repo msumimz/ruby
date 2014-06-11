@@ -46,12 +46,10 @@ TypeContext::isSameValueAs(Variable* v1, Variable* v2)
 std::string
 TypeContext::debugPrint() const
 {
-  char buf[256];
   std::string out = "[Type Constraints]\n";
   for (auto i = cfg_->variables()->cbegin(), end = cfg_->variables()->cend(); i != end; ++i) {
     Variable* v = *i;
-    sprintf(buf, "%Ix: ", v);
-    out += buf;
+    out += stringFormat("%Ix: ", v);
     if (types_[v->index()]) {
       out += types_[v->index()]->debugPrint();
     }
@@ -63,4 +61,5 @@ TypeContext::debugPrint() const
 
   return out;
 }
+
 RBJIT_NAMESPACE_END

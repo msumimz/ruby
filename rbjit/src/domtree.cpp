@@ -52,16 +52,13 @@ DomTree::buildTree(ControlFlowGraph* cfg)
 std::string
 DomTree::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "[DomTree: %Ix]\n", this);
-  std::string result(buf);
+  std::string result = stringFormat("[DomTree: %Ix]\n", this);
 
   for (size_t i = 0; i < size_; ++i) {
     Node* n = nodes_ + i;
-    sprintf(buf, "%3d: %Ix(%d) firstChild=%Ix(%d) nextSibling=%Ix(%d)\n",
+    result += stringFormat("%3d: %Ix(%d) firstChild=%Ix(%d) nextSibling=%Ix(%d)\n",
       i, n, blockIndexOf(n), n->firstChild_, blockIndexOf(n->firstChild_),
       n->nextSibling_, blockIndexOf(n->nextSibling_));
-    result += buf;
   }
 
   return result;

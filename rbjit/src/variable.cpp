@@ -52,19 +52,13 @@ extern "C" {
 std::string
 Variable::debugPrint() const
 {
-  char buf[256];
-  std::string result;
-
-  sprintf(buf, "%d:%Ix: '%s' defBlock=%Ix defOpcode=%Ix local=%d ",
+  std::string result = stringFormat("%d:%Ix: '%s' defBlock=%Ix defOpcode=%Ix local=%d ",
     index_, this, mri::Id(name_).name(), defBlock_, defOpcode_, local_);
-  result = buf;
 
   if (defInfo_) {
-    sprintf(buf, "defCount=%d defSites=", defInfo_->defCount());
-    result += buf;
+    result += stringFormat("defCount=%d defSites=", defInfo_->defCount());
     for (const DefSite* s = defInfo_->defSite(); s; s = s->next()) {
-      sprintf(buf, "%Ix ", s->defBlock());
-      result += buf;
+      result += stringFormat("%Ix ", s->defBlock());
     }
   }
   else {

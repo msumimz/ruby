@@ -1,5 +1,7 @@
 #pragma once
+
 #include <cassert>
+#include <string>
 
 // namespace
 #define RBJIT_NAMESPACE_BEGIN namespace rbjit {
@@ -14,6 +16,13 @@
 # define RBJIT_ASSUME(c) __assume(c)
 #endif
 
-
 // Unreachable code path
 #define RBJIT_UNREACHABLE RBJIT_ASSUME(!"Unreachable code path")
+
+RBJIT_NAMESPACE_BEGIN
+
+// sprintf that returns a std::string
+std::string stringFormat(const char* format, ...);
+std::string stringFormatVarargs(const char* format, va_list args);
+
+RBJIT_NAMESPACE_END

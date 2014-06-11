@@ -126,9 +126,7 @@ TypeInteger::resolve()
 std::string
 TypeInteger::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "Integer(%Ix)", integer_);
-  return buf;
+  return stringFormat("Integer(%Ix)", integer_);
 }
 
 ////////////////////////////////////////////////////////////
@@ -174,9 +172,7 @@ TypeConstant::resolve()
 std::string
 TypeConstant::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "Constant(%Ix)", value_);
-  return buf;
+  return stringFormat("Constant(%Ix)", value_);
 }
 
 ////////////////////////////////////////////////////////////
@@ -265,13 +261,10 @@ TypeLookup::resolve()
 std::string
 TypeLookup::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "Lookup[%d]", candidates_.size());
-  std::string out = buf;
+  std::string out = stringFormat("Lookup[%d]", candidates_.size());
 
   for (auto i = candidates_.cbegin(), end = candidates_.cend(); i != end; ++i) {
-    sprintf(buf, " (%Ix)", i->methodEntry());
-    out += buf;
+    out += stringFormat(" (%Ix)", i->methodEntry());
   };
   return out;
 }
@@ -313,9 +306,7 @@ TypeSameAs::resolve()
 std::string
 TypeSameAs::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "SameAs(%Ix, %Ix)", typeContext_, source_);
-  return buf;
+  return stringFormat("SameAs(%Ix, %Ix)", typeContext_, source_);
 }
 
 ////////////////////////////////////////////////////////////
@@ -360,9 +351,7 @@ TypeExactClass::resolve()
 std::string
 TypeExactClass::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "ExactClass(%Ix)", cls_);
-  return buf;
+  return stringFormat("ExactClass(%Ix)", cls_);
 }
 
 ////////////////////////////////////////////////////////////
@@ -426,9 +415,7 @@ TypeClassOrSubclass::resolveInternal(mri::Class cls, TypeList* list)
 std::string
 TypeClassOrSubclass::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "ClassOrSubclass(%Ix)", cls_);
-  return buf;
+  return stringFormat("ClassOrSubclass(%Ix)", cls_);
 }
 
 ////////////////////////////////////////////////////////////
@@ -608,9 +595,7 @@ TypeSelection::resolve()
 std::string
 TypeSelection::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "Selection[%d]", types_.size());
-  std::string out = buf;
+  std::string out = stringFormat("Selection[%d]", types_.size());
 
   for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
     out += ' ';
@@ -674,9 +659,7 @@ TypeRecursion::resolve()
 std::string
 TypeRecursion::debugPrint() const
 {
-  char buf[256];
-  sprintf(buf, "TypeRecursion(%Ix)", mi_);
-  return buf;
+  return stringFormat("TypeRecursion(%Ix)", mi_);
 }
 
 RBJIT_NAMESPACE_END

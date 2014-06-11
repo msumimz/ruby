@@ -334,6 +334,9 @@
     <ClCompile Include="..\..\src\typecontext.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\common.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
