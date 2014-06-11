@@ -382,6 +382,12 @@ TypeClassOrSubclass::evaluatesToBoolean()
 mri::Class
 TypeClassOrSubclass::evaluateClass()
 {
+  TypeList* list = resolve();
+  if (list->size() == 1) {
+    mri::Class cls = list->typeList()[0];
+    delete list;
+    return cls;
+  }
   return mri::Class();
 }
 
