@@ -24,11 +24,10 @@ public:
 
   enum Lattice { NONE, ANY, DETERMINED };
 
-  Lattice lattice() const { return lattice_; }
-  const std::vector<mri::Class>& list() const { return list_; }
+  TypeList(Lattice lattice) : lattice_(lattice) {}
 
-  TypeList(Lattice lattice) : lattice_(lattice)
-  {}
+  Lattice lattice() const { return lattice_; }
+  void setLattice(Lattice l) { lattice_ = l; }
 
   const std::vector<mri::Class>& typeList() const { return list_; }
 

@@ -409,6 +409,7 @@ TypeClassOrSubclass::resolveInternal(mri::Class cls, TypeList* list)
       list->addType(entry.class_());
     }
     if (list->size() >= MAX_CANDIDATE_COUNT) {
+      list->setLattice(TypeList::ANY);
       return false;
     }
     if (!resolveInternal(entry.class_(), list)) {
