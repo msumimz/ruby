@@ -12,9 +12,9 @@ RBJIT_NAMESPACE_BEGIN
 // TypeNone
 
 bool
-TypeNone::operator==(const TypeConstraint& other) const
+TypeNone::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeNone);
+  return typeid(*other) == typeid(TypeNone);
 }
 
 bool
@@ -51,9 +51,9 @@ TypeNone::debugPrint() const
 // TypeAny
 
 bool
-TypeAny::operator==(const TypeConstraint& other) const
+TypeAny::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeAny);
+  return typeid(*other) == typeid(TypeAny);
 }
 
 bool
@@ -90,17 +90,10 @@ TypeAny::debugPrint() const
 // TypeInteger
 
 bool
-TypeInteger::operator==(const TypeConstraint& other) const
+TypeInteger::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeInteger) &&
-    static_cast<const TypeInteger&>(other).integer_ == integer_;
-}
-
-bool
-TypeInteger::isSameValueAs(TypeContext* typeContext, Variable* v)
-{
-  // Comparison by value
-  return *this == *typeContext->typeConstraintOf(v);
+  return typeid(*other) == typeid(TypeInteger) &&
+    static_cast<const TypeInteger*>(other)->integer_ == integer_;
 }
 
 TypeConstraint::Boolean
@@ -133,17 +126,16 @@ TypeInteger::debugPrint() const
 // TypeConstant
 
 bool
-TypeConstant::operator==(const TypeConstraint& other) const
+TypeConstant::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeConstant) &&
-    static_cast<const TypeConstant&>(other).value_ == value_;
+  return typeid(*other) == typeid(TypeConstant) &&
+    static_cast<const TypeConstant*>(other)->value_ == value_;
 }
 
 bool
 TypeConstant::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
-  // Comparison by pointer
-  return this == typeContext->typeConstraintOf(v);
+  return equals(typeContext->typeConstraintOf(v));
 }
 
 TypeConstraint::Boolean
@@ -179,9 +171,9 @@ TypeConstant::debugPrint() const
 // TypeEnv
 
 bool
-TypeEnv::operator==(const TypeConstraint& other) const
+TypeEnv::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeEnv);
+  return typeid(*other) == typeid(TypeEnv);
 }
 
 bool
@@ -226,17 +218,16 @@ TypeLookup::clone() const
 }
 
 bool
-TypeLookup::operator==(const TypeConstraint& other) const
+TypeLookup::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeLookup) &&
-    static_cast<const TypeLookup&>(other).candidates_ == candidates_;
+  return typeid(*other) == typeid(TypeLookup) &&
+    static_cast<const TypeLookup*>(other)->candidates_ == candidates_;
 }
 
 bool
 TypeLookup::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
-  // Comparison by value
-  return *this == *typeContext->typeConstraintOf(v);
+  return false;
 }
 
 TypeConstraint::Boolean
@@ -261,7 +252,8 @@ TypeLookup::resolve()
 std::string
 TypeLookup::debugPrint() const
 {
-  std::string out = stringFormat("Lookup[%d]", candidates_.size());
+  std::string out = stringFormat("Lookup[%d, %s]",
+    candidates_.size(), isDetermined() ? "true" : "false");
 
   for (auto i = candidates_.cbegin(), end = candidates_.cend(); i != end; ++i) {
     out += stringFormat(" (%Ix)", i->methodEntry());
@@ -272,11 +264,17 @@ TypeLookup::debugPrint() const
 ////////////////////////////////////////////////////////////
 // TypeSameAs
 
-bool
-TypeSameAs::operator==(const TypeConstraint& other) const
+TypeConstraint*
+TypeSameAs::independantClone() const
 {
-  return typeid(other) == typeid(TypeSameAs) &&
-    static_cast<const TypeSameAs&>(other).source_ == source_;
+  return typeContext_->typeConstraintOf(source_)->independantClone();
+}
+
+bool
+TypeSameAs::equals(const TypeConstraint* other) const
+{
+  return typeid(*other) == typeid(TypeSameAs) &&
+    static_cast<const TypeSameAs*>(other)->source_ == source_;
 }
 
 bool
@@ -313,10 +311,10 @@ TypeSameAs::debugPrint() const
 // TypeExactClass
 
 bool
-TypeExactClass::operator==(const TypeConstraint& other) const
+TypeExactClass::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeExactClass) &&
-    static_cast<const TypeExactClass&>(other).cls_ == cls_;
+  return typeid(*other) == typeid(TypeExactClass) &&
+    static_cast<const TypeExactClass*>(other)->cls_ == cls_;
 }
 
 bool
@@ -358,10 +356,10 @@ TypeExactClass::debugPrint() const
 // TypeClassOrSubclass
 
 bool
-TypeClassOrSubclass::operator==(const TypeConstraint& other) const
+TypeClassOrSubclass::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeClassOrSubclass) &&
-    static_cast<const TypeClassOrSubclass&>(other).cls_ == cls_;
+  return typeid(*other) == typeid(TypeClassOrSubclass) &&
+    static_cast<const TypeClassOrSubclass*>(other)->cls_ == cls_;
 }
 
 bool
@@ -431,26 +429,42 @@ TypeClassOrSubclass::debugPrint() const
 TypeSelection::TypeSelection()
 {}
 
+
 TypeSelection::TypeSelection(std::vector<TypeConstraint*> types)
   : types_(std::move(types))
 {}
 
-TypeSelection::TypeSelection(TypeConstraint* type1)
+TypeSelection*
+TypeSelection::create()
 {
-  types_.push_back(type1);
+  return new TypeSelection();
 }
 
-TypeSelection::TypeSelection(TypeConstraint* type1, TypeConstraint* type2)
+TypeSelection*
+TypeSelection::create(TypeConstraint* type1)
 {
-  types_.push_back(type1);
-  types_.push_back(type2);
+  TypeSelection* sel = new TypeSelection();
+  sel->types_.push_back(type1);
+  return sel;
 }
 
-TypeSelection::TypeSelection(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3)
+TypeSelection*
+TypeSelection::create(TypeConstraint* type1, TypeConstraint* type2)
 {
-  types_.push_back(type1);
-  types_.push_back(type2);
-  types_.push_back(type3);
+  TypeSelection* sel = new TypeSelection();
+  sel->types_.push_back(type1);
+  sel->types_.push_back(type2);
+  return sel;
+}
+
+TypeSelection*
+TypeSelection::create(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3)
+{
+  TypeSelection* sel = new TypeSelection();
+  sel->types_.push_back(type1);
+  sel->types_.push_back(type2);
+  sel->types_.push_back(type3);
+  return sel;
 }
 
 TypeSelection*
@@ -469,27 +483,62 @@ TypeSelection::clone() const
 
 TypeSelection::~TypeSelection()
 {
-  auto i = types_.cbegin();
-  auto end = types_.cend();
-  for (; i != end; ++i) {
-    (*i)->destroy();
-  }
+  clear();
 }
 
 void
-TypeSelection::addOption(TypeConstraint* type)
+TypeSelection::add(const TypeConstraint& type)
 {
-  if (std::find(types_.cbegin(), types_.cend(), type) != types_.cend()) {
+  if (typeid(type) == typeid(TypeSelection)) {
+    // For TypeSelection, add each element in it
+    const TypeSelection& sel = static_cast<const TypeSelection&>(type);
+    for (auto i = sel.types().cbegin(), end = sel.types().cend(); i != end; ++i) {
+      add(**i);
+    }
     return;
   }
-  types_.push_back(type);
+
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    if ((*i)->equals(&type)) {
+      return;
+    }
+  }
+
+  types_.push_back(type.clone());
+}
+
+void
+TypeSelection::clear()
+{
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    (*i)->destroy();
+  }
+  types_.clear();
 }
 
 bool
-TypeSelection::operator==(const TypeConstraint& other) const
+TypeSelection::equals(const TypeConstraint* other) const
 {
-  return typeid(other) == typeid(TypeSelection) &&
-    static_cast<const TypeSelection&>(other).types_ == types_;
+  if (typeid(*other) != typeid(TypeSelection)) {
+    return types_.size() == 1 && types_[0]->equals(other);
+  }
+
+  std::vector<TypeConstraint*> o = static_cast<const TypeSelection*>(other)->types_;
+
+  if (types_.size() != o.size()) {
+    return false;
+  }
+
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    for (auto j = o.begin(), jend = o.end(); j != jend; ++j) {
+      if (!((*i)->equals(*j))) {
+        return false;
+      }
+      *j = 0;
+    }
+  }
+
+  return true;
 }
 
 bool
@@ -631,10 +680,10 @@ TypeRecursion::create(MethodInfo* mi)
 }
 
 bool
-TypeRecursion::operator==(const TypeConstraint& other) const
+TypeRecursion::equals(const TypeConstraint* other) const
 {
   return typeid(other) == typeid(TypeRecursion) &&
-    static_cast<const TypeRecursion&>(other).mi_ == mi_;
+    static_cast<const TypeRecursion*>(other)->mi_ == mi_;
 }
 
 bool

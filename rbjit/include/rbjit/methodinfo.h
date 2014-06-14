@@ -25,7 +25,7 @@ public:
     : cls_(cls), hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
   {}
 
-  virtual ~MethodInfo() {}
+  virtual ~MethodInfo();
 
   mri::Class class_() const { return cls_; }
 
@@ -70,6 +70,7 @@ public:
 
   TypeConstraint* returnType();
 
+  static PrecompiledMethodInfo* addToExistingMethod(mri::MethodEntry me);
   static PrecompiledMethodInfo* addToExistingMethod(mri::Class cls, ID methodName);
 
 private:

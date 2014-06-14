@@ -32,6 +32,10 @@ MethodEntry::MethodEntry(VALUE cls, ID id)
 {
   VALUE c;
   rb_method_entry_t* me = rb_method_entry(cls, id, &c);
+
+  // Are these conditions always satisfied?
+  assert(me->called_id == id);
+
   me_ = me;
 }
 

@@ -95,12 +95,17 @@ public:
   // Create an object by cloning
   virtual TypeConstraint* clone() const = 0;
 
+  // Clone as an 'independant' type constraint, or a type constraint that does
+  // not refer to any variables or constraints.  Currently, the only instance
+  // of a 'dependant' type constraint is TypeSameAs.
+  virtual TypeConstraint* independantClone() const = 0;
+
   // Destroy this
   // Should be overwriten by classes having unusual life cycles
   virtual void destroy() { delete this; }
 
   // Test C++ equality
-  virtual bool operator==(const TypeConstraint& other) const =  0;
+  virtual bool equals(const TypeConstraint* other) const =  0;
 
   // Test live equality
   // [NOTE] Don't call this method directly because it doesn't consider the
@@ -146,6 +151,11 @@ protected:
 
   void* operator new(size_t s) { return ::operator new(s); }
   void operator delete(void* p) { ::delete p; }
+
+private:
+
+  bool operator==(const TypeConstraint&) const;
+
 };
 
 class TypeNone : public TypeConstraint {
@@ -154,9 +164,10 @@ public:
   TypeNone() {}
   static TypeNone* create() { static TypeNone none; return &none; }
   TypeNone* clone() const { return create(); }
+  TypeNone* independantClone() const { return clone(); }
   void destroy() {}
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
@@ -174,9 +185,10 @@ public:
   TypeAny() {}
   static TypeAny* create() { static TypeAny any; return &any; }
   TypeAny* clone() const { return create(); }
+  TypeAny* independantClone() const { return clone(); }
   void destroy() {}
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
@@ -195,8 +207,9 @@ public:
 
   TypeInteger(intptr_t integer) : integer_(integer) {}
   TypeInteger* clone() const { return new TypeInteger(integer_); }
+  TypeInteger* independantClone() const { return clone(); }
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   intptr_t integer() const { return integer_; }
 
@@ -219,8 +232,9 @@ public:
 
   TypeConstant(mri::Object value) : value_(value) {}
   TypeConstant* clone() const { return new TypeConstant(value_); }
+  TypeConstant* independantClone() const { return clone(); }
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   mri::Object value() const { return value_; }
 
@@ -245,9 +259,10 @@ public:
   TypeEnv() {}
   static TypeEnv* create() { static TypeEnv env; return &env; }
   TypeEnv* clone() const { return create(); }
+  TypeEnv* independantClone() const { return clone(); }
   void destroy() {}
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
@@ -263,14 +278,18 @@ public:
 class TypeLookup : public TypeConstraint {
 public:
 
-  TypeLookup() {}
+  TypeLookup() : determined_(false) {}
+
+  TypeLookup(bool determined) : determined_(determined) {}
+
   TypeLookup(const std::vector<mri::MethodEntry>& candidates)
-    : candidates_(candidates)
+    : candidates_(candidates), determined_(false)
   {}
 
   TypeLookup* clone() const;
+  TypeLookup* independantClone() const { return clone(); }
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   bool includes(mri::MethodEntry me)
   { return std::find(candidates_.cbegin(), candidates_.cend(), me) != candidates_.cend(); }
@@ -280,6 +299,8 @@ public:
 
   std::vector<mri::MethodEntry>& candidates() { return candidates_; }
   const std::vector<mri::MethodEntry>& candidates() const { return candidates_; }
+
+  bool isDetermined() const { return determined_; }
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
@@ -293,6 +314,7 @@ public:
 private:
 
   std::vector<mri::MethodEntry> candidates_;
+  bool determined_;
 
 };
 
@@ -302,9 +324,11 @@ public:
   TypeSameAs(TypeContext* typeContext, Variable* source)
     : typeContext_(typeContext), source_(source) {}
   TypeSameAs* clone() const { return new TypeSameAs(typeContext_, source_); }
+  TypeConstraint* independantClone() const;
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
+  TypeContext* typeContext() const { return typeContext_; }
   Variable* source() const { return source_; }
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
@@ -329,8 +353,9 @@ public:
   TypeExactClass(mri::Class cls) : cls_(cls) {}
   static TypeExactClass* create(mri::Class cls) { return new TypeExactClass(cls); }
   TypeExactClass* clone() const { return create(cls_); }
+  TypeExactClass* independantClone() const { return clone(); }
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   mri::Class class_() const { return cls_; }
 
@@ -355,8 +380,9 @@ public:
   TypeClassOrSubclass(mri::Class cls) : cls_(cls) {}
   static TypeClassOrSubclass* create(mri::Class cls) { return new TypeClassOrSubclass(cls); }
   TypeClassOrSubclass* clone() const { return create(cls_); }
+  TypeClassOrSubclass* independantClone() const { return clone(); }
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   mri::Class class_() const { return cls_; }
 
@@ -381,24 +407,23 @@ class TypeSelection : public TypeConstraint {
 public:
 
   TypeSelection();
-  TypeSelection(std::vector<TypeConstraint*> types);
-
-  TypeSelection(TypeConstraint* type1);
-  TypeSelection(TypeConstraint* type1, TypeConstraint* type2);
-  TypeSelection(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3);
 
   ~TypeSelection();
 
-  static TypeSelection* create() { return new TypeSelection(); }
-  static TypeSelection* create(std::vector<TypeConstraint*> types) { return new TypeSelection(types); }
-  static TypeSelection* create(TypeConstraint* type1) { return new TypeSelection(type1); }
-  static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2) { return new TypeSelection(type1, type2); }
-  static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3) { return new TypeSelection(type1, type2, type3); }
+  // The create() methods take the ownership of the arguments
+  static TypeSelection* create();
+  static TypeSelection* create(TypeConstraint* type1);
+  static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2);
+  static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3);
+
   TypeSelection* clone() const;
+  TypeSelection* independantClone() const { return clone(); }
 
-  void addOption(TypeConstraint* type);
+  // The add method adds the clone of the argument
+  void add(const TypeConstraint& type);
+  void clear();
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   const std::vector<TypeConstraint*>& types() const { return types_; }
 
@@ -416,6 +441,9 @@ private:
   // Should not call
   TypeSelection(const TypeSelection&);
 
+  // Called inside clone()
+  TypeSelection(std::vector<TypeConstraint*> types);
+
   std::vector<TypeConstraint*> types_;
 
 };
@@ -426,9 +454,10 @@ public:
   TypeRecursion(MethodInfo* mi) : mi_(mi) {}
   static TypeRecursion* create(MethodInfo* mi);
   TypeRecursion* clone() const { return create(mi_); }
+  TypeRecursion* independantClone() const { return clone(); }
   void destroy() {}
 
-  bool operator==(const TypeConstraint& other) const;
+  bool equals(const TypeConstraint* other) const;
 
   MethodInfo* methodInfo() const { return mi_; }
 

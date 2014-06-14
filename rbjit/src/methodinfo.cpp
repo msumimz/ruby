@@ -21,6 +21,13 @@ RBJIT_NAMESPACE_BEGIN
 ////////////////////////////////////////////////////////////
 // MethodInfo
 
+MethodInfo::~MethodInfo()
+{
+  if (returnType_) {
+    returnType_->destroy();
+  }
+}
+
 void
 MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
 {
@@ -32,9 +39,8 @@ MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, unsigned h
 // PrecompiledMethodInfo
 
 PrecompiledMethodInfo*
-PrecompiledMethodInfo::addToExistingMethod(mri::Class cls, ID methodName)
+PrecompiledMethodInfo::addToExistingMethod(mri::MethodEntry me)
 {
-  mri::MethodEntry me(cls, methodName);
   mri::MethodDefinition def = me.methodDefinition();
 
   if (!def.hasAstNode()) {
@@ -42,10 +48,17 @@ PrecompiledMethodInfo::addToExistingMethod(mri::Class cls, ID methodName)
   }
 
   PrecompiledMethodInfo* mi =
-    new PrecompiledMethodInfo(cls, def.astNode(), mri::Id(methodName).name());
+    new PrecompiledMethodInfo(me.class_(), def.astNode(), mri::Id(me.methodName()).name());
   def.setMethodInfo(mi);
 
   return mi;
+}
+
+PrecompiledMethodInfo*
+PrecompiledMethodInfo::addToExistingMethod(mri::Class cls, ID methodName)
+{
+  mri::MethodEntry me(cls, methodName);
+  return addToExistingMethod(me);
 }
 
 void
@@ -98,7 +111,7 @@ PrecompiledMethodInfo::analyzeTypes()
   if (returnType_) {
     returnType_->destroy();
   }
-  returnType_ = typeContext_->typeConstraintOf(cfg_->output());
+  returnType_ = typeContext_->typeConstraintOf(cfg_->output())->independantClone();
 
   RBJIT_DPRINT(typeContext_->debugPrint());
 }

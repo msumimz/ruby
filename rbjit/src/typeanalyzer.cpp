@@ -29,12 +29,16 @@ TypeAnalyzer::setInputTypeConstraint(int index, const TypeConstraint& type)
 void
 TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
 {
+  assert(cfg_->containsVariable(v));
+
   if (!v) {
     return;
   }
 
   if (typeContext_->updateTypeConstraint(v, newType)) {
-    variables_.push_back(v);
+    if (std::find(variables_.cbegin(), variables_.cend(), v) == variables_.cend()) {
+      variables_.push_back(v);
+    }
   }
 }
 
@@ -74,29 +78,21 @@ TypeAnalyzer::analyze()
 
   blocks_.push_back(cfg_->entry());
 
-  bool changed;
   do {
-    changed = false;
-    if (!blocks_.empty()) {
-      changed = true;
-      do {
-        BlockHeader* b = blocks_.back();
-        blocks_.pop_back();
+    BlockHeader* b = blocks_.back();
+    blocks_.pop_back();
 
-        b->visitEachOpcode(this);
-      } while (!blocks_.empty());
+    b->visitEachOpcode(this);
+
+    while (!variables_.empty()) {
+      Variable* v = variables_.back();
+      variables_.pop_back();
+
+      evaluateExpressionsUsing(v);
     }
 
-    if (!variables_.empty()) {
-      changed = true;
-      do {
-        Variable* v = variables_.back();
-        variables_.pop_back();
+  } while (!blocks_.empty());
 
-        evaluateExpressionsUsing(v);
-      } while (!variables_.empty());
-    }
-  } while (changed);
 
   return typeContext_;
 }
@@ -191,15 +187,8 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
   // The list of the receiver's possible classes
   std::unique_ptr<TypeList> list(typeContext_->typeConstraintOf(op->receiver())->resolve());
 
-  if (list->lattice() != TypeList::DETERMINED) {
-    updateTypeConstraint(op->lhs(), TypeLookup());
-    return true;
-  }
-
-  TypeLookup lookup;
-  auto i = list->typeList().cbegin();
-  auto end = list->typeList().cend();
-  for (; i != end; ++i) {
+  TypeLookup lookup(list->lattice() == TypeList::DETERMINED);
+  for (auto i = list->typeList().cbegin(), end = list->typeList().cend(); i != end; ++i) {
     mri::MethodEntry me = (*i).findMethod(op->methodName());
     if (!me.isNull() && !lookup.includes(me)) {
       lookup.addCandidate(me);
@@ -222,34 +211,42 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   }
 
   bool mutator = false;
-  std::vector<TypeConstraint*> types;
-  auto i = lookup->candidates().cbegin();
-  auto end = lookup->candidates().cend();
-  for (; i != end; ++i) {
-    MethodInfo* mi;
-    if (!i->isNull() &&
-        (mi = i->methodDefinition().methodInfo())) {
-      types.push_back(mi->returnType()->clone());
+  TypeSelection sel;
+  for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
+    assert(!i->isNull());
+    MethodInfo* mi = i->methodDefinition().methodInfo();
+    if (!mi && i->methodDefinition().hasAstNode()) {
+      mi = PrecompiledMethodInfo::addToExistingMethod(*i);
+    }
+
+    if (mi) {
+      sel.add(*mi->returnType());
       mutator = mutator || mi->isMutator();
     }
     else {
       // If there is any method without method info, type inference will fail.
       mutator = true;
-      types.clear();
+      sel.clear();
       break;
     }
   }
 
-  if (types.empty()) {
-    updateTypeConstraint(op->lhs(), TypeAny());
-  }
-  else {
-    if (types.size() == 1) {
-      updateTypeConstraint(op->lhs(), *types[0]);
+  if (lookup->isDetermined()) {
+    if (sel.types().empty()) {
+      updateTypeConstraint(op->lhs(), TypeNone());
     }
     else {
-      updateTypeConstraint(op->lhs(), TypeSelection(std::move(types)));
+      if (sel.types().size() == 1) {
+        updateTypeConstraint(op->lhs(), *sel.types()[0]);
+      }
+      else {
+        updateTypeConstraint(op->lhs(), sel);
+      }
     }
+  }
+  else {
+    sel.add(TypeAny());
+    updateTypeConstraint(op->lhs(), sel);
   }
 
   if (mutator) {
@@ -275,15 +272,13 @@ bool
 TypeAnalyzer::visitOpcode(OpcodePhi* op)
 {
   TypeSelection types;
-  auto i = op->rhsBegin();
-  auto end = op->rhsEnd();
   BlockHeader::Backedge* e = block_->backedge();
-  for (; i < end; ++i, e = e->next()) {
+  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i, e = e->next()) {
     assert(e->block());
     if (typeContext_->typeConstraintOf(*i)) {
       auto r = reachEdges_.find(std::make_pair(e->block(), block_));
       if (r != reachEdges_.end() && r->second == REACHABLE) {
-        types.addOption(typeContext_->typeConstraintOf(*i)->clone());
+        types.add(*typeContext_->typeConstraintOf(*i));
       }
     }
   }

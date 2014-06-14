@@ -27,7 +27,7 @@ TypeContext::updateTypeConstraint(Variable* v, const TypeConstraint& type)
   int i = v->index();
   TypeConstraint* t = types_[i];
   if (t) {
-    if (*t == type) {
+    if (t->equals(&type)) {
       return false;
     }
     t->destroy();
@@ -40,7 +40,28 @@ TypeContext::updateTypeConstraint(Variable* v, const TypeConstraint& type)
 bool
 TypeContext::isSameValueAs(Variable* v1, Variable* v2)
 {
-  return v1 == v2 || typeConstraintOf(v1)->isSameValueAs(this, v2);
+  if (v1 == v2) {
+    return true;
+  }
+
+  TypeSameAs* sa;
+  while (sa = dynamic_cast<TypeSameAs*>(typeConstraintOf(v1))) {
+    assert(sa->typeContext() == this);
+    v1 = sa->source();
+    if (v1 == v2) {
+      return true;
+    }
+  }
+
+  while (sa = dynamic_cast<TypeSameAs*>(typeConstraintOf(v2))) {
+    assert(sa->typeContext() == this);
+    v2 = sa->source();
+    if (v1 == v2) {
+      return true;
+    }
+  }
+
+  return typeConstraintOf(v1)->equals(typeConstraintOf(v2));
 }
 
 std::string
