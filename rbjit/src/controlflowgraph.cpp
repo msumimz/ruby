@@ -416,7 +416,17 @@ SanityChecker::check()
     current_ = work_.back();
     work_.pop_back();
 
-    current_->visitEachOpcode(this);
+    Opcode* op = current_;
+    Opcode* prev = op->prev();
+    for (; op; prev = op, op = op->next()) {
+      if (op->prev() != prev) {
+        addError(op, "prev() is different from the acutual previous opcode");
+      }
+      bool result = op->accept(this);
+      if (!result || op == current_->footer()) {
+        break;
+      }
+    }
   }
 
   for (auto i = visitedBlocks_.cbegin(), end = visitedBlocks_.cend(); i != end; ++i) {
