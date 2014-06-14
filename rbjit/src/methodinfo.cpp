@@ -113,18 +113,22 @@ PrecompiledMethodInfo::analyzeTypes()
   }
   returnType_ = typeContext_->typeConstraintOf(cfg_->output())->independantClone();
 
+  RBJIT_DPRINT(debugPrintBanner());
   RBJIT_DPRINT(typeContext_->debugPrint());
 }
 
 void
 PrecompiledMethodInfo::compile()
 {
+  RBJIT_DPRINT(debugPrintBanner());
+
   if (!cfg_) {
     buildCfg();
   }
 
   analyzeTypes();
 
+  RBJIT_DPRINT(debugPrintBanner());
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
 }
 
@@ -143,6 +147,19 @@ PrecompiledMethodInfo::returnType()
   analyzeTypes();
 
   return returnType_;
+}
+
+////////////////////////////////////////////////////////////
+// debugPrintBanner
+
+std::string
+PrecompiledMethodInfo::debugPrintBanner() const
+{
+  return stringFormat(
+    "============================================================\n"
+    "Method: '%s' (%Ix)\n"
+    "============================================================\n",
+    methodName_, this);
 }
 
 RBJIT_NAMESPACE_END

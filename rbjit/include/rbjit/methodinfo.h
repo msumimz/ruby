@@ -73,6 +73,8 @@ public:
   static PrecompiledMethodInfo* addToExistingMethod(mri::MethodEntry me);
   static PrecompiledMethodInfo* addToExistingMethod(mri::Class cls, ID methodName);
 
+  std::string debugPrintBanner() const;
+
 private:
 
   RNode* node_; // method definition
