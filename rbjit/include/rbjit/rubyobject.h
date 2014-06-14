@@ -153,6 +153,8 @@ public:
   static Class fixnumClass();
   static Class bignumClass();
 
+  std::string debugClassName() const;
+
 };
 
 } // namespace mri

@@ -350,7 +350,7 @@ TypeExactClass::resolve()
 std::string
 TypeExactClass::debugPrint() const
 {
-  return stringFormat("ExactClass(%Ix)", cls_);
+  return stringFormat("ExactClass(%s)", cls_.debugClassName().c_str());
 }
 
 ////////////////////////////////////////////////////////////
@@ -421,7 +421,7 @@ TypeClassOrSubclass::resolveInternal(mri::Class cls, TypeList* list)
 std::string
 TypeClassOrSubclass::debugPrint() const
 {
-  return stringFormat("ClassOrSubclass(%Ix)", cls_);
+  return stringFormat("ClassOrSubclass(%s)", cls_.debugClassName().c_str());
 }
 
 ////////////////////////////////////////////////////////////

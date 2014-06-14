@@ -113,6 +113,12 @@ Class Class::nilClass() { return rb_cNilClass; }
 Class Class::fixnumClass() { return rb_cFixnum; }
 Class Class::bignumClass() { return rb_cBignum; }
 
+std::string
+Class::debugClassName() const
+{
+  return std::string(rb_class2name(value_));
+}
+
 } // namespace mri
 
 RBJIT_NAMESPACE_END
