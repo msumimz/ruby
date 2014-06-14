@@ -282,8 +282,8 @@ public:
 
   TypeLookup(bool determined) : determined_(determined) {}
 
-  TypeLookup(const std::vector<mri::MethodEntry>& candidates)
-    : candidates_(candidates), determined_(false)
+  TypeLookup(const std::vector<mri::MethodEntry>& candidates, bool determined)
+    : candidates_(candidates), determined_(determined)
   {}
 
   TypeLookup* clone() const;

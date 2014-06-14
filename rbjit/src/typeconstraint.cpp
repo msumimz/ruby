@@ -214,14 +214,15 @@ TypeEnv::debugPrint() const
 TypeLookup*
 TypeLookup::clone() const
 {
-  return new TypeLookup(candidates_);
+  return new TypeLookup(candidates_, determined_);
 }
 
 bool
 TypeLookup::equals(const TypeConstraint* other) const
 {
   return typeid(*other) == typeid(TypeLookup) &&
-    static_cast<const TypeLookup*>(other)->candidates_ == candidates_;
+    static_cast<const TypeLookup*>(other)->candidates_ == candidates_ &&
+    static_cast<const TypeLookup*>(other)->determined_ == determined_;
 }
 
 bool

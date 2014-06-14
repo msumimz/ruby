@@ -177,8 +177,8 @@ TypeAnalyzer::visitOpcode(OpcodeEnv* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeLookup* op)
 {
-  // If the 'environment' is changed between the method entry and the call
-  // site, it is impossible to decide actual methods.
+  // If the env is changed between the method entry and the call site, it is
+  // impossible to decide actual methods.
   if (!typeContext_->isSameValueAs(op->env(), cfg_->env())) {
     updateTypeConstraint(op->lhs(), TypeLookup()); // empty TypeLookup instance
     return true;
