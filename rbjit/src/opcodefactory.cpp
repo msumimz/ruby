@@ -13,6 +13,12 @@ OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg)
     file_(0), line_(0), depth_(0), halted_(false)
 {}
 
+OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg, BlockHeader* block, Opcode* opcode)
+  : cfg_(cfg), lastBlock_(block), lastOpcode_(opcode),
+    file_(opcode->file()), line_(opcode->line()), depth_(block->depth()),
+    halted_(false)
+{}
+
 OpcodeFactory::OpcodeFactory(OpcodeFactory& factory, int)
   : cfg_(factory.cfg_), file_(factory.file_), line_(factory.line_),
     depth_(factory.depth_), halted_(false)

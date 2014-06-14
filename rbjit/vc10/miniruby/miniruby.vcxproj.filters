@@ -337,6 +337,9 @@
     <ClCompile Include="..\..\src\common.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\inliner.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -429,6 +432,9 @@
       <Filter>rbjit</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\typecontext.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\inliner.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

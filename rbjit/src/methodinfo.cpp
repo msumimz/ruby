@@ -11,6 +11,7 @@
 #include "rbjit/typeconstraint.h"
 #include "rbjit/debugprint.h"
 #include "rbjit/typecontext.h"
+#include "rbjit/inliner.h"
 
 #ifdef RBJIT_DEBUG
 #include "rbjit/domtree.h"
@@ -131,6 +132,13 @@ PrecompiledMethodInfo::compile()
   analyzeTypes();
 
   RBJIT_DPRINT(debugPrintBanner());
+
+  Inliner inliner(cfg_, typeContext_);
+  inliner.doInlining();
+
+  RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintVariables());
+
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
 }
 

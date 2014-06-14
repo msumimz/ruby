@@ -68,6 +68,7 @@ public:
   void compile();
 
   ControlFlowGraph* cfg();
+  TypeContext* typeContext() { return typeContext_; }
   TypeConstraint* returnType();
 
   static PrecompiledMethodInfo* addToExistingMethod(mri::MethodEntry me);
