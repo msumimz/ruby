@@ -513,8 +513,7 @@ Dumper::putCommonOutput(Opcode* op)
     opname = typeid(*op).name() + skip;
   }
 
-  out_ += stringFormat("  " PTRF " " PTRF " " PTRF " %d:%d ",
-    op, op->prev(), op->next(), op->file(), op->line());
+  out_ += stringFormat("  " PTRF  " %d:%d ", op, op->file(), op->line());
   if (op->lhs()) {
     out_ += stringFormat(PTRF " %-7s", op->lhs(), opname);
   }
