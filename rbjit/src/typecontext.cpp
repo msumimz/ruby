@@ -16,6 +16,12 @@ TypeContext::~TypeContext()
 }
 
 void
+TypeContext::fitSizeToCfg()
+{
+  types_.resize(cfg_->variables()->size(), 0);
+}
+
+void
 TypeContext::setTypeConstraint(Variable* v, TypeConstraint* type)
 {
   types_[v->index()] = type;

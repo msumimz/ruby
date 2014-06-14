@@ -16,7 +16,10 @@ public:
 
   ~TypeContext();
 
+  void fitSizeToCfg();
+
   // Simply set the type constraint
+  // No checkes done.
   void setTypeConstraint(Variable* v, TypeConstraint* type);
 
   // Update the existing type constraint value

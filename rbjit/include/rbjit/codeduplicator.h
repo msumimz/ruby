@@ -8,16 +8,20 @@ RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
 class Variable;
+class TypeContext;
 
 class CodeDuplicator : public OpcodeVisitor {
 public:
 
-  CodeDuplicator(ControlFlowGraph* source, ControlFlowGraph* dest);
+  CodeDuplicator(ControlFlowGraph* src, TypeContext* srcTypes, ControlFlowGraph* dest, TypeContext* destTypes);
 
   void duplicateCfg();
 
-  BlockHeader* entry() { return blockOf(source_->entry()); }
-  BlockHeader* exit() { return blockOf(source_->exit()); }
+  BlockHeader* entry() { return blockOf(src_->entry()); }
+  BlockHeader* exit() { return blockOf(src_->exit()); }
+
+  BlockHeader* duplicatedBlockOf(BlockHeader* block) { return blockOf(block); }
+  Variable* duplicatedVariableOf(Variable* v) { return variableOf(v); }
 
   bool visitOpcode(BlockHeader* op);
   bool visitOpcode(OpcodeCopy* op);
@@ -33,16 +37,18 @@ public:
 
 private:
 
-  BlockHeader* blockOf(BlockHeader* sourceBlock);
-  Variable* variableOf(Variable* sourceVariable);
+  BlockHeader* blockOf(BlockHeader* srcBlock);
+  Variable* variableOf(Variable* srcVariable);
   void setDefInfo(Variable* lhs, Opcode* op);
-  void copyRhs(OpcodeVa* dest, OpcodeVa* source);
+  void copyRhs(OpcodeVa* dest, OpcodeVa* src);
 
   BlockHeader* lastBlock_;
   Opcode* lastOpcode_;
 
-  ControlFlowGraph* source_;
+  ControlFlowGraph* src_;
+  TypeContext* srcTypes_;
   ControlFlowGraph* dest_;
+  TypeContext* destTypes_;
 
   std::vector<BlockHeader*>* destBlocks_;
   std::vector<Variable*>* destVariables_;

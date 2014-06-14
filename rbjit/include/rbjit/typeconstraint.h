@@ -305,6 +305,10 @@ public:
 
   TypeSameAs(TypeContext* typeContext, Variable* source)
     : typeContext_(typeContext), source_(source) {}
+
+  static TypeSameAs* create(TypeContext* typeContext, Variable* source)
+  { return new TypeSameAs(typeContext, source); }
+
   TypeSameAs* clone() const { return new TypeSameAs(typeContext_, source_); }
   TypeConstraint* independantClone() const;
 
