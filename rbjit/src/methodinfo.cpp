@@ -79,6 +79,8 @@ PrecompiledMethodInfo::buildCfg()
   SsaTranslator ssa(cfg_, true);
   ssa.translate();
 
+  cfg_->clearDefInfo();
+
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
 }
