@@ -39,6 +39,9 @@ public:
   DefInfo* defInfo() const { return defInfo_; }
   void setDefInfo(DefInfo* defInfo) { defInfo_ = defInfo; }
   int defCount() const { return defInfo_ ? defInfo_->defCount() : 0; }
+
+  void updateDefSite(BlockHeader* defBlock, Opcode* defOpcode);
+
   void clearDefInfo();
 
   std::string debugPrint() const;

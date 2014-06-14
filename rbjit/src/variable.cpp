@@ -37,6 +37,16 @@ Variable::copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v)
 }
 
 void
+Variable::updateDefSite(BlockHeader* defBlock, Opcode* defOpcode)
+{
+  defBlock_ = defBlock;
+  defOpcode_ = defOpcode;
+  if (defInfo_) {
+    defInfo_->addDefSite(defBlock);
+  }
+}
+
+void
 Variable::clearDefInfo()
 {
   if (defInfo_) {

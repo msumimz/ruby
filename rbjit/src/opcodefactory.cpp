@@ -50,6 +50,14 @@ OpcodeFactory::createTemporary(bool useResult)
   return v;
 }
 
+void
+OpcodeFactory::updateDefSite(Variable* v)
+{
+  // Before SSA translastion, Variable::defBlock_ and Variable::defOpcode_ are
+  // not significant.  Thus update defSite_ only.
+  v->defInfo()->addDefSite(lastBlock_);
+}
+
 BlockHeader*
 OpcodeFactory::addFreeBlockHeader(BlockHeader* idom)
 {
@@ -72,7 +80,7 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   return lhs;
 }
@@ -81,7 +89,7 @@ Variable*
 OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   lastOpcode_ = op;
 
@@ -143,7 +151,7 @@ OpcodeFactory::addImmediate(VALUE value, bool useResult)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   return lhs;
 }
@@ -160,7 +168,7 @@ OpcodeFactory::addEnv(bool useResult)
 
   Variable* lhs = createNamedVariable(OpcodeEnv::envName());
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   return lhs;
 }
@@ -173,7 +181,7 @@ OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   return lhs;
 }
@@ -189,8 +197,8 @@ OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variabl
 
   Variable* lhs = createTemporary(useResult);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
-  env->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
+  updateDefSite(env);
 
   Variable** v = op->rhsBegin();
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
@@ -214,7 +222,7 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   Variable** v = op->rhsBegin();
   for (Variable*const* rhs = rhsBegin; rhs < rhsEnd; ++rhs) {
@@ -238,7 +246,7 @@ OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* 
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   Variable** v = op->rhsBegin();
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
@@ -256,7 +264,7 @@ OpcodeFactory::addPrimitive(const char* name, int argCount, ...)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  updateDefSite(lhs);
 
   va_list args;
   va_start(args, name);
@@ -278,7 +286,7 @@ OpcodeFactory::addJumpToReturnBlock(Variable* returnValue)
       cfg_->output_ = createTemporary(true);
     }
     op->setLhs(cfg_->output_);
-    cfg_->output_->defInfo()->addDefSite(lastBlock_);
+    updateDefSite(cfg_->output_);
   }
 
   addJump(cfg_->exit());

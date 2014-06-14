@@ -65,6 +65,8 @@ public:
 
 private:
 
+  void updateDefSite(Variable* v);
+
   ControlFlowGraph* cfg_;
 
   BlockHeader* lastBlock_;
