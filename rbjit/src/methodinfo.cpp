@@ -168,9 +168,9 @@ PrecompiledMethodInfo::debugPrintBanner() const
 {
   return stringFormat(
     "============================================================\n"
-    "Method: '%s' (%Ix)\n"
+    "Method: %s#%s (%Ix)\n"
     "============================================================\n",
-    methodName_, this);
+    class_().debugClassName().c_str(), methodName_, this);
 }
 
 RBJIT_NAMESPACE_END
