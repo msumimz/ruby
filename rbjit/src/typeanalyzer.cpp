@@ -254,7 +254,7 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   }
   else {
     updateTypeConstraint(op->env(),
-      TypeSameAs(typeContext_, static_cast<OpcodeLookup*>(op->lookup()->defOpcode())->env()));
+      TypeSameAs(typeContext_, op->lookupOpcode()->env()));
   }
 
   return true;

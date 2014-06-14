@@ -37,6 +37,13 @@ Opcode::shortTypeName() const
 ////////////////////////////////////////////////////////////
 // Call
 
+OpcodeLookup*
+OpcodeCall::lookupOpcode() const
+{
+  assert(typeid(*lookup_->defOpcode()) == typeid(OpcodeLookup));
+  return static_cast<OpcodeLookup*>(lookup_->defOpcode());
+}
+
 OpcodeCall*
 OpcodeCall::clone(Opcode* prev, Variable* methodEntry) const
 {

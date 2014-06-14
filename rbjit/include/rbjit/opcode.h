@@ -385,6 +385,8 @@ public:
   OpcodeCall* clone(Opcode* prev, Variable* methodEntry) const;
 
   Variable* lookup() const { return lookup_; }
+  OpcodeLookup* lookupOpcode() const;
+
   Variable* receiver() const { return rhs(0); }
 
   Variable* env() const { return env_; }

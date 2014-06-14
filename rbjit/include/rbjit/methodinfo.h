@@ -61,13 +61,13 @@ public:
       typeContext_(0), methodBody_(0), lock_(false)
   {}
 
-  ControlFlowGraph* cfg() const { return cfg_; }
   void* methodBody() { return methodBody_; }
 
   void buildCfg();
   void analyzeTypes();
   void compile();
 
+  ControlFlowGraph* cfg();
   TypeConstraint* returnType();
 
   static PrecompiledMethodInfo* addToExistingMethod(mri::MethodEntry me);

@@ -132,6 +132,15 @@ PrecompiledMethodInfo::compile()
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
 }
 
+ControlFlowGraph*
+PrecompiledMethodInfo::cfg()
+{
+  if (!cfg_) {
+    buildCfg();
+  }
+  return cfg_;
+}
+
 TypeConstraint*
 PrecompiledMethodInfo::returnType()
 {
