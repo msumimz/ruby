@@ -132,21 +132,6 @@ public:
 
   virtual std::string debugPrint() const = 0;
 
-#if 0
-  // Implication testers
-  virtual bool isImpliedBy(const TypeNone* type) const = 0;
-  virtual bool isImpliedBy(const TypeAny* type) const = 0;
-  virtual bool isImpliedBy(const TypeInteger* type) const = 0;
-  virtual bool isImpliedBy(const TypeConstant* type) const = 0;
-  virtual bool isImpliedBy(const TypeEnv* type) const = 0;
-  virtual bool isImpliedBy(const TypeMethodEntry* type) const = 0;
-  virtual bool isImpliedBy(const TypeSameAs* type) const = 0;
-  virtual bool isImpliedBy(const TypeExactClass* type) const = 0;
-  virtual bool isImpliedBy(const TypeSelection* type) const = 0;
-
-  virtual bool implies(const TypeConstraint* other) const = 0;
-#endif
-
 protected:
 
   void* operator new(size_t s) { return ::operator new(s); }
@@ -176,7 +161,7 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
+
 };
 
 class TypeAny : public TypeConstraint {
@@ -197,7 +182,7 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
+
 };
 
 // Just an integer, not a Fixnum; Internal use only.
@@ -220,11 +205,11 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
   intptr_t integer_;
+
 };
 
 class TypeConstant : public TypeConstraint {
@@ -245,7 +230,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
@@ -271,7 +255,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 };
 
@@ -309,7 +292,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
@@ -338,7 +320,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
@@ -366,7 +347,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
@@ -393,7 +373,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
@@ -434,7 +413,6 @@ public:
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
-//  bool implies(const TypeConstraint* other) const { return other->isImpliedBy(this); }
 
 private:
 
