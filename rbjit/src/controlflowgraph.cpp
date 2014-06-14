@@ -77,8 +77,43 @@ void
 ControlFlowGraph::removeOpcodeAfter(Opcode* prev)
 {
   Opcode* op = prev->next();
-  prev->removeNextOpcode();
+  op->unlink();
   delete op;
+}
+
+void
+ControlFlowGraph::removeOpcode(Opcode* op)
+{
+  op->unlink();
+  delete op;
+}
+
+BlockHeader*
+ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op)
+{
+  op->unlink();
+
+  BlockHeader* latterHeader = new BlockHeader(op->file(), op->line(), op->prev(), block, blocks_.size(), block->depth(), block);
+  blocks_.push_back(latterHeader);
+
+  OpcodeJump* jump = new OpcodeJump(op->file(), op->line(), op->prev(), latterHeader);
+  block->setFooter(jump);
+
+  return latterHeader;
+}
+
+BlockHeader*
+ControlFlowGraph::insertEmptyBlockAfter(BlockHeader* block)
+{
+  OpcodeJump* footer = static_cast<OpcodeJump*>(block->footer());
+  assert(typeid(*footer) == typeid(OpcodeJump));
+
+  BlockHeader* newBlock = new BlockHeader(footer->file(), footer->line(), footer, block, blocks_.size(), block->depth(), block);
+  blocks_.push_back(newBlock);
+
+  footer->setDest(newBlock);
+
+  return newBlock;
 }
 
 ////////////////////////////////////////////////////////////

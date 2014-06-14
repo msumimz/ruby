@@ -69,8 +69,9 @@ public:
   // Modifiers
 
   void removeOpcodeAfter(Opcode* prev);
-  void inlineAnotherCFG(Opcode* where, ControlFlowGraph* cfg);
-  Variable* duplicateCall(OpcodeCall* source, Variable* methodEntry);
+  void removeOpcode(Opcode* op);
+  BlockHeader* splitBlock(BlockHeader* block, Opcode* op);
+  BlockHeader* insertEmptyBlockAfter(BlockHeader* block);
 
   // Sanity check for debugging
 

@@ -44,7 +44,7 @@ class Opcode {
 public:
 
   Opcode(int file, int line, Opcode* prev)
-    : file_(file), line_(line), next_(0), prev_(prev)
+    : file_(file), line_(line), prev_(prev), next_(0)
   {
     if (prev) {
       next_ = prev->next_;
@@ -52,13 +52,20 @@ public:
     }
   }
 
+  // To be overridden by subclasses.
+  // Even when overridden, contained variables are NOT released.
   virtual ~Opcode() {}
 
-  virtual Opcode* clone(Opcode* prev) const { assert(!"clone() is not implemented"); return 0; }
+  virtual Opcode* clone(Opcode* prev) const
+  { assert(!"clone() is not implemented"); return 0; }
 
   Opcode* next() const { return next_; }
   Opcode* prev() const { return prev_; }
-  void removeNextOpcode() { next_ = next_->next_; }
+
+  void unlink() {
+    if (prev_) { prev_->next_ = next_; }
+    if (next_) { next_->prev_ = prev_; }
+  }
 
   // Obtain variables
   virtual Variable* lhs() const { return 0; }
@@ -86,8 +93,8 @@ protected:
 
   int file_ : 8;
   int line_ : 16;
-  Opcode* next_;
   Opcode* prev_;
+  Opcode* next_;
 };
 
 ////////////////////////////////////////////////////////////
@@ -287,6 +294,7 @@ public:
   { next_ = dest; }
 
   BlockHeader* dest() const { return static_cast<BlockHeader*>(next()); }
+  void setDest(BlockHeader* dest) { next_ = dest; }
   BlockHeader* nextBlock() const { return dest(); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
