@@ -373,7 +373,10 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
   Variable* receiver = buildNode(factory, node->nd_recv, true);
 
   // Arguments
-  int argCount = node->nd_args->nd_alen + 1; // includes receiver
+  int argCount = 1;
+  if (node->nd_args) {
+    argCount = node->nd_args->nd_alen + 1; // includes receiver
+  }
   Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
   Variable** a = args;
   *a++ = receiver;
