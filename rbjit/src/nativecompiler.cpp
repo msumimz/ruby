@@ -455,7 +455,7 @@ NativeCompiler::debugPrint()
   std::string bitcode;
   llvm::raw_string_ostream out(bitcode);
   func_->print(out);
-  return out.str();
+  return out.str().substr(1, std::string::npos);
 }
 
 RBJIT_NAMESPACE_END

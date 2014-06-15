@@ -305,7 +305,7 @@ TypeSameAs::resolve()
 std::string
 TypeSameAs::debugPrint() const
 {
-  return stringFormat("SameAs(%Ix, %Ix)", typeContext_, source_);
+  return stringFormat("SameAs(%Ix %Ix)", typeContext_, source_);
 }
 
 ////////////////////////////////////////////////////////////

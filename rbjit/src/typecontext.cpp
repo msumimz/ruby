@@ -79,6 +79,12 @@ TypeContext::debugPrint() const
     out += stringFormat("%Ix: ", v);
     if (types_[v->index()]) {
       out += types_[v->index()]->debugPrint();
+      if (std::find(cfg_->inputs()->cbegin(), cfg_->inputs()->cend(), v) != cfg_->inputs()->cend()) {
+        out += "  +";
+      }
+      if (cfg_->output() == v) {
+        out += "  *";
+      }
     }
     else {
       out += "(null)";
