@@ -59,9 +59,7 @@ OpcodeFactory::createTemporary(bool useResult)
 void
 OpcodeFactory::updateDefSite(Variable* v)
 {
-  // Before SSA translastion, Variable::defBlock_ and Variable::defOpcode_ are
-  // not significant.  Thus update defSite_ only.
-  v->defInfo()->addDefSite(lastBlock_);
+  v->updateDefSite(lastBlock_, lastOpcode_);
 }
 
 BlockHeader*
@@ -95,9 +93,8 @@ Variable*
 OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
-  updateDefSite(lhs);
-
   lastOpcode_ = op;
+  updateDefSite(lhs);
 
   return useResult ? lhs : 0;
 }
