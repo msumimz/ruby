@@ -20,7 +20,7 @@ Inliner::doInlining()
     do {
       op = op->next();
       if (typeid(*op) == typeid(OpcodeCall)) {
-        inlineCallSite(static_cast<OpcodeCall*>(op));
+        op = inlineCallSite(static_cast<OpcodeCall*>(op));
       }
     } while (op && op != footer);
   }
@@ -28,19 +28,19 @@ Inliner::doInlining()
   RBJIT_ASSERT(cfg_->checkSanityAndPrintErrors());
 }
 
-void
+Opcode*
 Inliner::inlineCallSite(OpcodeCall* op)
 {
   TypeLookup* lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
 
   if (!lookup->isDetermined() || lookup->candidates().size() != 1) {
-    return;
+    return op;
   }
 
   mri::MethodEntry me = lookup->candidates()[0];
   if (!me.methodDefinition().hasAstNode()) {
-    return;
+    return op;
   }
 
   PrecompiledMethodInfo* mi = (PrecompiledMethodInfo*)me.methodDefinition().methodInfo();
@@ -70,6 +70,8 @@ Inliner::inlineCallSite(OpcodeCall* op)
   static_cast<OpcodeJump*>(block_->footer())->setDest(initBlock);
 
   delete op;
+
+  return dup.exit();
 }
 
 RBJIT_NAMESPACE_END

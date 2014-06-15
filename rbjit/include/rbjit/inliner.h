@@ -7,6 +7,7 @@ RBJIT_NAMESPACE_BEGIN
 class ControlFlowGraph;
 class TypeContext;
 class BlockHeader;
+class Opcode;
 class OpcodeCall;
 
 class Inliner {
@@ -21,7 +22,7 @@ public:
 
 private:
 
-  void inlineCallSite(OpcodeCall* op);
+  Opcode* inlineCallSite(OpcodeCall* op);
 
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;
