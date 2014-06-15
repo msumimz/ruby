@@ -679,7 +679,8 @@ void
 Dumper::dumpBlockHeader(BlockHeader* b)
 {
   put("BLOCK %d: %Ix\n", b->index(), b);
-  put("depth=%d footer=%Ix backedges=", b->depth(), b->footer());
+  put("depth=%d footer=%Ix idom=%Ix backedges=",
+    b->depth(), b->footer(), b->idom());
   for (BlockHeader::Backedge* e = b->backedge(); e; e = e->next()) {
     put("%Ix ", e->block());
   }
