@@ -101,7 +101,7 @@ CodeDuplicator::duplicateCfg()
 bool
 CodeDuplicator::visitOpcode(BlockHeader* op)
 {
-  lastOpcode_ = lastBlock_ = op;
+  lastOpcode_ = lastBlock_ = blockOf(op);
   return true;
 }
 
