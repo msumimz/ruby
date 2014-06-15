@@ -15,13 +15,13 @@ Inliner::doInlining()
 {
   for (auto i = cfg_->blocks()->cbegin(), end = cfg_->blocks()->cend(); i != end; ++i) {
     block_ = *i;
-    Opcode* op = block_;
+    Opcode* op = block_->next();
     Opcode* footer = block_->footer();
     do {
-      op = op->next();
       if (typeid(*op) == typeid(OpcodeCall)) {
         op = inlineCallSite(static_cast<OpcodeCall*>(op));
       }
+      op = op->next();
     } while (op && op != footer);
   }
 
