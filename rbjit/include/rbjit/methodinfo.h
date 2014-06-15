@@ -74,7 +74,7 @@ public:
   static PrecompiledMethodInfo* addToExistingMethod(mri::MethodEntry me);
   static PrecompiledMethodInfo* addToExistingMethod(mri::Class cls, ID methodName);
 
-  std::string debugPrintBanner() const;
+  std::string debugPrintBanner(const char* stage) const;
   std::string debugPrintAst() const;
 
 private:

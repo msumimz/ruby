@@ -36,6 +36,8 @@ public:
 
   void* compileMethod(ControlFlowGraph* cfg, TypeContext* typeContext, const char* name);
 
+  std::string debugPrint();
+
   // Compile opcode
   bool visitOpcode(BlockHeader* opcode);
   bool visitOpcode(OpcodeCopy* opcode);

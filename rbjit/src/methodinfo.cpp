@@ -65,9 +65,13 @@ PrecompiledMethodInfo::addToExistingMethod(mri::Class cls, ID methodName)
 void
 PrecompiledMethodInfo::buildCfg()
 {
+  RBJIT_DPRINT(debugPrintBanner("AST"));
+  RBJIT_DPRINT(debugPrintAst());
+
   CfgBuilder builder;
   cfg_ = builder.buildMethod(node_, this);
 
+  RBJIT_DPRINT(debugPrintBanner("CFG building"));
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
@@ -75,6 +79,7 @@ PrecompiledMethodInfo::buildCfg()
   LTDominatorFinder domFinder(cfg_);
   domFinder.setDominatorsToCfg();
 
+  RBJIT_DPRINT(debugPrintBanner("SSA translation"));
   RBJIT_DPRINT(cfg_->domTree()->debugPrint());
 
   SsaTranslator ssa(cfg_, true);
@@ -116,31 +121,30 @@ PrecompiledMethodInfo::analyzeTypes()
   }
   returnType_ = typeContext_->typeConstraintOf(cfg_->output())->independantClone();
 
-  RBJIT_DPRINT(debugPrintBanner());
+  RBJIT_DPRINT(debugPrintBanner("Type analysis"));
   RBJIT_DPRINT(typeContext_->debugPrint());
 }
 
 void
 PrecompiledMethodInfo::compile()
 {
-  RBJIT_DPRINT(debugPrintBanner());
-  RBJIT_DPRINT(debugPrintAst());
-
   if (!cfg_) {
     buildCfg();
   }
 
   analyzeTypes();
 
-  RBJIT_DPRINT(debugPrintBanner());
-
   Inliner inliner(cfg_, typeContext_);
   inliner.doInlining();
 
+  RBJIT_DPRINT(debugPrintBanner("Inlining"));
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
 
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
+
+  RBJIT_DPRINT(debugPrintBanner("Compilation"));
+  RBJIT_DPRINT(NativeCompiler::instance()->debugPrint());
 }
 
 ControlFlowGraph*
@@ -173,13 +177,13 @@ PrecompiledMethodInfo::returnType()
 // debugPrintBanner
 
 std::string
-PrecompiledMethodInfo::debugPrintBanner() const
+PrecompiledMethodInfo::debugPrintBanner(const char* stage) const
 {
   return stringFormat(
     "============================================================\n"
-    "Method: %s#%s (%Ix)\n"
+    "%s#%s (%Ix) [%s]\n"
     "============================================================\n",
-    class_().debugClassName().c_str(), methodName_, this);
+    class_().debugClassName().c_str(), methodName_, this, stage);
 }
 
 ////////////////////////////////////////////////////////////

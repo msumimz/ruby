@@ -30,8 +30,8 @@ public:
   ID name() const { return name_; }
   void setName(ID name) { name_ = name; }
   Variable* original() const { return original_; }
-  bool local() const { return local_; }
-  void setLocal(bool local) { local_ = local; }
+  bool local() const { return defInfo_->isLocal(); }
+  void setLocal(bool local) { defInfo_->setLocal(local); }
   int index() const { return index_; }
   void setIndex(int i) { index_ = i; }
 
@@ -60,9 +60,6 @@ private:
 
   // original variable when this variable is created by renaming the existing one
   Variable* original_;
-
-  // True if every def and use is located in the same block
-  bool local_;
 
   int index_;
 

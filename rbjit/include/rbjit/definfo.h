@@ -38,10 +38,10 @@ private:
 class DefInfo {
 public:
 
-  DefInfo() : defSite_(0, 0), defCount_(0) {}
+  DefInfo() : defSite_(0, 0), defCount_(0), local_(true) {}
 
   DefInfo(BlockHeader* defBlock)
-    : defSite_(defBlock, 0), defCount_(1) {}
+    : defSite_(defBlock, 0), defCount_(1), local_(true) {}
 
   ~DefInfo();
 
@@ -52,6 +52,9 @@ public:
   void increaseDefCount() { ++defCount_; }
   void decreaseDefCount() { --defCount_; }
 
+  bool isLocal() const { return local_; }
+  void setLocal(bool local) { local_ = local; }
+
 private:
 
   // The block where the variable is defined.
@@ -61,6 +64,10 @@ private:
   // The number of definition sites.
   // Used to judge whether renaming is necessary.
   int defCount_;
+
+  // True if every def and use is located in the same block
+  bool local_;
+
 };
 
 RBJIT_NAMESPACE_END

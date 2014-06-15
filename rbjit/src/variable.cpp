@@ -8,7 +8,7 @@ RBJIT_NAMESPACE_BEGIN
 
 Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo)
   : defBlock_(defBlock), defOpcode_(defOpcode), name_(name),
-    original_(original == 0 ? this : original), local_(true),
+    original_(original == 0 ? this : original),
     index_(index), defInfo_(defInfo)
 {}
 
@@ -62,11 +62,11 @@ extern "C" {
 std::string
 Variable::debugPrint() const
 {
-  std::string result = stringFormat("%d:%Ix: '%s' defBlock=%Ix defOpcode=%Ix local=%d ",
-    index_, this, mri::Id(name_).name(), defBlock_, defOpcode_, local_);
+  std::string result = stringFormat("%d:%Ix: '%s' (%Ix %Ix) ",
+    index_, this, mri::Id(name_).name(), defBlock_, defOpcode_);
 
   if (defInfo_) {
-    result += stringFormat("defCount=%d defSites=", defInfo_->defCount());
+    result += stringFormat("defCount=%d local=%d defSites=", defInfo_->defCount(), defInfo_->isLocal());
     for (const DefSite* s = defInfo_->defSite(); s; s = s->next()) {
       result += stringFormat("%Ix ", s->defBlock());
     }

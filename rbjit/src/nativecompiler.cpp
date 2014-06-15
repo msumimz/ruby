@@ -235,10 +235,6 @@ NativeCompiler::translateToBitcode()
   };
 
 #ifdef RBJIT_DEBUG
-  std::string bitcode;
-  llvm::raw_string_ostream out(bitcode);
-  func_->print(out);
-  RBJIT_DPRINTLN(out.str());
   llvm::verifyFunction(*func_);
 #endif
 
@@ -448,6 +444,18 @@ NativeCompiler::loadBitcode()
   PrimitiveStore::instance()->buildLookupMap(mod);
 
   return mod;
+}
+
+////////////////////////////////////////////////////////////
+// debugPrint
+
+std::string
+NativeCompiler::debugPrint()
+{
+  std::string bitcode;
+  llvm::raw_string_ostream out(bitcode);
+  func_->print(out);
+  return out.str();
 }
 
 RBJIT_NAMESPACE_END
