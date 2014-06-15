@@ -39,7 +39,7 @@ private:
 
   BlockHeader* blockOf(BlockHeader* srcBlock);
   Variable* variableOf(Variable* srcVariable);
-  void setDefInfo(Variable* lhs, Opcode* op);
+  void setDefSite(Variable* v);
   void copyRhs(OpcodeVa* dest, OpcodeVa* src);
 
   BlockHeader* lastBlock_;
@@ -49,9 +49,6 @@ private:
   TypeContext* srcTypes_;
   ControlFlowGraph* dest_;
   TypeContext* destTypes_;
-
-  std::vector<BlockHeader*>* destBlocks_;
-  std::vector<Variable*>* destVariables_;
 
   size_t blockIndexOffset_;
   size_t variableIndexOffset_;

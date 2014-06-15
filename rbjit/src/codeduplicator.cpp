@@ -13,20 +13,19 @@ CodeDuplicator::CodeDuplicator(ControlFlowGraph* src, TypeContext* srcTypes, Con
 BlockHeader*
 CodeDuplicator::blockOf(BlockHeader* srcBlock)
 {
-  return (*destBlocks_)[srcBlock->index() + blockIndexOffset_];
+  return (*dest_->blocks())[srcBlock->index() + blockIndexOffset_];
 }
 
 Variable*
 CodeDuplicator::variableOf(Variable* srcVariable)
 {
-  return (*destVariables_)[srcVariable->index() + variableIndexOffset_];
+  return (*dest_->variables())[srcVariable->index() + variableIndexOffset_];
 }
 
 void
-CodeDuplicator::setDefInfo(Variable* lhs, Opcode* op)
+CodeDuplicator::setDefSite(Variable* lhs)
 {
-  lhs->setDefOpcode(op);
-  lhs->defInfo()->addDefSite(lastBlock_);
+  lhs->updateDefSite(lastBlock_, lastOpcode_);
 }
 
 void
@@ -56,8 +55,10 @@ CodeDuplicator::duplicateCfg()
 
   // Set the idom of each block
   for (int i = 0, end = src_->blocks()->size(); i < end; ++i) {
-    BlockHeader* idom = blockOf((*src_->blocks())[i]->idom());
-    (*blocks)[i + blockIndexOffset_]->setIdom(idom);
+    BlockHeader* idom = (*src_->blocks())[i]->idom();
+    if (idom) {
+      (*blocks)[i + blockIndexOffset_]->setIdom(blockOf(idom));
+    }
   }
 
   // Allocate space for new variables
@@ -108,8 +109,8 @@ CodeDuplicator::visitOpcode(OpcodeCopy* op)
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
   OpcodeCopy* newOp = new OpcodeCopy(op->file(), op->line(), lastOpcode_, lhs, op->rhs());
-  setDefInfo(lhs, newOp);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   return true;
 }
@@ -146,9 +147,8 @@ CodeDuplicator::visitOpcode(OpcodeImmediate* op)
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
   OpcodeImmediate* newOp = new OpcodeImmediate(op->file(), op->line(), lastOpcode_, lhs, op->value());
-
-  setDefInfo(lhs, newOp);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   return true;
 }
@@ -159,9 +159,8 @@ CodeDuplicator::visitOpcode(OpcodeEnv* op)
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
   OpcodeEnv* newOp = new OpcodeEnv(op->file(), op->line(), lastOpcode_, lhs);
-
-  setDefInfo(lhs, op);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   return true;
 }
@@ -172,9 +171,8 @@ CodeDuplicator::visitOpcode(OpcodeLookup* op)
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
   OpcodeLookup* newOp = new OpcodeLookup(op->file(), op->line(), lastOpcode_, lhs, op->receiver(), op->methodName(), variableOf(op->env()));
-
-  setDefInfo(lhs, op);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   return true;
 }
@@ -184,9 +182,8 @@ CodeDuplicator::visitOpcode(OpcodeCall* op)
 {
   Variable* lhs = variableOf(op->lhs());
   OpcodeCall* newOp = new OpcodeCall(op->file(), op->line(), lastOpcode_, lhs, variableOf(op->lookup()), op->rhsSize(), variableOf(op->env()));
-
-  setDefInfo(lhs, newOp);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   copyRhs(newOp, op);
 
@@ -198,9 +195,8 @@ CodeDuplicator::visitOpcode(OpcodePrimitive* op)
 {
   Variable* lhs = variableOf(op->lhs());
   OpcodePrimitive* newOp = new OpcodePrimitive(op->file(), op->line(), lastOpcode_, lhs, op->name(), op->rhsSize());
-
-  setDefInfo(lhs, newOp);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   copyRhs(newOp, op);
 
@@ -212,9 +208,8 @@ CodeDuplicator::visitOpcode(OpcodePhi* op)
 {
   Variable* lhs = variableOf(op->lhs());
   OpcodePhi* newOp = new OpcodePhi(op->file(), op->line(), lastOpcode_, lhs, op->rhsSize(), lastBlock_);
-
-  setDefInfo(lhs, newOp);
   lastOpcode_ = newOp;
+  setDefSite(lhs);
 
   copyRhs(newOp, op);
 
