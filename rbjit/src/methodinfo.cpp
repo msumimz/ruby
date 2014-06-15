@@ -124,6 +124,7 @@ void
 PrecompiledMethodInfo::compile()
 {
   RBJIT_DPRINT(debugPrintBanner());
+  RBJIT_DPRINT(debugPrintAst());
 
   if (!cfg_) {
     buildCfg();
@@ -179,6 +180,31 @@ PrecompiledMethodInfo::debugPrintBanner() const
     "Method: %s#%s (%Ix)\n"
     "============================================================\n",
     class_().debugClassName().c_str(), methodName_, this);
+}
+
+////////////////////////////////////////////////////////////
+// debugPrintAst
+
+// In node.h
+extern "C" {
+VALUE rb_parser_dump_tree(RNode* node, int);
+}
+
+std::string
+PrecompiledMethodInfo::debugPrintAst() const
+{
+  std::string out = stringFormat("[AST %Ix]\n", node_);
+  if (node_) {
+    mri::String ast = rb_parser_dump_tree(node_, 0);
+    std::string s = ast.toString();
+    out += s.substr(s.find("\n\n#") + 2, std::string::npos);
+    out += '\n';
+  }
+  else {
+    out += "(null)\n";
+  }
+
+  return out;
 }
 
 RBJIT_NAMESPACE_END

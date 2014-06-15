@@ -89,6 +89,21 @@ private:
 };
 
 ////////////////////////////////////////////////////////////
+// mri::String
+// Wrapper for the MRI's RString
+
+class String : public Object {
+public:
+
+  String(VALUE str) : Object(str) {}
+  String(const char* str);
+
+  const char* ToCStr() const;
+  std::string toString() const;
+
+};
+
+////////////////////////////////////////////////////////////
 // mri::SubclassEntry
 // Wrapper for the MRI's rb_subclass_entry_t
 

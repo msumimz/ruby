@@ -67,6 +67,25 @@ Id::stringName() const
 }
 
 ////////////////////////////////////////////////////////////
+// mri::String
+
+String::String(const char* str)
+  : Object(rb_str_new_cstr(str))
+{}
+
+const char*
+String::ToCStr() const
+{
+  return rb_string_value_cstr(const_cast<volatile VALUE*>(&value_));
+}
+
+std::string
+String::toString() const
+{
+  return std::string(rb_string_value_ptr(const_cast<volatile VALUE*>(&value_)));
+}
+
+////////////////////////////////////////////////////////////
 // mri::SubclassEntry
 
 Class
