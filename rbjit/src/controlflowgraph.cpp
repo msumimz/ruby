@@ -548,7 +548,8 @@ Dumper::putCommonOutput(Opcode* op)
     opname = typeid(*op).name() + skip;
   }
 
-  out_ += stringFormat("  " PTRF  " %d:%d ", op, op->file(), op->line());
+  out_ += stringFormat("  " PTRF " " PTRF " " PTRF " %d:%d ",
+    op, op->prev(), op->next(), op->file(), op->line());
   if (op->lhs()) {
     out_ += stringFormat(PTRF " %-7s", op->lhs(), opname);
   }
@@ -699,6 +700,16 @@ ControlFlowGraph::debugPrint() const
     dumper.dumpBlockHeader(*i);
   }
   return dumper.output();
+}
+
+std::string
+ControlFlowGraph::debugPrintBlock(BlockHeader* block) const
+{
+  std::string out = stringFormat("[Block %Ix (CFG: %Ix)]\n", block, this);
+  Dumper dumper;
+  dumper.dumpBlockHeader(block);
+  out += dumper.output();
+  return out;
 }
 
 std::string

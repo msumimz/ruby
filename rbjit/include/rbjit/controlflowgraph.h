@@ -81,6 +81,7 @@ public:
   // debug print
 
   std::string debugPrint() const;
+  std::string debugPrintBlock(BlockHeader* block) const;
   std::string debugPrintVariables() const;
   std::string debugPrintTypeConstraints() const;
 

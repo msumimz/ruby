@@ -3,6 +3,7 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/typecontext.h"
+#include "rbjit/debugprint.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -77,6 +78,7 @@ CodeDuplicator::duplicateCfg()
   // Main loop: iterate over the control flow graph and copy blocks
   for (auto i = src_->blocks()->cbegin(), end = src_->blocks()->cend(); i != end; ++i) {
     (*i)->visitEachOpcode(this);
+    RBJIT_DPRINT(src_->debugPrintBlock(blockOf(*i)));
   }
 
   // Duplicate type constraints
