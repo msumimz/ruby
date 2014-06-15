@@ -216,6 +216,8 @@ public:
   BlockHeader* nextBlock() const { assert(footer()); return footer()->nextBlock(); }
   BlockHeader* nextAltBlock() const { assert(footer()); return footer()->nextAltBlock(); }
 
+  bool containsOpcode(const Opcode* op);
+
   // backedges
 
   class Backedge {
@@ -249,9 +251,8 @@ public:
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
   // intrinsic iterator
-  template <class T>
-  void
-  ForEachOpcode(T func)
+  template <class T> void
+  forEachOpcode(T func)
   {
     Opcode* op = this;
     do {

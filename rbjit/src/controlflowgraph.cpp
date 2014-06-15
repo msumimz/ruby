@@ -191,7 +191,10 @@ void
 SanityChecker::addError(const char* format, ...)
 {
   // header
-  std::string error = stringFormat("Block %d(%Ix): ", current_->index(), current_);
+  std::string error;
+  if (current_) {
+    error = stringFormat("Block %d(%Ix): ", current_->index(), current_);
+  }
 
   va_list args;
   va_start(args, format);
@@ -436,6 +439,36 @@ SanityChecker::check()
     }
     if (v->index() != index) {
       addError("variable %d(%Ix)'s index %d is inconsistent with its position", index, v, v->index());
+      continue;
+    }
+
+    // Check defOpcode
+
+    if (!v->defOpcode()) {
+      if (!cfg_->containsInInputs(v)) {
+        addError("variable %d(%Ix)'s defOpcode is null", index, v);
+      }
+      continue;
+    }
+
+    OpcodeL* opl = dynamic_cast<OpcodeL*>(v->defOpcode());
+    if (!opl) {
+      addError("variable %d(%Ix)'s defOpcode %Ix is not OpcodeL", index, v, v->defOpcode());
+      continue;
+    }
+
+    if (opl->lhs() != v) {
+      OpcodeCall* opc = dynamic_cast<OpcodeCall*>(opl);
+      if (!opc || opc->env() != v) {
+        addError("variable %d(%Ix)'s defOpcode is %Ix, but that opcode's lhs variable is %Ix",
+	index, v, v->defOpcode(), opl->lhs());
+        continue;
+      }
+    }
+
+    if (!v->defBlock()->containsOpcode(opl)) {
+      addError("variable %d(%Ix)'s defOpcode is %Ix and defBlock is %Ix, but that block does not contain the opcode",
+	index, v, opl, v->defBlock());
       continue;
     }
   }

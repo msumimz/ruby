@@ -67,6 +67,21 @@ BlockHeader::~BlockHeader()
   }
 }
 
+bool
+BlockHeader::containsOpcode(const Opcode* op)
+{
+  Opcode* o = next();
+  Opcode* footer = footer_;
+  do {
+    if (op == o) {
+      return true;
+    }
+    o = o->next();
+  } while (o && o != footer);
+
+  return false;
+}
+
 void
 BlockHeader::addBackedge(BlockHeader* block)
 {

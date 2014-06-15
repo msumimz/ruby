@@ -49,8 +49,11 @@ public:
   void removeVariables(const std::vector<Variable*>* toBeRemoved);
   void clearDefInfo();
 
-  bool containsVariable(const Variable* block) const
-  { return std::find(variables_.cbegin(), variables_.cend(), block) != variables_.cend(); }
+  bool containsVariable(const Variable* v) const
+  { return std::find(variables_.cbegin(), variables_.cend(), v) != variables_.cend(); }
+
+  bool containsInInputs(const Variable* v) const
+  { return std::find(inputs_.cbegin(), inputs_.cend(), v) != inputs_.cend(); }
 
   // Method arguments
 
