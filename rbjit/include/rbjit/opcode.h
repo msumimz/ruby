@@ -62,7 +62,14 @@ public:
   Opcode* next() const { return next_; }
   Opcode* prev() const { return prev_; }
 
-  void unlink() {
+  void link(Opcode* next)
+  {
+    next_ = next;
+    next->prev_ = this;
+  }
+
+  void unlink()
+  {
     if (prev_) { prev_->next_ = next_; }
     if (next_) { next_->prev_ = prev_; }
   }
@@ -216,6 +223,8 @@ public:
   BlockHeader* nextBlock() const { assert(footer()); return footer()->nextBlock(); }
   BlockHeader* nextAltBlock() const { assert(footer()); return footer()->nextAltBlock(); }
 
+  void updateJumpDestination(BlockHeader* block);
+
   bool containsOpcode(const Opcode* op);
 
   // backedges
@@ -241,6 +250,8 @@ public:
   const Backedge* backedge() const { return &backedge_; }
 
   void addBackedge(BlockHeader* block);
+  void removeBackedge(BlockHeader* block);
+  void updateBackedge(BlockHeader* oldBlock, BlockHeader* newBlock);
   bool hasBackedge() const { return backedge_.block_ != 0; }
   bool hasMultipleBackedges() const { return backedge_.next_ != 0; }
   int backedgeSize() const;
@@ -295,12 +306,17 @@ public:
   { next_ = dest; }
 
   BlockHeader* dest() const { return static_cast<BlockHeader*>(next()); }
-  void setDest(BlockHeader* dest) { next_ = dest; }
   BlockHeader* nextBlock() const { return dest(); }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
   bool isTerminator() const { return true; }
+
+protected:
+
+  // Allows BlockHeader to call setDest()
+  friend class BlockHeader;
+  void setDest(BlockHeader* dest) { next_ = dest; }
 
 };
 

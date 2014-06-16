@@ -177,6 +177,17 @@ OpcodeFactory::addEnv(bool useResult)
 }
 
 Variable*
+OpcodeFactory::addEnv(Variable* env, bool useResult)
+{
+  OpcodeEnv* op = new OpcodeEnv(file_, line_, lastOpcode_, env);
+  lastOpcode_ = op;
+
+  updateDefSite(env);
+
+  return useResult ? env : 0;
+}
+
+Variable*
 OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 {
   OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->env());

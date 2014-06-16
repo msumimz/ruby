@@ -44,7 +44,7 @@ CodeDuplicator::duplicateCfg()
   // Allocate space for new blocks
   std::vector<BlockHeader*>* blocks = dest_->blocks();
   blockIndexOffset_ = blocks->size();
-  blocks->resize(blockIndexOffset_ + src_->variables()->size(), 0);
+  blocks->insert(blocks->end(), src_->blocks()->size(), nullptr);
 
   // Pre-create blocks
   for (auto i = src_->blocks()->cbegin(), end = src_->blocks()->cend(); i != end; ++i) {
@@ -65,7 +65,7 @@ CodeDuplicator::duplicateCfg()
   // Allocate space for new variables
   std::vector<Variable*>* variables = dest_->variables();
   variableIndexOffset_ = variables->size();
-  variables->resize(variableIndexOffset_ + src_->variables()->size(), 0);
+  variables->insert(variables->end(), src_->variables()->size(), nullptr);
 
   // Pre-create variables
   for (auto i = src_->variables()->cbegin(), end = src_->variables()->cend(); i != end; ++i) {
@@ -110,7 +110,9 @@ CodeDuplicator::visitOpcode(OpcodeCopy* op)
 {
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
-  OpcodeCopy* newOp = new OpcodeCopy(op->file(), op->line(), lastOpcode_, lhs, op->rhs());
+  Variable* rhs = variableOf(op->rhs());
+  RBJIT_ASSUME(rhs);
+  OpcodeCopy* newOp = new OpcodeCopy(op->file(), op->line(), lastOpcode_, lhs, rhs);
   lastOpcode_ = newOp;
   setDefSite(lhs);
 
@@ -172,7 +174,7 @@ CodeDuplicator::visitOpcode(OpcodeLookup* op)
 {
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
-  OpcodeLookup* newOp = new OpcodeLookup(op->file(), op->line(), lastOpcode_, lhs, op->receiver(), op->methodName(), variableOf(op->env()));
+  OpcodeLookup* newOp = new OpcodeLookup(op->file(), op->line(), lastOpcode_, lhs, variableOf(op->receiver()), op->methodName(), variableOf(op->env()));
   lastOpcode_ = newOp;
   setDefSite(lhs);
 
@@ -183,9 +185,12 @@ bool
 CodeDuplicator::visitOpcode(OpcodeCall* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  OpcodeCall* newOp = new OpcodeCall(op->file(), op->line(), lastOpcode_, lhs, variableOf(op->lookup()), op->rhsSize(), variableOf(op->env()));
+  Variable* lookup = variableOf(op->lookup());
+  Variable* env = variableOf(op->env());
+  OpcodeCall* newOp = new OpcodeCall(op->file(), op->line(), lastOpcode_, lhs, lookup, op->rhsSize(), env);
   lastOpcode_ = newOp;
   setDefSite(lhs);
+  setDefSite(env);
 
   copyRhs(newOp, op);
 
@@ -222,6 +227,12 @@ bool
 CodeDuplicator::visitOpcode(OpcodeExit* op)
 {
   // Emit nothing, because it is more useful when the duplicated code will be inlined.
+
+  // Temporarily set the footer to the last opcode, which is inconsistent
+  // against the invariants of the CFG because a footer should be a terminator.
+  // Callers should recover this inconsistency.
+  lastBlock_->setFooter(lastOpcode_);
+
   return true;
 }
 

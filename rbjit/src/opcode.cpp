@@ -67,10 +67,23 @@ BlockHeader::~BlockHeader()
   }
 }
 
+void
+BlockHeader::updateJumpDestination(BlockHeader* dest)
+{
+  assert(typeid(*footer_) == typeid(OpcodeJump) || typeid(*footer_) == typeid(OpcodeJumpIf));
+
+  if (nextBlock()) {
+    nextBlock()->removeBackedge(this);
+    dest->addBackedge(this);
+  }
+
+  static_cast<OpcodeJump*>(footer_)->setDest(dest);
+}
+
 bool
 BlockHeader::containsOpcode(const Opcode* op)
 {
-  Opcode* o = next();
+  Opcode* o = this;
   Opcode* footer = footer_;
   do {
     if (op == o) {
@@ -92,6 +105,48 @@ BlockHeader::addBackedge(BlockHeader* block)
     Backedge* e = new Backedge(block, backedge_.next_);
     backedge_.next_ = e;
   }
+}
+
+void
+BlockHeader::removeBackedge(BlockHeader* block)
+{
+  Backedge* e = &backedge_;
+  if (e->block_ == block) {
+    e->block_ = 0;
+    return;
+  }
+
+  for (;;) {
+    Backedge* prev = e;
+    e = e->next_;
+    if (!e) {
+      break;
+    }
+    if (e->block_ == block) {
+      prev->next_ = e->next_;
+      delete e;
+      return;
+    }
+  }
+
+  RBJIT_UNREACHABLE;
+}
+
+void
+BlockHeader::updateBackedge(BlockHeader* oldBlock, BlockHeader* newBlock)
+{
+  Backedge* e = &backedge_;
+  assert(e->block_);
+
+  do {
+    if (e->block_ == oldBlock) {
+      e->block_ = newBlock;
+      return;
+    }
+    e = e->next_;
+  } while (e);
+
+  RBJIT_UNREACHABLE;
 }
 
 int

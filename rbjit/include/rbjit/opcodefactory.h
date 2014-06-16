@@ -42,6 +42,7 @@ public:
   void addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse);
   Variable* addImmediate(VALUE value, bool useResult);
   Variable* addEnv(bool useResult);
+  Variable* addEnv(Variable* env, bool useResult);
   Variable* addLookup(Variable* receiver, ID methodName);
   // args includes a receiver as first argument
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);

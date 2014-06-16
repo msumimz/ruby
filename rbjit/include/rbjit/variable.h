@@ -25,6 +25,7 @@ public:
   ~Variable() { delete defInfo_; }
 
   BlockHeader* defBlock() const { return defBlock_; }
+  void setDefBlock(BlockHeader* block) { defBlock_ = block; }
   Opcode* defOpcode() const { return defOpcode_; }
   void setDefOpcode(Opcode* opcode) { defOpcode_ = opcode; }
   ID name() const { return name_; }
@@ -48,7 +49,7 @@ public:
 
 private:
 
-  // constructor indirectly called through factory methods
+  // constructor indirectly called by factory methods
   Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo);
 
   // location where this variable is defined

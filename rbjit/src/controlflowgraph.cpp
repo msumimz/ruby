@@ -8,6 +8,7 @@
 #include "rbjit/rubyobject.h"
 #include "rbjit/ltdominatorfinder.h"
 #include "rbjit/typeconstraint.h"
+#include "rbjit/debugprint.h"
 
 #ifdef _x64
 # define PTRF "% 16Ix"
@@ -93,13 +94,43 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op)
 {
   op->unlink();
 
-  BlockHeader* latterHeader = new BlockHeader(op->file(), op->line(), op->prev(), block, blocks_.size(), block->depth(), block);
-  blocks_.push_back(latterHeader);
+  BlockHeader* latter = new BlockHeader(op->file(), op->line(), 0, 0, blocks_.size(), block->depth(), 0);
+  latter->link(op->next());
+  latter->setFooter(block->footer());
+  blocks_.push_back(latter);
 
-  OpcodeJump* jump = new OpcodeJump(op->file(), op->line(), op->prev(), latterHeader);
+  OpcodeJump* jump = new OpcodeJump(op->file(), op->line(), op->prev(), 0);
   block->setFooter(jump);
 
-  return latterHeader;
+  // Update the defBlocks of the variables in the latter block
+  Opcode* o = latter;
+  Opcode* footer = latter->footer();
+  do {
+    OpcodeL* opl = dynamic_cast<OpcodeL*>(o);
+    if (opl) {
+      opl->lhs()->setDefBlock(latter);
+      OpcodeCall* opc = dynamic_cast<OpcodeCall*>(o);
+      if (opc) {
+        opc->env()->setDefBlock(latter);
+      }
+    }
+    o = o->next();
+  } while (o && o != footer);
+
+  // Update backedges
+  jump = dynamic_cast<OpcodeJump*>(footer);
+  if (jump) {
+    latter->nextBlock()->updateBackedge(block, latter);
+  }
+  else {
+    OpcodeJumpIf* jumpIf = dynamic_cast<OpcodeJumpIf*>(footer);
+    if (jumpIf) {
+      latter->nextBlock()->updateBackedge(block, latter);
+      latter->nextAltBlock()->updateBackedge(block, latter);
+    }
+  }
+
+  return latter;
 }
 
 BlockHeader*
@@ -111,7 +142,7 @@ ControlFlowGraph::insertEmptyBlockAfter(BlockHeader* block)
   BlockHeader* newBlock = new BlockHeader(footer->file(), footer->line(), footer, block, blocks_.size(), block->depth(), block);
   blocks_.push_back(newBlock);
 
-  footer->setDest(newBlock);
+  block->updateJumpDestination(newBlock);
 
   return newBlock;
 }
@@ -467,7 +498,7 @@ SanityChecker::check()
     }
 
     if (!v->defBlock()->containsOpcode(opl)) {
-      addError("variable %d(%Ix)'s defOpcode is %Ix and defBlock is %Ix, but that block does not contain the opcode",
+      addError("variable %d(%Ix)'s defOpcode is %Ix and defBlock is %Ix, but that block does not contain such an opcode",
 	index, v, opl, v->defBlock());
       continue;
     }

@@ -7,6 +7,7 @@
 #include "rbjit/typecontext.h"
 #include "rbjit/codeduplicator.h"
 #include "rbjit/opcodefactory.h"
+#include "rbjit/debugprint.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -20,6 +21,7 @@ Inliner::doInlining()
     do {
       if (typeid(*op) == typeid(OpcodeCall)) {
         op = inlineCallSite(static_cast<OpcodeCall*>(op));
+	footer = block_->footer(); // When inline is performed, block_ can be updated.
       }
       op = op->next();
     } while (op && op != footer);
@@ -48,30 +50,44 @@ Inliner::inlineCallSite(OpcodeCall* op)
   CodeDuplicator dup(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
   dup.duplicateCfg();
 
+  RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintVariables());
+
   BlockHeader* latter = cfg_->splitBlock(block_, op);
   BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block_);
 
   // Duplicate the arguments
-  OpcodeFactory entryFact(cfg_, initBlock, initBlock);
-  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i) {
-    Variable* v = dup.duplicatedVariableOf(*i);
-    entryFact.addCopy(v, *i, true);
-    v->updateDefSite(block_, op);
+  OpcodeFactory entryFactory(cfg_, initBlock, initBlock);
+  auto i = op->rhsBegin();
+  auto end = op->rhsEnd();
+  auto arg = mi->cfg()->inputs()->cbegin();
+  auto argEnd = mi->cfg()->inputs()->cend();
+  for (; arg != argEnd; ++arg, ++i) {
+    Variable* newArg = dup.duplicatedVariableOf(*arg);
+    entryFactory.addCopy(newArg, *i, true);
   }
-  entryFact.addJump(dup.entry());
 
-  // Duplicate the return value
+  // The opcode call implicitly defines the env, so that we need define an
+  // explict opcode.
+  entryFactory.addEnv(op->env(), true);
+
+  entryFactory.addJump(dup.entry());
+
+  OpcodeFactory exitFactory(cfg_, dup.exit(), dup.exit()->footer());
   if (op->lhs()) {
-    OpcodeFactory exitFact(cfg_, dup.exit(), dup.exit());
-    exitFact.addCopy(op->lhs(), dup.duplicatedVariableOf(cfg_->output()), true);
-    op->lhs()->updateDefSite(block_, op);
+    // Duplicate the return value
+    exitFactory.addCopy(op->lhs(), dup.duplicatedVariableOf(cfg_->output()), true);
   }
-
-  static_cast<OpcodeJump*>(block_->footer())->setDest(initBlock);
+  exitFactory.addJump(latter);
 
   delete op;
 
-  return dup.exit();
+  RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintVariables());
+  assert(cfg_->checkSanityAndPrintErrors());
+
+  block_ = latter;
+  return latter;
 }
 
 RBJIT_NAMESPACE_END
