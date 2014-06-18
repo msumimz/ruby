@@ -22,7 +22,7 @@ public:
 
 private:
 
-  Opcode* inlineCallSite(OpcodeCall* op);
+  bool inlineCallSite(OpcodeCall* op);
 
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;

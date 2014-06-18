@@ -134,16 +134,19 @@ PrecompiledMethodInfo::compile()
 
   analyzeTypes();
 
+  RBJIT_DPRINT(debugPrintBanner("Inlining"));
+
   Inliner inliner(cfg_, typeContext_);
   inliner.doInlining();
 
-  RBJIT_DPRINT(debugPrintBanner("Inlining"));
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
+  RBJIT_DPRINT(typeContext_->debugPrint());
+
+  RBJIT_DPRINT(debugPrintBanner("Compilation"));
 
   methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
 
-  RBJIT_DPRINT(debugPrintBanner("Compilation"));
   RBJIT_DPRINT(NativeCompiler::instance()->debugPrint());
 }
 

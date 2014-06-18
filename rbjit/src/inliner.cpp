@@ -14,14 +14,15 @@ RBJIT_NAMESPACE_BEGIN
 void
 Inliner::doInlining()
 {
-  for (auto i = cfg_->blocks()->cbegin(), end = cfg_->blocks()->cend(); i != end; ++i) {
-    block_ = *i;
+  for (int i = 0; i < cfg_->blocks()->size(); ++i) {
+    block_ = (*cfg_->blocks())[i];
     Opcode* op = block_->next();
     Opcode* footer = block_->footer();
     do {
       if (typeid(*op) == typeid(OpcodeCall)) {
-        op = inlineCallSite(static_cast<OpcodeCall*>(op));
-	footer = block_->footer(); // When inline is performed, block_ can be updated.
+        if (inlineCallSite(static_cast<OpcodeCall*>(op))) {
+          break;
+        }
       }
       op = op->next();
     } while (op && op != footer);
@@ -30,19 +31,19 @@ Inliner::doInlining()
   RBJIT_ASSERT(cfg_->checkSanityAndPrintErrors());
 }
 
-Opcode*
+bool
 Inliner::inlineCallSite(OpcodeCall* op)
 {
   TypeLookup* lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
 
   if (!lookup->isDetermined() || lookup->candidates().size() != 1) {
-    return op;
+    return false;
   }
 
   mri::MethodEntry me = lookup->candidates()[0];
   if (!me.methodDefinition().hasAstNode()) {
-    return op;
+    return false;
   }
 
   PrecompiledMethodInfo* mi = (PrecompiledMethodInfo*)me.methodDefinition().methodInfo();
@@ -86,8 +87,7 @@ Inliner::inlineCallSite(OpcodeCall* op)
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
 
-  block_ = latter;
-  return latter;
+  return true;
 }
 
 RBJIT_NAMESPACE_END
