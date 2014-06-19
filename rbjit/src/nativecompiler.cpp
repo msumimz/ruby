@@ -32,10 +32,24 @@
 #include "rbjit/typeconstraint.h"
 #include "rbjit/primitivestore.h"
 #include "rbjit/typecontext.h"
+#include "rbjit/rubyobject.h"
 
-#include "ruby.h"
+#define NOMINMAX
+#include <Windows.h>
 
 RBJIT_NAMESPACE_BEGIN
+
+struct PendingOpcode {
+  Variable* variable_;
+  BlockHeader* block_;
+  Opcode* opcode_;
+  llvm::BasicBlock* llvmBlock_;
+  llvm::BasicBlock::iterator iter_;
+
+  PendingOpcode(Variable* variable, BlockHeader* block, Opcode* opcode, llvm::BasicBlock* llvmBlock, llvm::BasicBlock::iterator iter)
+    : variable_(variable), block_(block), opcode_(opcode), llvmBlock_(llvmBlock), iter_(iter)
+  {}
+};
 
 class IRBuilder: public llvm::IRBuilder<false> {};
 
@@ -136,15 +150,15 @@ NativeCompiler::getInt(size_t value) const
 llvm::Value*
 NativeCompiler::getValue(Variable* v)
 {
-  int i = v->index();
-  llvm::Value* value;
-  while ((value = llvmValues_[i]) == 0) {
-    RBJIT_DPRINTF(("waiting %Ix\n", v));
+  llvm::Value* value = llvmValues_[v->index()];
+  if (!value) {
+    RBJIT_DPRINTF(("Block %Ix is blocked by variable %Ix\n", block_, v));
     llvm::BasicBlock* b = builder_->GetInsertBlock();
     llvm::BasicBlock::iterator iter = builder_->GetInsertPoint();
-    translateBlocks();
-    builder_->SetInsertPoint(b, iter);
+    opcodes_.push_back(new PendingOpcode(v, block_, opcode_, b, iter));
+    return nullptr;
   }
+
   return value;
 }
 
@@ -202,8 +216,8 @@ NativeCompiler::translateToBitcode()
   // Set up a phi list
   phis_.clear();
 
-  // Set up a states list
-  states_.assign(blockCount, WAITING);
+  // Set up a pending opcode list
+  opcodes_.clear();
 
 #ifdef RBJIT_DEBUG
   // Add debugtrap
@@ -259,7 +273,7 @@ NativeCompiler::declareRuntimeFunctions()
   runtime_[RF_lookupMethod] = builder_->CreateIntToPtr(
     getInt((size_t)rbjit_lookupMethod), ft->getPointerTo(0), "");
 
-  // VALUE rbjit_callMethod(rb_method_entry_t* me, VALUE receiver, int argc, ...)
+  // VALUE rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
   paramTypes.assign(3, valueType_);
   ft = llvm::FunctionType::get(valueType_, paramTypes, true);
   runtime_[RF_callMethod] = builder_->CreateIntToPtr(
@@ -269,13 +283,62 @@ NativeCompiler::declareRuntimeFunctions()
 void
 NativeCompiler::translateBlocks()
 {
-  size_t blockCount = cfg_->blocks()->size();
-  for (size_t i = 0; i < blockCount; ++i) {
-    if (states_[i] == WAITING) {
-      states_[i] = WORKING;
-      BlockHeader* block = (*cfg_->blocks())[i];
-      block->visitEachOpcode(this);
-      states_[i] = DONE;
+  std::vector<BlockHeader*> blocks;
+  std::vector<bool> done(cfg_->blocks()->size(), false);
+
+  blocks.push_back(cfg_->entry());
+
+  while (!blocks.empty() || !opcodes_.empty()) {
+    if (!blocks.empty()) {
+      opcode_ = block_ = blocks.back();
+      blocks.pop_back();
+
+      llvm::BasicBlock* bb = llvmBlocks_[block_->index()];
+      builder_->SetInsertPoint(bb);
+    }
+    else {
+      assert(!opcodes_.empty());
+
+      PendingOpcode* p = opcodes_.back();
+      opcodes_.pop_back();
+      PendingOpcode* first = p;
+      while (!llvmValues_[p->variable_->index()]) {
+        opcodes_.push_front(p);
+        p = opcodes_.back();
+        opcodes_.pop_back();
+        assert(p != first);
+      }
+
+      block_ = p->block_;
+      opcode_ = p->opcode_;
+      builder_->SetInsertPoint(p->llvmBlock_, p->iter_);
+
+      delete p;
+    }
+
+    Opcode* footer = block_->footer();
+    bool pending = false;
+    do {
+      opcode_ = opcode_->next();
+      if (!opcode_) {
+	break;
+      }
+      if (!opcode_->accept(this)) {
+        pending = true;
+        break;
+      }
+    } while (opcode_ != footer);
+
+    if (!pending) {
+      BlockHeader* n;
+      if ((n = footer->nextAltBlock()) && !done[n->index()]) {
+        blocks.push_back(n);
+        done[n->index()] = true;
+      }
+      if ((n = footer->nextBlock()) && !done[n->index()]) {
+        blocks.push_back(n);
+        done[n->index()] = true;
+      }
     }
   }
 }
@@ -286,15 +349,19 @@ NativeCompiler::translateBlocks()
 bool
 NativeCompiler::visitOpcode(BlockHeader* block)
 {
-  llvm::BasicBlock* bb = llvmBlocks_[block->index()];
-  builder_->SetInsertPoint(bb);
+  RBJIT_UNREACHABLE;
   return true;
 }
 
 bool
 NativeCompiler::visitOpcode(OpcodeCopy* op)
 {
-  updateValue(op, getValue(op->rhs()));
+  llvm::Value* rhs = getValue(op->rhs());
+  if (!rhs) {
+    return false;
+  }
+
+  updateValue(op, rhs);
   return true;
 }
 
@@ -309,12 +376,17 @@ NativeCompiler::visitOpcode(OpcodeJump* op)
 bool
 NativeCompiler::visitOpcode(OpcodeJumpIf* op)
 {
+  llvm::Value* cond = getValue(op->cond());
+  if (!cond) {
+    return false;
+  }
+
   // Represent RTEST in bitcode
   // In ruby/ruby.h:
   // #define RTEST(v) !(((VALUE)(v) & ~Qnil) == 0)
-  llvm::Value* rtest = builder_->CreateAnd(getValue(op->cond()), getInt(~Qnil));
-  llvm::Value* cond = builder_->CreateICmpNE(rtest, getInt(0));
-  builder_->CreateCondBr(cond,
+  llvm::Value* rtest = builder_->CreateAnd(cond, getInt(~mri::Object::nilObject()));
+  llvm::Value* cmp = builder_->CreateICmpNE(rtest, getInt(0));
+  builder_->CreateCondBr(cmp,
     llvmBlocks_[op->ifTrue()->index()],
     llvmBlocks_[op->ifFalse()->index()]);
   return true;
@@ -336,6 +408,11 @@ NativeCompiler::visitOpcode(OpcodeEnv* op)
 bool
 NativeCompiler::visitOpcode(OpcodeLookup* op)
 {
+  llvm::Value* rhs = getValue(op->rhs());
+  if (!rhs) {
+    return false;
+  }
+
   llvm::Value* value = 0;
 
   // Try compile-time lookup
@@ -349,7 +426,7 @@ NativeCompiler::visitOpcode(OpcodeLookup* op)
 
   if (!value) {
     value = builder_->CreateCall2(runtime_[RF_lookupMethod],
-      getValue(op->rhs()), getInt(op->methodName()), "");
+      rhs, getInt(op->methodName()), "");
   }
 
   updateValue(op, value);
@@ -361,16 +438,24 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 {
   std::vector<llvm::Value*> args(op->rhsCount() + 2);
   int count = 0;
-  Variable*const* i = op->rhsBegin();
-  Variable*const* rhsEnd = op->rhsEnd();
 
-  args[count++] = getValue(op->lookup());      // methoEntry
-  args[count++] = getValue(*i++);              // receiver
+  llvm::Value* lookup = getValue(op->lookup());
+  args[count++] = lookup;                      // methoEntry
   args[count++] = getInt(op->rhsCount() - 1);  // argc
 
   // arguments
-  for (; i < rhsEnd; ++i) {
-    args[count++] = getValue(*i);
+   bool complete = true;
+   Variable*const* i = op->rhsBegin();
+   Variable*const* rhsEnd = op->rhsEnd();
+   for (; i < rhsEnd; ++i) {
+    llvm::Value* arg = getValue(*i);
+    args[count++] = arg;
+    if (!arg) {
+      complete = false;
+    }
+  }
+  if (!lookup || !complete) {
+    return false;
   }
 
   // call instruction
@@ -386,8 +471,16 @@ NativeCompiler::visitOpcode(OpcodePrimitive* op)
 {
   int argCount = op->rhsCount();
   std::vector<llvm::Value*> args(argCount);
+  bool complete = true;
   for (int i = 0; i < op->rhsCount(); ++i) {
-    args[i] = getValue(op->rhs(i));
+    llvm::Value* arg = getValue(op->rhs(i));
+    args[i] = arg;
+    if (!arg) {
+      complete = false;
+    }
+  }
+  if (!complete) {
+    return false;
   }
 
   llvm::Function* f = module_->getFunction(mri::Id(op->name()).name());
@@ -409,7 +502,7 @@ NativeCompiler::visitOpcode(OpcodePhi* op)
   llvm::PHINode* phi = builder_->CreatePHI(valueType_, op->rhsCount());
   updateValue(op, phi);
 
-  // Left hand side arguments will be filled later, saving the phi node information here
+  // Left-hand side arguments will be filled later, saving the phi node information here
   phis_.push_back(Phi(op, phi));
 
   return true;
@@ -418,7 +511,12 @@ NativeCompiler::visitOpcode(OpcodePhi* op)
 bool
 NativeCompiler::visitOpcode(OpcodeExit* op)
 {
-  builder_->CreateRet(getValue(cfg_->output()));
+  llvm::Value* output = getValue(cfg_->output());
+  if (!output) {
+    return false;
+  }
+
+  builder_->CreateRet(output);
   return true;
 }
 

@@ -9,8 +9,10 @@ class Fixnum
 end
 
 def m
-  1.add_one
+  2.add_one
 end
 
 precompile Object, :m
+
+assert(m == 3)
 

@@ -17,11 +17,11 @@ rbjit_lookupMethod(VALUE receiver, ID methodName)
 }
 
 VALUE
-rbjit_callMethod(rb_method_entry_t* me, VALUE receiver, int argc, ...)
+rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
 {
   va_list list;
 
-  va_start(list, argc);
+  va_start(list, receiver);
   VALUE* argv = (VALUE*)_alloca(argc * sizeof(VALUE));
   for (int i = 0; i < argc; ++i) {
     argv[i] = va_arg(list, VALUE);

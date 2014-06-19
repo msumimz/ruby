@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <deque>
 #include <string>
 #include <unordered_set>
 
@@ -24,6 +25,8 @@ class IRBuilder;
 
 class ControlFlowGraph;
 class TypeContext;
+
+struct PendingOpcode;
 
 class NativeCompiler : public OpcodeVisitor {
 public:
@@ -93,6 +96,9 @@ private:
   llvm::Function* func_;
   std::vector<llvm::BasicBlock*> llvmBlocks_;
   std::vector<llvm::Value*> llvmValues_;
+  BlockHeader* block_;
+  Opcode* opcode_;
+  std::deque<PendingOpcode*> opcodes_;
 
   class Phi {
   public:
@@ -103,9 +109,6 @@ private:
     llvm::PHINode* bitcode_;
   };
   std::vector<Phi> phis_;
-
-  enum { WAITING, WORKING, DONE };
-  std::vector<int> states_;
 
   // Runtime functions
   enum {
