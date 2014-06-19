@@ -16,7 +16,7 @@ Inliner::doInlining()
 {
   for (int i = 0; i < cfg_->blocks()->size(); ++i) {
     block_ = (*cfg_->blocks())[i];
-    Opcode* op = block_->next();
+    Opcode* op = block_;
     Opcode* footer = block_->footer();
     do {
       if (typeid(*op) == typeid(OpcodeCall)) {
@@ -27,8 +27,6 @@ Inliner::doInlining()
       op = op->next();
     } while (op && op != footer);
   }
-
-  RBJIT_ASSERT(cfg_->checkSanityAndPrintErrors());
 }
 
 bool

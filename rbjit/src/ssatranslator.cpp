@@ -138,7 +138,8 @@ SsaTranslator::insertSinglePhiFunction(BlockHeader* block, Variable* v)
   int size = block->backedgeSize();
   assert(0 < size && size < 100);
 
-  OpcodePhi* phi = new OpcodePhi(0, 0, block, v, size, block);
+  OpcodePhi* phi = new OpcodePhi(0, 0, nullptr, v, size, block);
+  phi->insertAfter(block);
   for (Variable** i = phi->rhsBegin(); i < phi->rhsEnd(); ++i) {
     *i = v;
   }

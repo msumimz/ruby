@@ -95,7 +95,7 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op)
   op->unlink();
 
   BlockHeader* latter = new BlockHeader(op->file(), op->line(), 0, 0, blocks_.size(), block->depth(), 0);
-  latter->link(op->next());
+  latter->linkToNext(op->next());
   latter->setFooter(block->footer());
   blocks_.push_back(latter);
 

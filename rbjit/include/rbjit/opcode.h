@@ -62,13 +62,24 @@ public:
   Opcode* next() const { return next_; }
   Opcode* prev() const { return prev_; }
 
-  void link(Opcode* next)
+  void
+  linkToNext(Opcode* next)
   {
     next_ = next;
     next->prev_ = this;
   }
 
-  void unlink()
+  void
+  insertAfter(Opcode* prev)
+  {
+    prev_ = prev;
+    next_ = prev->next_;
+    prev->next_->prev_ = this;
+    prev->next_ = this;
+  }
+
+  void
+  unlink()
   {
     if (prev_) { prev_->next_ = next_; }
     if (next_) { next_->prev_ = prev_; }

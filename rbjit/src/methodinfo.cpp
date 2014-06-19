@@ -89,6 +89,7 @@ PrecompiledMethodInfo::buildCfg()
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
+  assert(cfg_->checkSanityAndPrintErrors());
 }
 
 void
@@ -142,6 +143,7 @@ PrecompiledMethodInfo::compile()
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   RBJIT_DPRINT(typeContext_->debugPrint());
+  assert(cfg_->checkSanityAndPrintErrors());
 
   RBJIT_DPRINT(debugPrintBanner("Compilation"));
 
