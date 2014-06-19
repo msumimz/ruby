@@ -139,6 +139,7 @@ NativeCompiler::getValue(Variable* v)
   int i = v->index();
   llvm::Value* value;
   while ((value = llvmValues_[i]) == 0) {
+    RBJIT_DPRINTF(("waiting %Ix\n", v));
     llvm::BasicBlock* b = builder_->GetInsertBlock();
     llvm::BasicBlock::iterator iter = builder_->GetInsertPoint();
     translateBlocks();
@@ -455,6 +456,8 @@ NativeCompiler::debugPrint()
   std::string bitcode;
   llvm::raw_string_ostream out(bitcode);
   func_->print(out);
+
+  // skip the first newline
   return out.str().substr(1, std::string::npos);
 }
 

@@ -32,6 +32,7 @@ private:
 
 #define RBJIT_DPRINT(msg) DebugPrint::instance()->print(__FILE__, __LINE__, __FUNCTION__, msg)
 #define RBJIT_DPRINTLN(msg) DebugPrint::instance()->println(__FILE__, __LINE__, __FUNCTION__, msg)
+#define RBJIT_DPRINTF(msg) DebugPrint::instance()->print(__FILE__, __LINE__, __FUNCTION__, stringFormat msg)
 
 RBJIT_NAMESPACE_END
 
