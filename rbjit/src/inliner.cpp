@@ -15,12 +15,12 @@ void
 Inliner::doInlining()
 {
   for (int i = 0; i < cfg_->blocks()->size(); ++i) {
-    block_ = (*cfg_->blocks())[i];
-    Opcode* op = block_;
-    Opcode* footer = block_->footer();
+    BlockHeader* block = (*cfg_->blocks())[i];
+    Opcode* op = block;
+    Opcode* footer = block->footer();
     do {
       if (typeid(*op) == typeid(OpcodeCall)) {
-        if (inlineCallSite(static_cast<OpcodeCall*>(op))) {
+        if (inlineCallSite(block, static_cast<OpcodeCall*>(op))) {
           break;
         }
       }
@@ -30,7 +30,7 @@ Inliner::doInlining()
 }
 
 bool
-Inliner::inlineCallSite(OpcodeCall* op)
+Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
 {
   TypeLookup* lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
@@ -46,14 +46,24 @@ Inliner::inlineCallSite(OpcodeCall* op)
 
   PrecompiledMethodInfo* mi = (PrecompiledMethodInfo*)me.methodDefinition().methodInfo();
 
+  replaceCallWithMethodBody(mi, block, op);
+
+  delete op;
+
+  return true;
+}
+
+void
+Inliner::replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* block, OpcodeCall* op)
+{
   CodeDuplicator dup(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
   dup.duplicateCfg();
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
 
-  BlockHeader* latter = cfg_->splitBlock(block_, op);
-  BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block_);
+  BlockHeader* latter = cfg_->splitBlock(block, op);
+  BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
 
   // Duplicate the arguments
   OpcodeFactory entryFactory(cfg_, initBlock, initBlock);
@@ -79,13 +89,9 @@ Inliner::inlineCallSite(OpcodeCall* op)
   }
   exitFactory.addJump(latter);
 
-  delete op;
-
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
-
-  return true;
 }
 
 RBJIT_NAMESPACE_END

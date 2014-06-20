@@ -9,6 +9,7 @@ class TypeContext;
 class BlockHeader;
 class Opcode;
 class OpcodeCall;
+class PrecompiledMethodInfo;
 
 class Inliner {
 public:
@@ -22,11 +23,11 @@ public:
 
 private:
 
-  bool inlineCallSite(OpcodeCall* op);
+  bool inlineCallSite(BlockHeader* block, OpcodeCall* op);
+  void replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* block, OpcodeCall* op);
 
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;
-  BlockHeader* block_;
 
 };
 
