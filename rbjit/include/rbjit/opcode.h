@@ -235,6 +235,7 @@ public:
   BlockHeader* nextAltBlock() const { assert(footer()); return footer()->nextAltBlock(); }
 
   void updateJumpDestination(BlockHeader* block);
+  void updateJumpAltDestination(BlockHeader* block);
 
   bool containsOpcode(const Opcode* op);
 
@@ -325,9 +326,9 @@ public:
 
 protected:
 
-  // Allows BlockHeader to call setDest()
+  // Allows BlockHeader to call setNextBlock(), which is used in updateJumpDestination()
   friend class BlockHeader;
-  void setDest(BlockHeader* dest) { next_ = dest; }
+  void setNextBlock(BlockHeader* dest) { next_ = dest; }
 
 };
 
@@ -353,6 +354,11 @@ public:
   bool isTerminator() const { return true; }
 
 private:
+
+  // Allows BlockHeader to call setNextBlock(), which is used in updateJumpDestination()
+  friend class BlockHeader;
+  void setNextBlock(BlockHeader* dest) { next_ = dest; }
+  void setNextAltBlock(BlockHeader* dest) { ifFalse_ = dest; }
 
   BlockHeader* ifFalse_;
 };

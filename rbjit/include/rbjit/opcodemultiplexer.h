@@ -1,0 +1,38 @@
+#pragma once
+
+#include <vector>
+#include "rbjit/common.h"
+#include "rbjit/rubyobject.h"
+
+RBJIT_NAMESPACE_BEGIN
+
+class ControlFlowGraph;
+class Opcode;
+class BlockHeader;
+class OpcodePhi;
+class Variable;
+
+class OpcodeMultiplexer {
+public:
+
+  OpcodeMultiplexer(ControlFlowGraph* cfg)
+    : cfg_(cfg), phi_(0)
+  {}
+
+  void addSelection(mri::Class cls);
+  BlockHeader* multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, bool otherwise);
+
+  const std::vector<BlockHeader*> segments() const { return segments_; }
+  OpcodePhi* phi() const { return phi_; }
+
+private:
+
+  ControlFlowGraph* cfg_;
+
+  std::vector<mri::Class> selections_;
+  std::vector<BlockHeader*> segments_;
+  OpcodePhi* phi_;
+
+};
+
+RBJIT_NAMESPACE_END

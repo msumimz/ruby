@@ -35,6 +35,9 @@ public:
   void setDepth(int depth) { depth_ = depth; }
 
   BlockHeader* addFreeBlockHeader(BlockHeader* idom);
+  void addBlockHeader();
+  void addBlockHeaderAsTrueBlock();
+  void addBlockHeaderAsFalseBlock();
 
   Variable* addCopy(Variable* rhs, bool useResult);
   Variable* addCopy(Variable* lhs, Variable* rhs, bool useResult);
@@ -48,6 +51,7 @@ public:
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   void duplicateCall(OpcodeCall* source, Variable* methodEntry);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
+  Variable* addPhi(Variable* lhs, int rhsCount, bool useResult);
   Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   Variable* addPrimitive(const char* name, int argCount, ...);
 

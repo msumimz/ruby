@@ -77,7 +77,20 @@ BlockHeader::updateJumpDestination(BlockHeader* dest)
     dest->addBackedge(this);
   }
 
-  static_cast<OpcodeJump*>(footer_)->setDest(dest);
+  static_cast<OpcodeJump*>(footer_)->setNextBlock(dest);
+}
+
+void
+BlockHeader::updateJumpAltDestination(BlockHeader* dest)
+{
+  assert(typeid(*footer_) == typeid(OpcodeJumpIf));
+
+  if (nextAltBlock()) {
+    nextAltBlock()->removeBackedge(this);
+    dest->addBackedge(this);
+  }
+
+  static_cast<OpcodeJumpIf*>(footer_)->setNextAltBlock(dest);
 }
 
 bool

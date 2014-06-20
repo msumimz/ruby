@@ -72,6 +72,30 @@ OpcodeFactory::addFreeBlockHeader(BlockHeader* idom)
   return block;
 }
 
+void
+OpcodeFactory::addBlockHeader()
+{
+  BlockHeader* block = addFreeBlockHeader(lastBlock_);
+  addJump(block);
+  lastOpcode_ = lastBlock_ = block;
+}
+
+void
+OpcodeFactory::addBlockHeaderAsTrueBlock()
+{
+  BlockHeader* block = addFreeBlockHeader(lastBlock_);
+  lastBlock_->updateJumpDestination(block);
+  lastOpcode_ = lastBlock_ = block;
+}
+
+void
+OpcodeFactory::addBlockHeaderAsFalseBlock()
+{
+  BlockHeader* block = addFreeBlockHeader(lastBlock_);
+  lastBlock_->updateJumpAltDestination(block);
+  lastOpcode_ = lastBlock_ = block;
+}
+
 Variable*
 OpcodeFactory::addCopy(Variable* rhs, bool useResult)
 {
