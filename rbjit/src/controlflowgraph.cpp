@@ -633,7 +633,6 @@ Dumper::put(const char* format, ...)
 bool
 Dumper::visitOpcode(BlockHeader* op)
 {
-  putCommonOutput(op);
   out_ += '\n';
   return true;
 }
@@ -641,7 +640,6 @@ Dumper::visitOpcode(BlockHeader* op)
 bool
 Dumper::visitOpcode(OpcodeCopy* op)
 {
-  putCommonOutput(op);
   put("%Ix\n", op->rhs());
   return true;
 }
@@ -649,7 +647,6 @@ Dumper::visitOpcode(OpcodeCopy* op)
 bool
 Dumper::visitOpcode(OpcodeJump* op)
 {
-  putCommonOutput(op);
   put("%Ix\n", op->dest());
   return true;
 }
@@ -657,7 +654,6 @@ Dumper::visitOpcode(OpcodeJump* op)
 bool
 Dumper::visitOpcode(OpcodeJumpIf* op)
 {
-  putCommonOutput(op);
   put("%Ix %Ix %Ix\n",
     op->cond(), op->ifTrue(), op->ifFalse());
   return true;
@@ -666,7 +662,6 @@ Dumper::visitOpcode(OpcodeJumpIf* op)
 bool
 Dumper::visitOpcode(OpcodeImmediate* op)
 {
-  putCommonOutput(op);
   put("%Ix\n", op->value());
   return true;
 }
@@ -674,7 +669,6 @@ Dumper::visitOpcode(OpcodeImmediate* op)
 bool
 Dumper::visitOpcode(OpcodeEnv* op)
 {
-  putCommonOutput(op);
   out_ += '\n';
   return true;
 }
@@ -682,7 +676,6 @@ Dumper::visitOpcode(OpcodeEnv* op)
 bool
 Dumper::visitOpcode(OpcodeLookup* op)
 {
-  putCommonOutput(op);
   put("%Ix '%s' [%Ix]\n",
     op->receiver(), mri::Id(op->methodName()).name(), op->env());
   return true;
@@ -691,7 +684,6 @@ Dumper::visitOpcode(OpcodeLookup* op)
 bool
 Dumper::visitOpcode(OpcodeCall* op)
 {
-  putCommonOutput(op);
   put("%Ix (%d)",
     op->lookup(), op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
@@ -704,7 +696,6 @@ Dumper::visitOpcode(OpcodeCall* op)
 bool
 Dumper::visitOpcode(OpcodePrimitive* op)
 {
-  putCommonOutput(op);
   put("%s (%d)",
     mri::Id(op->name()).name(), op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
@@ -716,7 +707,6 @@ Dumper::visitOpcode(OpcodePrimitive* op)
 bool
 Dumper::visitOpcode(OpcodePhi* op)
 {
-  putCommonOutput(op);
   put("(%d)", op->rhsCount());
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
@@ -728,7 +718,6 @@ Dumper::visitOpcode(OpcodePhi* op)
 bool
 Dumper::visitOpcode(OpcodeExit* op)
 {
-  putCommonOutput(op);
   put("\n");
   return true;
 }
@@ -750,7 +739,17 @@ Dumper::dumpBlockHeader(BlockHeader* b)
     put("%Ix ", e->block());
   }
   out_ += '\n';
-  b->visitEachOpcode(this);
+
+  Opcode* op = b;
+  Opcode* footer = b->footer();
+  do {
+    putCommonOutput(op);
+    op->accept(this);
+    if (op == footer) {
+      break;
+    }
+    op = op->next();
+  } while (op);
 }
 
 } // anonymous namespace
