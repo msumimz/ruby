@@ -19,8 +19,7 @@ public:
     : cfg_(cfg), phi_(0)
   {}
 
-  void addSelection(mri::Class cls);
-  BlockHeader* multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, bool otherwise);
+  BlockHeader* multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, const std::vector<mri::Class>& cases, bool otherwise);
 
   const std::vector<BlockHeader*> segments() const { return segments_; }
   OpcodePhi* phi() const { return phi_; }
@@ -29,7 +28,6 @@ private:
 
   ControlFlowGraph* cfg_;
 
-  std::vector<mri::Class> selections_;
   std::vector<BlockHeader*> segments_;
   OpcodePhi* phi_;
 

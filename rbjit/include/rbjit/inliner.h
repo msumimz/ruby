@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rbjit/common.h"
+#include "rbjit/rubymethod.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -9,7 +9,7 @@ class TypeContext;
 class BlockHeader;
 class Opcode;
 class OpcodeCall;
-class PrecompiledMethodInfo;
+class Variable;
 
 class Inliner {
 public:
@@ -24,7 +24,7 @@ public:
 private:
 
   bool inlineCallSite(BlockHeader* block, OpcodeCall* op);
-  void replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* block, OpcodeCall* op);
+  void replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result);
 
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;

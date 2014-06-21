@@ -1,5 +1,4 @@
 #include "rbjit/inliner.h"
-#include "rbjit/rubymethod.h"
 #include "rbjit/methodinfo.h"
 #include "rbjit/opcode.h"
 #include "rbjit/typeconstraint.h"
@@ -32,41 +31,59 @@ Inliner::doInlining()
 bool
 Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
 {
+  RBJIT_DPRINTF(("----------Call Site: (%Ix %Ix) '%s'\n",
+    block, op, mri::Id(op->lookupOpcode()->methodName()).name()));
+
   TypeLookup* lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
 
-  if (!lookup->isDetermined() || lookup->candidates().size() != 1) {
+  std::vector<mri::MethodEntry> mes;
+  std::vector<mri::Class> cases;
+  for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
+    mri::MethodEntry me = *i;
+    if (me.methodDefinition().hasAstNode()) {
+      mes.push_back(me);
+      cases.push_back(me.class_());
+    }
+  }
+
+  if (cases.empty()) {
     return false;
   }
 
-  mri::MethodEntry me = lookup->candidates()[0];
-  if (!me.methodDefinition().hasAstNode()) {
-    return false;
+  bool otherwise = !lookup->isDetermined();
+  if (!otherwise && cases.size() == 1) {
+    BlockHeader* latter = cfg_->splitBlock(block, op, true);
+    BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
+    replaceCallWithMethodBody(mes[0], initBlock, latter, op, op->lhs());
   }
-
-  PrecompiledMethodInfo* mi = (PrecompiledMethodInfo*)me.methodDefinition().methodInfo();
-
-  replaceCallWithMethodBody(mi, block, op);
+  else {
+    return false;
+    // OpcodeMultiplexer mul(cfg_);
+    // BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
+  }
 
   delete op;
+
+  RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintVariables());
+  RBJIT_DPRINT(typeContext_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintAsDot());
+  assert(cfg_->checkSanityAndPrintErrors());
 
   return true;
 }
 
 void
-Inliner::replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* block, OpcodeCall* op)
+Inliner::replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result)
 {
+  PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(me.methodDefinition().methodInfo());
+
   CodeDuplicator dup(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
   dup.duplicateCfg();
 
-  RBJIT_DPRINT(cfg_->debugPrint());
-  RBJIT_DPRINT(cfg_->debugPrintVariables());
-
-  BlockHeader* latter = cfg_->splitBlock(block, op);
-  BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
-
   // Duplicate the arguments
-  OpcodeFactory entryFactory(cfg_, initBlock, initBlock);
+  OpcodeFactory entryFactory(cfg_, entry, entry);
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
   auto arg = mi->cfg()->inputs()->cbegin();
@@ -76,22 +93,16 @@ Inliner::replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* block
     entryFactory.addCopy(newArg, *i, true);
   }
 
-  // The opcode call implicitly defines the env, so that we need define an
-  // explict opcode.
+  // The opcode call implicitly defines the env, so that we need to define it
+  // as explict opcode.
   entryFactory.addEnv(op->env(), true);
-
   entryFactory.addJump(dup.entry());
 
   OpcodeFactory exitFactory(cfg_, dup.exit(), dup.exit()->footer());
-  if (op->lhs()) {
-    // Duplicate the return value
-    exitFactory.addCopy(op->lhs(), dup.duplicatedVariableOf(cfg_->output()), true);
+  if (result) {
+    exitFactory.addCopy(result, dup.duplicatedVariableOf(mi->cfg()->output()), true);
   }
-  exitFactory.addJump(latter);
-
-  RBJIT_DPRINT(cfg_->debugPrint());
-  RBJIT_DPRINT(cfg_->debugPrintVariables());
-  assert(cfg_->checkSanityAndPrintErrors());
+  exitFactory.addJump(exit);
 }
 
 RBJIT_NAMESPACE_END

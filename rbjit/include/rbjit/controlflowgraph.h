@@ -73,7 +73,7 @@ public:
 
   void removeOpcodeAfter(Opcode* prev);
   void removeOpcode(Opcode* op);
-  BlockHeader* splitBlock(BlockHeader* block, Opcode* op);
+  BlockHeader* splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode);
   BlockHeader* insertEmptyBlockAfter(BlockHeader* block);
 
   // Sanity check for debugging

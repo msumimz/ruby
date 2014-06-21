@@ -90,7 +90,7 @@ ControlFlowGraph::removeOpcode(Opcode* op)
 }
 
 BlockHeader*
-ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op)
+ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode)
 {
   op->unlink();
 
@@ -99,7 +99,13 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op)
   latter->setFooter(block->footer());
   blocks_.push_back(latter);
 
-  OpcodeJump* jump = new OpcodeJump(op->file(), op->line(), op->prev(), 0);
+  OpcodeJump* jump;
+  if (discardOpcode) {
+    jump = new OpcodeJump(op->file(), op->line(), op->prev(), 0);
+  }
+  else {
+    jump = new OpcodeJump(op->file(), op->line(), op, 0);
+  }
   block->setFooter(jump);
 
   // Update the defBlocks of the variables in the latter block

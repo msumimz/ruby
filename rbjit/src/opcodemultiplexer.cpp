@@ -6,26 +6,20 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-void
-OpcodeMultiplexer::addSelection(mri::Class cls)
-{
-  selections_.push_back(cls);
-}
-
 BlockHeader*
-OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, bool otherwise)
+OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, const std::vector<mri::Class>& cases, bool otherwise)
 {
   // Split the base block at the specified opcode
-  BlockHeader* exitBlock = cfg_->splitBlock(block, opcode);
+  BlockHeader* exitBlock = cfg_->splitBlock(block, opcode, true);
   BlockHeader* entryBlock = cfg_->insertEmptyBlockAfter(block);
 
   OpcodeFactory factory(cfg_, entryBlock, entryBlock);
 
   Variable* sel = factory.addPrimitive("rbjit__class_of", 1, selector);
 
-  int count = selections_.size() - 1 + otherwise;
+  int count = cases.size() - 1 + otherwise;
   for (int i = 0; i < count; ++i) {
-    Variable* cls = factory.addImmediate(selections_[i].value(), true);
+    Variable* cls = factory.addImmediate(cases[i].value(), true);
     Variable* cond = factory.addPrimitive("rbjit__bitwise_compare_eq", 2, sel, cls);
     factory.addJumpIf(cond, 0, 0);
 
