@@ -15,3 +15,5 @@ Debug/
 Release/
 ipch/
 rbjit/temp/
+*.dot
+*.png

@@ -589,16 +589,21 @@ public:
   void dumpCfgInfo(const ControlFlowGraph* cfg);
   void dumpBlockHeader(BlockHeader* b);
 
+  void dumpAsDot(const ControlFlowGraph* cfg);
+
 private:
 
+  static std::string getOpcodeShortName(Opcode* op);
   void putCommonOutput(Opcode* op);
   void put(const char* format, ...);
+
+  void dumpBlockHeaderAsDot(BlockHeader* b);
 
   std::string out_;
 };
 
-void
-Dumper::putCommonOutput(Opcode* op)
+std::string
+Dumper::getOpcodeShortName(Opcode* op)
 {
   const char* opname;
   if (typeid(*op) == typeid(BlockHeader)) {
@@ -612,13 +617,21 @@ Dumper::putCommonOutput(Opcode* op)
     opname = typeid(*op).name() + skip;
   }
 
+  return std::string(opname);
+}
+
+void
+Dumper::putCommonOutput(Opcode* op)
+{
+  std::string opname = getOpcodeShortName(op);
+
   out_ += stringFormat("  " PTRF " " PTRF " " PTRF " %d:%d ",
     op, op->prev(), op->next(), op->file(), op->line());
   if (op->lhs()) {
-    out_ += stringFormat(PTRF " %-7s", op->lhs(), opname);
+    out_ += stringFormat(PTRF " %-7s", op->lhs(), opname.c_str());
   }
   else {
-    out_ += stringFormat(SPCF " %-7s", opname);
+    out_ += stringFormat(SPCF " %-7s", opname.c_str());
   }
 }
 
@@ -633,28 +646,27 @@ Dumper::put(const char* format, ...)
 bool
 Dumper::visitOpcode(BlockHeader* op)
 {
-  out_ += '\n';
   return true;
 }
 
 bool
 Dumper::visitOpcode(OpcodeCopy* op)
 {
-  put("%Ix\n", op->rhs());
+  put("%Ix", op->rhs());
   return true;
 }
 
 bool
 Dumper::visitOpcode(OpcodeJump* op)
 {
-  put("%Ix\n", op->dest());
+  put("%Ix", op->dest());
   return true;
 }
 
 bool
 Dumper::visitOpcode(OpcodeJumpIf* op)
 {
-  put("%Ix %Ix %Ix\n",
+  put("%Ix %Ix %Ix",
     op->cond(), op->ifTrue(), op->ifFalse());
   return true;
 }
@@ -662,21 +674,20 @@ Dumper::visitOpcode(OpcodeJumpIf* op)
 bool
 Dumper::visitOpcode(OpcodeImmediate* op)
 {
-  put("%Ix\n", op->value());
+  put("%Ix", op->value());
   return true;
 }
 
 bool
 Dumper::visitOpcode(OpcodeEnv* op)
 {
-  out_ += '\n';
   return true;
 }
 
 bool
 Dumper::visitOpcode(OpcodeLookup* op)
 {
-  put("%Ix '%s' [%Ix]\n",
+  put("%Ix '%s' [%Ix]",
     op->receiver(), mri::Id(op->methodName()).name(), op->env());
   return true;
 }
@@ -689,7 +700,7 @@ Dumper::visitOpcode(OpcodeCall* op)
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
-  put(" [%Ix]\n", op->env());
+  put(" [%Ix]", op->env());
   return true;
 }
 
@@ -711,21 +722,19 @@ Dumper::visitOpcode(OpcodePhi* op)
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
-  out_ += '\n';
   return true;
 }
 
 bool
 Dumper::visitOpcode(OpcodeExit* op)
 {
-  put("\n");
   return true;
 }
 
 void
 Dumper::dumpCfgInfo(const ControlFlowGraph* cfg)
 {
-  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix env=%Ix\n",
+  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix env=%Ix",
     cfg, cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
 }
 
@@ -745,11 +754,63 @@ Dumper::dumpBlockHeader(BlockHeader* b)
   do {
     putCommonOutput(op);
     op->accept(this);
+    out_ += '\n';
     if (op == footer) {
       break;
     }
     op = op->next();
   } while (op);
+}
+
+void
+Dumper::dumpBlockHeaderAsDot(BlockHeader* b)
+{
+  // block
+  put("BLOCK%d [label=\"BLOCK %d\\l", b->index(), b->index());
+
+  Opcode* op = b;
+  Opcode* footer = b->footer();
+  do {
+    if (op->lhs()) {
+      out_ += stringFormat(PTRF " " PTRF " ", op, op->lhs());
+    }
+    else {
+      out_ += stringFormat(PTRF " " SPCF " ", op);
+    }
+    out_ += getOpcodeShortName(op);
+    out_ += ' ';
+    op->accept(this);
+    out_ += "\\l";
+    if (op == footer) {
+      break;
+    }
+    op = op->next();
+  } while (op);
+
+  put("\"]\n");
+
+  // edges
+  if (typeid(*footer) == typeid(OpcodeJump)) {
+    put("BLOCK%d -> BLOCK%d\n", b->index(), b->nextBlock()->index());
+  }
+  else if (typeid(*footer) == typeid(OpcodeJumpIf)) {
+    put("BLOCK%d -> BLOCK%d [label=\"true\"]\n", b->index(), b->nextBlock()->index());
+    put("BLOCK%d -> BLOCK%d [label=\"false\"]\n", b->index(), b->nextAltBlock()->index());
+  }
+}
+
+void
+Dumper::dumpAsDot(const ControlFlowGraph* cfg)
+{
+  std::string cfgInfo = stringFormat("entry=%Ix exit=%Ix output=%Ix env=%Ix",
+    cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
+  out_ = "digraph {\n"
+    "graph [label=\"" + cfgInfo + "\" labelloc=t labeljust=l]\n"
+    "node [shape=box fontname=\"Consolas\"]\n";
+  for (std::vector<BlockHeader*>::const_iterator i = cfg->blocks()->cbegin(); i != cfg->blocks()->cend(); ++i) {
+    dumpBlockHeaderAsDot(*i);
+  }
+  out_ += "}\n";
 }
 
 } // anonymous namespace
@@ -762,6 +823,14 @@ ControlFlowGraph::debugPrint() const
   for (std::vector<BlockHeader*>::const_iterator i = blocks_.begin(); i != blocks_.end(); ++i) {
     dumper.dumpBlockHeader(*i);
   }
+  return dumper.output();
+}
+
+std::string
+ControlFlowGraph::debugPrintAsDot() const
+{
+  Dumper dumper;
+  dumper.dumpAsDot(this);
   return dumper.output();
 }
 

@@ -88,6 +88,8 @@ public:
   std::string debugPrintVariables() const;
   std::string debugPrintTypeConstraints() const;
 
+  std::string debugPrintAsDot() const;
+
 private:
 
   friend class OpcodeFactory;
