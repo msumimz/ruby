@@ -44,7 +44,7 @@ define %VALUE @rbjit__is_undef(%VALUE %v) nounwind readnone alwaysinline {
   ret %VALUE %ret
 }
 
-define %VALUE @rbjit__class_of(%VALUE %obj) nounwind readnone alwaysinline {
+define %VALUE @rbjit__class_of(%VALUE %obj) nounwind readonly alwaysinline {
   %rbasic = inttoptr %VALUE %obj to {%VALUE, %VALUE}*
   %pcls = getelementptr {%VALUE, %VALUE}* %rbasic, i32 0, i32 1
   %cls = load %VALUE* %pcls
