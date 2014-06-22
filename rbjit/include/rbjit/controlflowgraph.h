@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include "rbjit/common.h"
+#include "rbjit/rubytypes.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -43,9 +44,16 @@ public:
 
   // Variables
 
+  // Readers
   const std::vector<Variable*>* variables() const { return &variables_; }
   std::vector<Variable*>* variables() { return &variables_; }
+
+  // Factory methods
+  Variable* createVariable(ID name = 0, BlockHeader* defBlock = 0, Opcode* defOpcode = 0);
+  Variable* createVariableSsa(ID name = 0, BlockHeader* defBlock = 0, Opcode* defOpcode = 0);
   Variable* copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source);
+
+  // Mutators
   void removeVariables(const std::vector<Variable*>* toBeRemoved);
   void clearDefInfo();
 
@@ -73,7 +81,7 @@ public:
 
   void removeOpcodeAfter(Opcode* prev);
   void removeOpcode(Opcode* op);
-  BlockHeader* splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode);
+  BlockHeader* splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode, bool addJump);
   BlockHeader* insertEmptyBlockAfter(BlockHeader* block);
 
   // Sanity check for debugging

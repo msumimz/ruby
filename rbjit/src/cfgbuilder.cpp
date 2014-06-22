@@ -7,6 +7,7 @@
 #include "rbjit/variable.h"
 #include "rbjit/methodinfo.h"
 #include "rbjit/primitivestore.h"
+#include "rbjit/opcode.h"
 
 extern "C" {
 #include "ruby.h"
@@ -44,6 +45,8 @@ CfgBuilder::buildMethod(const RNode* rootNode, MethodInfo* methodInfo)
 
   OpcodeFactory factory(cfg_);
   factory.createEntryExitBlocks();
+  cfg_->entry()->setDebugName("entry");
+  cfg_->exit()->setDebugName("exit");
 
   buildArguments(&factory, rootNode);
   buildProcedureBody(&factory, rootNode, true);

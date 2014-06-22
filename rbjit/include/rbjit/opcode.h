@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cassert>
+#ifdef RBJIT_DEBUG // used in BlockHeader
+#include <string>
+#endif
 #include "rbjit/common.h"
 #include "rbjit/rubytypes.h"
 
@@ -287,6 +290,16 @@ public:
     } while (op);
   }
 
+  // debug tools
+#ifdef RBJIT_DEBUG
+  void setDebugName(const char* name)
+  { debugName_ = std::string(name); }
+  const char* debugName() const { return debugName_.c_str(); }
+#else
+  void setDebugName(const char* name) {}
+  const char* debugName() const { return ""; }
+#endif
+
 private:
 
   Backedge backedge_;
@@ -297,6 +310,10 @@ private:
 
   BlockHeader* idom_;
   BlockHeader* rescueBlock_;
+
+#ifdef RBJIT_DEBUG
+  std::string debugName_;
+#endif
 };
 
 class OpcodeCopy : public OpcodeLR<1> {

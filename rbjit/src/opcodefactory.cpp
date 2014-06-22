@@ -59,7 +59,9 @@ OpcodeFactory::createTemporary(bool useResult)
 void
 OpcodeFactory::updateDefSite(Variable* v)
 {
-  v->updateDefSite(lastBlock_, lastOpcode_);
+  if (v) {
+    v->updateDefSite(lastBlock_, lastOpcode_);
+  }
 }
 
 BlockHeader*
@@ -75,25 +77,25 @@ OpcodeFactory::addFreeBlockHeader(BlockHeader* idom)
 void
 OpcodeFactory::addBlockHeader()
 {
-  BlockHeader* block = addFreeBlockHeader(lastBlock_);
-  addJump(block);
-  lastOpcode_ = lastBlock_ = block;
+  BlockHeader* block = lastBlock_;
+  BlockHeader* newBlock = addFreeBlockHeader(lastBlock_);
+  block->updateJumpDestination(newBlock);
 }
 
 void
 OpcodeFactory::addBlockHeaderAsTrueBlock()
 {
-  BlockHeader* block = addFreeBlockHeader(lastBlock_);
-  lastBlock_->updateJumpDestination(block);
-  lastOpcode_ = lastBlock_ = block;
+  BlockHeader* block = lastBlock_;
+  BlockHeader* trueBlock = addFreeBlockHeader(lastBlock_);
+  block->updateJumpDestination(trueBlock);
 }
 
 void
 OpcodeFactory::addBlockHeaderAsFalseBlock()
 {
-  BlockHeader* block = addFreeBlockHeader(lastBlock_);
-  lastBlock_->updateJumpAltDestination(block);
-  lastOpcode_ = lastBlock_ = block;
+  BlockHeader* block = lastBlock_;
+  BlockHeader* falseBlock = addFreeBlockHeader(lastBlock_);
+  block->updateJumpAltDestination(falseBlock);
 }
 
 Variable*
@@ -118,7 +120,9 @@ OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
   lastOpcode_ = op;
-  updateDefSite(lhs);
+  if (lhs) {
+    updateDefSite(lhs);
+  }
 
   return useResult ? lhs : 0;
 }
@@ -126,44 +130,37 @@ OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 void
 OpcodeFactory::addJump(BlockHeader* dest)
 {
-  if (!dest) {
-    dest = createFreeBlockHeader(lastBlock_);
-  }
-
   OpcodeJump* op = new OpcodeJump(file_, line_, lastOpcode_, dest);
-
-  dest->addBackedge(lastBlock_);
 
   lastBlock_->setFooter(op);
 
-  lastOpcode_ = dest;
-  lastBlock_ = dest;
+  if (dest) {
+    dest->addBackedge(lastBlock_);
+    lastOpcode_ = dest;
+    lastBlock_ = dest;
+  }
+  else {
+    lastOpcode_ = op;
+  }
+
 }
 
 void
 OpcodeFactory::addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse)
 {
-  BlockHeader* nextBlock = ifTrue;
-
-  if (!ifFalse) {
-    ifFalse = createFreeBlockHeader(lastBlock_);
-    nextBlock = ifFalse;
-  }
-
-  if (!ifTrue) {
-    ifTrue = createFreeBlockHeader(lastBlock_);
-    nextBlock = ifTrue;
-  }
-
   OpcodeJumpIf* op = new OpcodeJumpIf(file_, line_, lastOpcode_, cond, ifTrue, ifFalse);
 
-  ifTrue->addBackedge(lastBlock_);
-  ifFalse->addBackedge(lastBlock_);
+  if (ifTrue) {
+    ifTrue->addBackedge(lastBlock_);
+  }
+
+  if (ifFalse) {
+    ifFalse->addBackedge(lastBlock_);
+  }
 
   lastBlock_->setFooter(op);
 
-  lastBlock_ = nextBlock;
-  lastOpcode_ = nextBlock;
+  lastOpcode_ = op;
 }
 
 Variable*
@@ -178,6 +175,20 @@ OpcodeFactory::addImmediate(VALUE value, bool useResult)
 
   Variable* lhs = createTemporary(true);
   op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addImmediate(Variable* lhs, VALUE value, bool useResult)
+{
+  if (!useResult) {
+    return 0;
+  }
+
+  OpcodeImmediate* op = new OpcodeImmediate(file_, line_, lastOpcode_, lhs, value);
+  lastOpcode_ = op;
   updateDefSite(lhs);
 
   return lhs;
@@ -305,7 +316,24 @@ OpcodeFactory::addPrimitive(const char* name, int argCount, ...)
   updateDefSite(lhs);
 
   va_list args;
-  va_start(args, name);
+  va_start(args, argCount);
+  for (auto v = op->rhsBegin(), end = op->rhsEnd(); v != end; ++v) {
+    *v = va_arg(args, Variable*);
+  }
+  va_end(args);
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addPrimitive(Variable* lhs, const char* name, int argCount, ...)
+{
+  OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, lhs, mri::Id(name).id(), argCount);
+  lastOpcode_ = op;
+  updateDefSite(lhs);
+
+  va_list args;
+  va_start(args, argCount);
   for (auto v = op->rhsBegin(), end = op->rhsEnd(); v != end; ++v) {
     *v = va_arg(args, Variable*);
   }

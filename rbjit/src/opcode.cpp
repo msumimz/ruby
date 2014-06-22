@@ -70,9 +70,9 @@ BlockHeader::~BlockHeader()
 void
 BlockHeader::updateJumpDestination(BlockHeader* dest)
 {
-  assert(typeid(*footer_) == typeid(OpcodeJump) || typeid(*footer_) == typeid(OpcodeJumpIf));
+  assert(!footer_ || typeid(*footer_) == typeid(OpcodeJump) || typeid(*footer_) == typeid(OpcodeJumpIf));
 
-  if (nextBlock()) {
+  if (footer_ && nextBlock()) {
     nextBlock()->removeBackedge(this);
     dest->addBackedge(this);
   }
@@ -83,9 +83,9 @@ BlockHeader::updateJumpDestination(BlockHeader* dest)
 void
 BlockHeader::updateJumpAltDestination(BlockHeader* dest)
 {
-  assert(typeid(*footer_) == typeid(OpcodeJumpIf));
+  assert(!footer_ || typeid(*footer_) == typeid(OpcodeJumpIf));
 
-  if (nextAltBlock()) {
+  if (footer_ && nextAltBlock()) {
     nextAltBlock()->removeBackedge(this);
     dest->addBackedge(this);
   }

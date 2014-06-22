@@ -44,6 +44,7 @@ public:
   void addJump(BlockHeader* dest = 0);
   void addJumpIf(Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse);
   Variable* addImmediate(VALUE value, bool useResult);
+  Variable* addImmediate(Variable* lhs, VALUE value, bool useResult);
   Variable* addEnv(bool useResult);
   Variable* addEnv(Variable* env, bool useResult);
   Variable* addLookup(Variable* receiver, ID methodName);
@@ -54,6 +55,7 @@ public:
   Variable* addPhi(Variable* lhs, int rhsCount, bool useResult);
   Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   Variable* addPrimitive(const char* name, int argCount, ...);
+  Variable* addPrimitive(Variable* lhs, const char* name, int argCount, ...);
 
   void addJumpToReturnBlock(Variable* returnValue);
 

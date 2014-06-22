@@ -40,6 +40,22 @@ ControlFlowGraph::domTree()
 }
 
 Variable*
+ControlFlowGraph::createVariable(ID name, BlockHeader* defBlock, Opcode* defOpcode)
+{
+  Variable* v = new Variable(defBlock, defOpcode, name, 0, variables_.size(), 0);
+  variables_.push_back(v);
+  return v;
+}
+
+Variable*
+ControlFlowGraph::createVariableSsa(ID name, BlockHeader* defBlock, Opcode* defOpcode)
+{
+  Variable* v = new Variable(defBlock, defOpcode, name, 0, variables_.size(), new DefInfo());
+  variables_.push_back(v);
+  return v;
+}
+
+Variable*
 ControlFlowGraph::copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source)
 {
   Variable* v = Variable::copy(defBlock, defOpcode, variables_.size(), source);
@@ -90,7 +106,7 @@ ControlFlowGraph::removeOpcode(Opcode* op)
 }
 
 BlockHeader*
-ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode)
+ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode, bool addJump)
 {
   op->unlink();
 
@@ -99,14 +115,19 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode)
   latter->setFooter(block->footer());
   blocks_.push_back(latter);
 
-  OpcodeJump* jump;
-  if (discardOpcode) {
-    jump = new OpcodeJump(op->file(), op->line(), op->prev(), 0);
+  if (addJump) {
+    OpcodeJump* jump;
+    if (discardOpcode) {
+      jump = new OpcodeJump(op->file(), op->line(), op->prev(), 0);
+    }
+    else {
+      jump = new OpcodeJump(op->file(), op->line(), op, 0);
+    }
+    block->setFooter(jump);
   }
   else {
-    jump = new OpcodeJump(op->file(), op->line(), op, 0);
+    block->setFooter(op);
   }
-  block->setFooter(jump);
 
   // Update the defBlocks of the variables in the latter block
   Opcode* o = latter;
@@ -124,7 +145,7 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode)
   } while (o && o != footer);
 
   // Update backedges
-  jump = dynamic_cast<OpcodeJump*>(footer);
+  OpcodeJump* jump = dynamic_cast<OpcodeJump*>(footer);
   if (jump) {
     latter->nextBlock()->updateBackedge(block, latter);
   }
@@ -618,6 +639,9 @@ Dumper::getOpcodeShortName(Opcode* op)
   else if (typeid(*op) == typeid(OpcodeImmediate)) {
     opname = "Imm";
   }
+  else if (typeid(*op) == typeid(OpcodePrimitive)) {
+    opname = "Prim";
+  }
   else {
     int skip = strlen("const rbjit::Opcode"); // hopefully optimized out
     opname = typeid(*op).name() + skip;
@@ -652,6 +676,10 @@ Dumper::put(const char* format, ...)
 bool
 Dumper::visitOpcode(BlockHeader* op)
 {
+  if (!op->footer()) {
+    put("<fooer is null>");
+    return false;
+  }
   return true;
 }
 
@@ -740,14 +768,14 @@ Dumper::visitOpcode(OpcodeExit* op)
 void
 Dumper::dumpCfgInfo(const ControlFlowGraph* cfg)
 {
-  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix env=%Ix",
+  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix env=%Ix\n",
     cfg, cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
 }
 
 void
 Dumper::dumpBlockHeader(BlockHeader* b)
 {
-  put("BLOCK %d: %Ix\n", b->index(), b);
+  put("BLOCK %d: %Ix (%s)\n", b->index(), b, b->debugName());
   put("depth=%d footer=%Ix idom=%Ix backedges=",
     b->depth(), b->footer(), b->idom());
   for (BlockHeader::Backedge* e = b->backedge(); e; e = e->next()) {
@@ -759,9 +787,9 @@ Dumper::dumpBlockHeader(BlockHeader* b)
   Opcode* footer = b->footer();
   do {
     putCommonOutput(op);
-    op->accept(this);
+    bool ok = op->accept(this);
     out_ += '\n';
-    if (op == footer) {
+    if (!ok || op == footer) {
       break;
     }
     op = op->next();
@@ -772,7 +800,7 @@ void
 Dumper::dumpBlockHeaderAsDot(BlockHeader* b)
 {
   // block
-  put("BLOCK%d [label=\"BLOCK %d\\l", b->index(), b->index());
+  put("BLOCK%d [label=\"BLOCK %d (%s)\\l", b->index(), b->index(), b->debugName());
 
   Opcode* op = b;
   Opcode* footer = b->footer();
@@ -811,7 +839,7 @@ Dumper::dumpAsDot(const ControlFlowGraph* cfg)
   std::string cfgInfo = stringFormat("entry=%Ix exit=%Ix output=%Ix env=%Ix",
     cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
   out_ = "digraph {\n"
-    "graph [label=\"" + cfgInfo + "\" labelloc=t labeljust=l]\n"
+    "graph [label=\"" + cfgInfo + "\" labelloc=t labeljust=l fontname=\"Consolas\"]\n"
     "node [shape=box fontname=\"Consolas\"]\n";
   for (std::vector<BlockHeader*>::const_iterator i = cfg->blocks()->cbegin(); i != cfg->blocks()->cend(); ++i) {
     dumpBlockHeaderAsDot(*i);

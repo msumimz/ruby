@@ -43,6 +43,18 @@ TypeContext::updateTypeConstraint(Variable* v, const TypeConstraint& type)
   return true;
 }
 
+void
+TypeContext::addNewTypeConstraint(Variable* v, TypeConstraint* type)
+{
+  if (v->index() >= types_.size()) {
+    fitSizeToCfg();
+  }
+
+  assert(!typeConstraintOf(v));
+
+  setTypeConstraint(v, type);
+}
+
 bool
 TypeContext::isSameValueAs(Variable* v1, Variable* v2)
 {

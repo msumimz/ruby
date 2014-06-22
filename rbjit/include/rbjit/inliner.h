@@ -24,7 +24,7 @@ public:
 private:
 
   bool inlineCallSite(BlockHeader* block, OpcodeCall* op);
-  void replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result);
+  Variable* replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result);
 
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;

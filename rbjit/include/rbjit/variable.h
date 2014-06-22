@@ -16,6 +16,9 @@ class TypeConstraint;
 class Variable {
 public:
 
+  // constructor indirectly called by factory methods
+  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo);
+
   // factory methods
   static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name);
   static Variable* createUnnamed(BlockHeader* defBlock, Opcode* defOpcode, int index);
@@ -48,9 +51,6 @@ public:
   std::string debugPrint() const;
 
 private:
-
-  // constructor indirectly called by factory methods
-  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo);
 
   // location where this variable is defined
   BlockHeader* defBlock_;

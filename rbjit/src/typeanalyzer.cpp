@@ -233,7 +233,7 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
 
   if (lookup->isDetermined()) {
     if (sel.types().empty()) {
-      updateTypeConstraint(op->lhs(), TypeNone());
+      updateTypeConstraint(op->lhs(), TypeAny());
     }
     else {
       if (sel.types().size() == 1) {

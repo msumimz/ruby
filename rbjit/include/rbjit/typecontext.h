@@ -25,6 +25,9 @@ public:
   // Update the existing type constraint value
   bool updateTypeConstraint(Variable* v, const TypeConstraint& type);
 
+  // set a new variable's type constraint
+  void addNewTypeConstraint(Variable* v, TypeConstraint* type);
+
   TypeConstraint* typeConstraintOf(Variable* v) const
   { return types_[v->index()]; }
 

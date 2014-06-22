@@ -7,6 +7,7 @@
 #include "rbjit/codeduplicator.h"
 #include "rbjit/opcodefactory.h"
 #include "rbjit/debugprint.h"
+#include "rbjit/opcodemultiplexer.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -53,37 +54,65 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
 
   bool otherwise = !lookup->isDetermined();
   if (!otherwise && cases.size() == 1) {
-    BlockHeader* latter = cfg_->splitBlock(block, op, true);
+    BlockHeader* join = cfg_->splitBlock(block, op, true, true);
+    join->setDebugName("inliner_join");
     BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
-    replaceCallWithMethodBody(mes[0], initBlock, latter, op, op->lhs());
+    initBlock->setDebugName("inliner_arguments");
+    replaceCallWithMethodBody(mes[0], initBlock, join, op, op->lhs());
+    delete op;
   }
   else {
-    return false;
-    // OpcodeMultiplexer mul(cfg_);
-    // BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
+    OpcodeMultiplexer mul(cfg_);
+    BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
+
+    OpcodePhi* phi = mul.phi();
+    int size = mes.size();
+    for (int i = 0; i < size; ++i) {
+      BlockHeader* block = mul.segments()[i];
+      BlockHeader* join = cfg_->splitBlock(block, block, false, false);
+      join->setDebugName("inliner_join");
+
+      Variable* result = replaceCallWithMethodBody(mes[i], block, join, op, 0);
+      phi->setRhs(i, result);
+    }
+    if (otherwise) {
+      assert(mul.segments().size() == mes.size() + 1);
+      BlockHeader* block = mul.segments().back();
+      op->insertAfter(block);
+
+      if (op->lhs()) {
+        Variable* lhs = cfg_->copyVariable(block, op, op->lhs());
+        op->setLhs(lhs);
+        phi->setRhs(mes.size(), lhs);
+      }
+    }
+    else {
+      delete op;
+    }
   }
 
-  delete op;
-
   RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintAsDot());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   RBJIT_DPRINT(typeContext_->debugPrint());
-  RBJIT_DPRINT(cfg_->debugPrintAsDot());
   assert(cfg_->checkSanityAndPrintErrors());
 
   return true;
 }
 
-void
+Variable*
 Inliner::replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result)
 {
+  // entry should not be terminated
+  assert(!entry->footer()->isTerminator());
+
   PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(me.methodDefinition().methodInfo());
 
   CodeDuplicator dup(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
   dup.duplicateCfg();
 
   // Duplicate the arguments
-  OpcodeFactory entryFactory(cfg_, entry, entry);
+  OpcodeFactory entryFactory(cfg_, entry, entry->footer());
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
   auto arg = mi->cfg()->inputs()->cbegin();
@@ -99,10 +128,15 @@ Inliner::replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, Bloc
   entryFactory.addJump(dup.entry());
 
   OpcodeFactory exitFactory(cfg_, dup.exit(), dup.exit()->footer());
-  if (result) {
-    exitFactory.addCopy(result, dup.duplicatedVariableOf(mi->cfg()->output()), true);
+  exitFactory.addCopy(result, dup.duplicatedVariableOf(mi->cfg()->output()), true);
+  if (!result && op->lhs()) {
+    result = cfg_->copyVariable(exitFactory.lastBlock(), exitFactory.lastOpcode(), op->lhs());
+    typeContext_->addNewTypeConstraint(result, typeContext_->typeConstraintOf(op->lhs())->clone());
+    static_cast<OpcodeL*>(exitFactory.lastOpcode())->setLhs(result);
   }
   exitFactory.addJump(exit);
+
+  return result;
 }
 
 RBJIT_NAMESPACE_END

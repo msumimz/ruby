@@ -51,6 +51,9 @@ CodeDuplicator::duplicateCfg()
     BlockHeader* b = *i;
     BlockHeader* block = new BlockHeader(b->file(), b->line(), 0, 0,
       b->index() + blockIndexOffset_, b->depth(), 0);
+#ifdef RBJIT_DEBUG
+    block->setDebugName(stringFormat("dup_%Ix_%d", src_, b->index()).c_str());
+#endif
     (*blocks)[b->index() + blockIndexOffset_] = block;
   }
 
