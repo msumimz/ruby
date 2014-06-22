@@ -38,7 +38,16 @@ public:
 
   bool isNull() const { return value_ == 0; }
 
+  bool isTrueObject() const { return value_ == trueObject(); }
+  bool isFalseObject() const { return value_ == falseObject(); }
+  bool isNilObject() const { return value_ == nilObject(); }
+  bool isUndefObject() const { return value_ == undefObject(); }
+  // TODO: 64-bit environment
+  bool isFixnum() const { return (bool)(value_ & 1); }
+  bool isSymbol() const { return (bool)(value_ & 0xf == 0xe); }
+
   // Builtin objects
+
   static VALUE trueObject();
   static VALUE falseObject();
   static VALUE nilObject();

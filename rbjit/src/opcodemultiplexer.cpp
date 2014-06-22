@@ -7,6 +7,32 @@
 
 RBJIT_NAMESPACE_BEGIN
 
+Variable*
+OpcodeMultiplexer::generateTypeTestOpcode(OpcodeFactory* factory, Variable* selector, mri::Class cls)
+{
+  Variable* cond = cfg_->createVariable();
+
+  if (cls == mri::Class::trueClass()) {
+    factory->addPrimitive(cond, "rbjit__is_true", 1, selector);
+  }
+  else if (cls == mri::Class::falseClass()) {
+    factory->addPrimitive(cond, "rbjit__is_false", 1, selector);
+  }
+  else if (cls == mri::Class::nilClass()) {
+    factory->addPrimitive(cond, "rbjit__is_nil", 1, selector);
+  }
+  else if (cls == mri::Class::fixnumClass()) {
+    factory->addPrimitive(cond, "rbjit__is_fixnum", 1, selector);
+  }
+  else {
+    Variable* c = factory->addImmediate(cfg_->createVariable(), cls, true);
+    Variable* selc = factory->addPrimitive(cfg_->createVariable(), "rbjit__class_of", 1, selector);
+    factory->addPrimitive(cond, "rbjit__bitwise_compare_eq", 2, c, selc);
+  }
+
+  return cond;
+}
+
 BlockHeader*
 OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, const std::vector<mri::Class>& cases, bool otherwise)
 {
@@ -18,12 +44,10 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
 
   OpcodeFactory factory(cfg_, entryBlock, entryBlock);
 
-  Variable* sel = factory.addPrimitive(cfg_->createVariable(), "rbjit__class_of", 1, selector);
-
   int count = cases.size() - 1 + otherwise;
   for (int i = 0; i < count; ++i) {
     Variable* cls = factory.addImmediate(cfg_->createVariable(), cases[i].value(), true);
-    Variable* cond = factory.addPrimitive(cfg_->createVariable(), "rbjit__bitwise_compare_eq", 2, sel, cls);
+    Variable* cond = generateTypeTestOpcode(&factory, selector, cases[i].value());
     factory.addJumpIf(cond, 0, 0);
 
     // Create an empty block for each class

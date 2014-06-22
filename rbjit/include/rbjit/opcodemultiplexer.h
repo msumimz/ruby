@@ -11,6 +11,7 @@ class Opcode;
 class BlockHeader;
 class OpcodePhi;
 class Variable;
+class OpcodeFactory;
 
 class OpcodeMultiplexer {
 public:
@@ -25,6 +26,8 @@ public:
   OpcodePhi* phi() const { return phi_; }
 
 private:
+
+  Variable* generateTypeTestOpcode(OpcodeFactory* factory, Variable* selector, mri::Class cls);
 
   ControlFlowGraph* cfg_;
 
