@@ -215,3 +215,9 @@ define %VALUE @rbjit__fixnum_to_int(%VALUE %v) nounwind readonly alwaysinline {
   ret %VALUE %ret
 }
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Type cast
+
+define %VALUE @rbjit__typecast_fixnum(%VALUE %v) nounwind readonly alwaysinline {
+  ret %VALUE %v
+}

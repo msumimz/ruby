@@ -265,6 +265,15 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
 {
   // TODO: If the primitive is one of Fixnum comparisons or type tests, check
   // if it is used as a condition of JumpIf and re-visit JumpIf.
+
+  if (!op->lhs()) {
+    return true;
+  }
+
+  if (op->name() == mri::Id("rbjit__typecast_fixnum").id()) {
+    updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::fixnumClass()));
+  }
+
   return true;
 }
 
