@@ -11,6 +11,10 @@
 
 RBJIT_NAMESPACE_BEGIN
 
+Inliner::Inliner(PrecompiledMethodInfo* mi)
+  : mi_(mi), cfg_(mi->cfg()), typeContext_(mi->typeContext())
+{}
+
 void
 Inliner::doInlining()
 {
@@ -19,7 +23,7 @@ Inliner::doInlining()
     Opcode* op = block;
     Opcode* footer = block->footer();
     do {
-      if (typeid(*op) == typeid(OpcodeCall)) {
+      if (typeid(*op) == typeid(OpcodeCall) && inlined_.find(op) == inlined_.end()) {
         if (inlineCallSite(block, static_cast<OpcodeCall*>(op))) {
           break;
         }
@@ -38,13 +42,16 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
   TypeLookup* lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
 
-  std::vector<mri::MethodEntry> mes;
+  std::vector<PrecompiledMethodInfo*> methodInfos;
   std::vector<mri::Class> cases;
   for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
     mri::MethodEntry me = *i;
     if (me.methodDefinition().hasAstNode()) {
-      mes.push_back(me);
-      cases.push_back(me.class_());
+      PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(me.methodDefinition().methodInfo());
+      if (mi != mi_) {
+        methodInfos.push_back(mi);
+        cases.push_back(me.class_());
+      }
     }
   }
 
@@ -58,7 +65,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     join->setDebugName("inliner_join");
     BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
     initBlock->setDebugName("inliner_arguments");
-    replaceCallWithMethodBody(mes[0], initBlock, join, op, op->lhs());
+    replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs());
     delete op;
   }
   else {
@@ -66,24 +73,26 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
 
     OpcodePhi* phi = mul.phi();
-    int size = mes.size();
+    int size = methodInfos.size();
     for (int i = 0; i < size; ++i) {
       BlockHeader* block = mul.segments()[i];
       BlockHeader* join = cfg_->splitBlock(block, block, false, false);
       join->setDebugName("inliner_join");
 
-      Variable* result = replaceCallWithMethodBody(mes[i], block, join, op, 0);
+      Variable* result = replaceCallWithMethodBody(methodInfos[i], block, join, op, 0);
       phi->setRhs(i, result);
     }
     if (otherwise) {
-      assert(mul.segments().size() == mes.size() + 1);
+      assert(mul.segments().size() == methodInfos.size() + 1);
       BlockHeader* block = mul.segments().back();
       op->insertAfter(block);
+      inlined_.insert(op);
 
       if (op->lhs()) {
         Variable* lhs = cfg_->copyVariable(block, op, op->lhs());
+        typeContext_->addNewTypeConstraint(lhs, typeContext_->typeConstraintOf(op->lhs())->independantClone());
         op->setLhs(lhs);
-        phi->setRhs(mes.size(), lhs);
+        phi->setRhs(methodInfos.size(), lhs);
       }
     }
     else {
@@ -101,12 +110,10 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
 }
 
 Variable*
-Inliner::replaceCallWithMethodBody(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result)
+Inliner::replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result)
 {
   // entry should not be terminated
   assert(!entry->footer()->isTerminator());
-
-  PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(me.methodDefinition().methodInfo());
 
   CodeDuplicator dup(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
   dup.duplicateCfg();

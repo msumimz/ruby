@@ -137,7 +137,7 @@ PrecompiledMethodInfo::compile()
 
   RBJIT_DPRINT(debugPrintBanner("Inlining"));
 
-  Inliner inliner(cfg_, typeContext_);
+  Inliner inliner(this);
   inliner.doInlining();
 
   RBJIT_DPRINT(debugPrintBanner("Compilation"));

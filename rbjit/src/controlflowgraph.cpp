@@ -167,6 +167,7 @@ ControlFlowGraph::insertEmptyBlockAfter(BlockHeader* block)
   assert(typeid(*footer) == typeid(OpcodeJump));
 
   BlockHeader* newBlock = new BlockHeader(footer->file(), footer->line(), footer, block, blocks_.size(), block->depth(), block);
+  newBlock->setFooter(newBlock);
   blocks_.push_back(newBlock);
 
   block->updateJumpDestination(newBlock);
