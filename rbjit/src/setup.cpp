@@ -1,3 +1,4 @@
+#include <crtdbg.h>
 #include <intrin.h> // suppress warning in ruby_atomic.h
 #include <string>
 
@@ -72,6 +73,10 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
 void
 Init_rbjit()
 {
+#ifdef _MSC_VER
+  _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
+#endif
+
   PrimitiveStore::setup();
   NativeCompiler::setup();
 
