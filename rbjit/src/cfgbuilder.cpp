@@ -315,7 +315,9 @@ CfgBuilder::buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult
   OpcodeFactory secondFactory(*factory, 0);
   BlockHeader* secondBlock = secondFactory.lastBlock();
   Variable* second = buildNode(&secondFactory, node->nd_2nd, useResult);
-  secondFactory.addCopy(first, second, useResult);
+  if (useResult) {
+    secondFactory.addCopy(first, second, useResult);
+  }
   secondFactory.addJump(joinBlock);
 
   // branch
