@@ -311,6 +311,11 @@ CfgBuilder::buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult
   OpcodeFactory joinFactory(*factory, 0);
   BlockHeader* joinBlock = joinFactory.lastBlock();
 
+  // cushion block to avoid a critical edge
+  OpcodeFactory cushionFactory(*factory, 0);
+  BlockHeader* cushionBlock = cushionFactory.lastBlock();
+  cushionFactory.addJump(joinBlock);
+
   // right-side hand value
   OpcodeFactory secondFactory(*factory, 0);
   BlockHeader* secondBlock = secondFactory.lastBlock();
@@ -322,10 +327,10 @@ CfgBuilder::buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult
 
   // branch
   if (nd_type(node) == NODE_AND) {
-    factory->addJumpIf(first, secondBlock, joinBlock);
+    factory->addJumpIf(first, secondBlock, cushionBlock);
   }
   else {
-    factory->addJumpIf(first, joinBlock, secondBlock);
+    factory->addJumpIf(first, cushionBlock, secondBlock);
   }
 
   *factory = joinFactory;
