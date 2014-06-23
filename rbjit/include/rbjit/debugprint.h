@@ -40,5 +40,6 @@ RBJIT_NAMESPACE_END
 
 #define RBJIT_DPRINT(msg)
 #define RBJIT_DPRINTLN(msg)
+#define RBJIT_DPRINTF(msg)
 
 #endif // RBJIT_DEBUG

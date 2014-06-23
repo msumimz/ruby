@@ -19,9 +19,7 @@
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/MemoryBuffer.h"
 
-#ifdef RBJIT_DEBUG
 #include "llvm/Support/raw_ostream.h"
-#endif
 
 #include "rbjit/nativecompiler.h"
 #include "rbjit/opcode.h"
