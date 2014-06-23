@@ -254,6 +254,9 @@ SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
   }
   else {
     renameStack_[lhs->index()].push_back(lhs);
+    // The definition sites of phi functions' lhs variables should be updated
+    lhs->setDefBlock(b);
+    lhs->setDefOpcode(opl);
   }
 }
 
