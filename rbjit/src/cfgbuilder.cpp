@@ -156,6 +156,11 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildNil(factory, node, useResult);
     break;
 
+  case NODE_AND:
+  case NODE_OR:
+    v = buildAndOr(factory, node, useResult);
+    break;
+
   case NODE_IF:
     v = buildIf(factory, node, useResult);
     break;
@@ -248,8 +253,6 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // condition
   Variable* cond = buildNode(factory, node->nd_cond, true);
 
-  BlockHeader* idom = factory->lastBlock();
-
   // true block
   OpcodeFactory trueFactory(*factory, 0);
   BlockHeader* trueBlock = trueFactory.lastBlock();
@@ -290,6 +293,41 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // Both route have been stopped
   factory->halt();
   return 0;
+}
+
+Variable*
+CfgBuilder::buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  assert(nd_type(node) == NODE_AND || nd_type(node) == NODE_OR);
+
+  // left-side hand value
+  Variable* first = buildNode(factory, node->nd_1st, true);
+
+  if (!factory->continues()) {
+    return 0;
+  }
+
+  // join block
+  OpcodeFactory joinFactory(*factory, 0);
+  BlockHeader* joinBlock = joinFactory.lastBlock();
+
+  // right-side hand value
+  OpcodeFactory secondFactory(*factory, 0);
+  BlockHeader* secondBlock = secondFactory.lastBlock();
+  Variable* second = buildNode(&secondFactory, node->nd_2nd, useResult);
+  secondFactory.addCopy(first, second, useResult);
+  secondFactory.addJump(joinBlock);
+
+  // branch
+  if (nd_type(node) == NODE_AND) {
+    factory->addJumpIf(first, secondBlock, joinBlock);
+  }
+  else {
+    factory->addJumpIf(first, joinBlock, secondBlock);
+  }
+
+  *factory = joinFactory;
+  return first;
 }
 
 Variable*

@@ -32,6 +32,9 @@ DefInfo::addDefSite(BlockHeader* block)
   }
 
   defSite_.addDefSite(block);
+  if (defCount_ > 1) {
+    local_ = false;
+  }
 }
 
 RBJIT_NAMESPACE_END

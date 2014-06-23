@@ -55,7 +55,7 @@ LTDominatorFinder::setDominatorsToCfg()
 #endif
 
   for (int i = 0; i < blocks_->size(); ++i) {
-    if (i == cfg_->entry()->index()) {
+    if (i == cfg_->entry()->index() || i == cfg_->exit()->index()) {
       continue;
     }
     (*blocks_)[i]->setIdom((*blocks_)[dom_[i + 1] - 1]);
@@ -72,7 +72,8 @@ LTDominatorFinder::debugVerify(std::vector<BlockHeader*>& doms)
 
   bool error = false;
   for (int i = 0; i < blocks_->size(); ++i) {
-    if (cfg_->exit()->index() == i) {
+    // LTDominatorFinder does not find an exit block's dominator
+    if (i == cfg_->exit()->index()) {
       continue;
     }
     if (doms[i] != cooperDoms[i]) {

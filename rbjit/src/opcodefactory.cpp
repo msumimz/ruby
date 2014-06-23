@@ -118,13 +118,17 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
 Variable*
 OpcodeFactory::addCopy(Variable* lhs, Variable* rhs, bool useResult)
 {
+  if (!useResult) {
+    return 0;
+  }
+
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, lhs, rhs);
   lastOpcode_ = op;
   if (lhs) {
     updateDefSite(lhs);
   }
 
-  return useResult ? lhs : 0;
+  return lhs;
 }
 
 void
