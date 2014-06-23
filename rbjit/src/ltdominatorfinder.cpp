@@ -32,7 +32,7 @@ LTDominatorFinder::dominators()
 
   std::vector<BlockHeader*> idoms(blocks_->size());
   for (int i = 0; i < blocks_->size(); ++i) {
-    if (i == cfg_->entry()->index()) {
+    if (dom_[i + 1] == 0) {
       continue;
     }
     idoms[i] = (*blocks_)[dom_[i + 1] - 1];
@@ -55,7 +55,7 @@ LTDominatorFinder::setDominatorsToCfg()
 #endif
 
   for (int i = 0; i < blocks_->size(); ++i) {
-    if (i == cfg_->entry()->index() || i == cfg_->exit()->index()) {
+    if (dom_[i + 1] == 0) {
       continue;
     }
     (*blocks_)[i]->setIdom((*blocks_)[dom_[i + 1] - 1]);
@@ -149,35 +149,57 @@ LTDominatorFinder::dfs()
   std::vector<int> work;
   int n = 0;
 
-  work.push_back(cfg_->entry()->index() + 1);
+  int v = cfg_->entry()->index() + 1;
+  BlockHeader* b;
+  for (;;) {
+    for (;;) {
+      semi_[v] = ++n;
+      vertex_[n] = label_[v] = v;
+      ancestor_[v] = child_[v] = 0;
+      size_[v] = 1;
 
-  while (!work.empty()) {
-    int v = work.back();
-    work.pop_back();
+      work.push_back(v);
 
-    semi_[v] = ++n;
-    vertex_[n] = label_[v] = v;
-    size_[v] = 1;
+      b = (*blocks_)[v - 1]->nextBlock();
+      if (!b) {
+        break;
+      }
 
-    BlockHeader* b = (*blocks_)[v - 1]->nextAltBlock();
-    if (b) {
       int w = b->index() + 1;
+      pred_[w].push_back(v);
       if (semi_[w] == 0) {
         parent_[w] = v;
-        work.push_back(w);
       }
-      pred_[w].push_back(v);
+      else {
+        break;
+      }
+
+      v = b->index() + 1;
     }
 
-    b = (*blocks_)[v - 1]->nextBlock();
-    if (b) {
-      int w = b->index() + 1;
-      if (semi_[w] == 0) {
-        parent_[w] = v;
-        work.push_back(w);
+  altBlockLoop:
+    b = 0;
+    while (!work.empty()) {
+      v = work.back();
+      work.pop_back();
+      b = (*blocks_)[v - 1]->nextAltBlock();
+      if (b) {
+        break;
       }
-      pred_[w].push_back(v);
     }
+    if (!b) {
+      return;
+    }
+
+    int w = b->index() + 1;
+    pred_[w].push_back(v);
+    if (semi_[w] == 0) {
+      parent_[w] = v;
+    }
+    else {
+      goto altBlockLoop;
+    }
+    v = w;
   }
 }
 
