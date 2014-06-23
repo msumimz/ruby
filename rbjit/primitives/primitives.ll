@@ -7,6 +7,23 @@ declare {i32, i1} @llvm.ssub.with.overflow.i32(i32 %a, i32 %b)
 declare {i64, i1} @llvm.ssub.with.overflow.i64(i64 %a, i64 %b)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Boolean tests
+
+define %VALUE @rbjit__test(%VALUE %v) nounwind readnone alwaysinline {
+  %rtest = and %VALUE %v, xor (%VALUE 4, %VALUE -1)
+  %cmp = icmp ne %VALUE %rtest, 0
+  %ret = select i1 %cmp, %VALUE 2, %VALUE 0
+  ret %VALUE %ret
+}
+
+define %VALUE @rbjit__test_not(%VALUE %v) nounwind readnone alwaysinline {
+  %rtest = and %VALUE %v, xor (%VALUE 4, %VALUE -1)
+  %cmp = icmp eq %VALUE %rtest, 0
+  %ret = select i1 %cmp, %VALUE 2, %VALUE 0
+  ret %VALUE %ret
+}
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Bitwise arithmetics
 
 define %VALUE @rbjit__bitwise_add(%VALUE %v1, %VALUE %v2) nounwind readnone alwaysinline {

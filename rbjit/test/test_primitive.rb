@@ -23,6 +23,14 @@ class Array; def m13; rbjit__class_of(self) end; end
 def m14; rbjit__is_embedded(123) end
 def m15; rbjit__is_embedded(self) end
 
+def m16; rbjit__test(123) end
+def m17; rbjit__test(false) end
+def m18; rbjit__test(nil) end
+
+def m19; rbjit__test_not(123) end
+def m20; rbjit__test_not(false) end
+def m21; rbjit__test_not(nil) end
+
 
 precompile(Object, :m1); assert(m1 == true)
 precompile(Object, :m2); assert(m2 == false)
@@ -39,3 +47,9 @@ precompile(Object, :m12); assert(m12 == false)
 precompile(Array, :m13); assert([].m13 == Array)
 precompile(Object, :m14); assert(m14 == true)
 precompile(Object, :m15); assert(m15 == false)
+precompile(Object, :m16); assert(m16 == true)
+precompile(Object, :m17); assert(m17 == false)
+precompile(Object, :m18); assert(m18 == false)
+precompile(Object, :m19); assert(m19 == false)
+precompile(Object, :m20); assert(m20 == true)
+precompile(Object, :m21); assert(m21 == true)
