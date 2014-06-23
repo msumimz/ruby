@@ -21,10 +21,10 @@ DefSite::clearDefSite()
 void
 DefInfo::addDefSite(BlockHeader* block)
 {
-  // defCount should be increased whichever block is already added
+  // defCount should be increased whichever the block is already added
   ++defCount_;
 
-  // return if already defined
+  // return if the block is already defined
   for (DefSite* ds = &defSite_; ds; ds = ds->next()) {
     if (ds->defBlock() == block) {
       return;
