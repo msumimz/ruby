@@ -13,6 +13,8 @@ public:
 
   DominatorFinder(ControlFlowGraph* cfg);
 
+  virtual ~DominatorFinder() {}
+
   virtual std::vector<BlockHeader*> dominators() = 0;
   virtual void setDominatorsToCfg();
 
