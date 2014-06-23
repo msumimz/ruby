@@ -68,16 +68,20 @@ PrecompiledMethodInfo::buildCfg()
   RBJIT_DPRINT(debugPrintBanner("AST"));
   RBJIT_DPRINT(debugPrintAst());
 
-  CfgBuilder builder;
-  cfg_ = builder.buildMethod(node_, this);
+  {
+    CfgBuilder builder;
+    cfg_ = builder.buildMethod(node_, this);
+  }
 
   RBJIT_DPRINT(debugPrintBanner("CFG building"));
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
 
-  LTDominatorFinder domFinder(cfg_);
-  domFinder.setDominatorsToCfg();
+  {
+    LTDominatorFinder domFinder(cfg_);
+    domFinder.setDominatorsToCfg();
+  }
 
   RBJIT_DPRINT(debugPrintBanner("SSA translation"));
   RBJIT_DPRINT(cfg_->domTree()->debugPrint());
