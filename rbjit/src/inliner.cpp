@@ -46,8 +46,8 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
   std::vector<mri::Class> cases;
   for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
     mri::MethodEntry me = *i;
-    if (me.methodDefinition().hasAstNode()) {
-      PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(me.methodDefinition().methodInfo());
+    if (me.methodInfo() && me.methodInfo()->astNode()) {
+      PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(me.methodInfo());
       if (mi != mi_) {
         methodInfos.push_back(mi);
         cases.push_back(me.class_());
@@ -66,7 +66,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
     initBlock->setDebugName("inliner_arguments");
     replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs());
-    delete op;
+    removeOpcodeCall(op);
   }
   else {
     OpcodeMultiplexer mul(cfg_);
@@ -96,7 +96,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
       }
     }
     else {
-      delete op;
+      removeOpcodeCall(op);
     }
   }
 
@@ -144,6 +144,19 @@ Inliner::replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* entry
   exitFactory.addJump(exit);
 
   return result;
+}
+
+void
+Inliner::removeOpcodeCall(OpcodeCall* op)
+{
+  // Remove OpcodeLookup
+  // The variable does not be removed; instead, its defOpode is cleared to zero.
+  op->lookup()->defOpcode()->unlink();
+  delete op->lookup()->defOpcode();
+  op->lookup()->setDefOpcode(0);
+
+  // Remove OpcodeCall
+  delete op;
 }
 
 RBJIT_NAMESPACE_END
