@@ -303,6 +303,7 @@
     <ClCompile Include="..\..\src\defusechain.cpp" />
     <ClCompile Include="..\..\src\dominatorfinder.cpp" />
     <ClCompile Include="..\..\src\domtree.cpp" />
+    <ClCompile Include="..\..\src\idstore.cpp" />
     <ClCompile Include="..\..\src\inliner.cpp" />
     <ClCompile Include="..\..\src\ltdominatorfinder.cpp" />
     <ClCompile Include="..\..\src\methodinfo.cpp">
@@ -353,6 +354,7 @@
     <ClInclude Include="..\..\include\rbjit\analysisresult.h" />
     <ClInclude Include="..\..\include\rbjit\codeduplicator.h" />
     <ClInclude Include="..\..\include\rbjit\defusechain.h" />
+    <ClInclude Include="..\..\include\rbjit\idstore.h" />
     <ClInclude Include="..\..\include\rbjit\inliner.h" />
     <ClInclude Include="..\..\include\rbjit\opcodemultiplexer.h" />
     <ClInclude Include="..\..\include\rbjit\primitivestore.h" />

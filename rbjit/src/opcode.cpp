@@ -2,6 +2,7 @@
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
 #include "rbjit/rubyobject.h"
+#include "rbjit/idstore.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -213,7 +214,7 @@ ID
 OpcodeEnv::envName()
 {
   if (!envName_) {
-    envName_ = mri::Id("<env>");
+    envName_ = IdStore::get(ID_env);
   }
   return envName_;
 }

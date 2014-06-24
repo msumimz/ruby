@@ -5,6 +5,7 @@
 #include "rbjit/methodinfo.h"
 #include "rbjit/nativecompiler.h"
 #include "rbjit/primitivestore.h"
+#include "rbjit/idstore.h"
 #include "rbjit/rubymethod.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/controlflowgraph.h"
@@ -73,6 +74,7 @@ Init_rbjit()
   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
 #endif
 
+  IdStore::setup();
   PrimitiveStore::setup();
   NativeCompiler::setup();
 

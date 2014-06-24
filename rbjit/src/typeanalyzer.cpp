@@ -7,6 +7,7 @@
 #include "rbjit/variable.h"
 #include "rbjit/methodinfo.h"
 #include "rbjit/typecontext.h"
+#include "rbjit/idstore.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -270,10 +271,10 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
     return true;
   }
 
-  if (op->name() == mri::Id("rbjit__typecast_fixnum").id()) {
+  if (op->name() == IdStore::get(ID_rbjit__typecast_fixnum)) {
     updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::fixnumClass()));
   }
-  else if (op->name() == mri::Id("rbjit__typecast_fixnum_bignum").id()) {
+  else if (op->name() == IdStore::get(ID_rbjit__typecast_fixnum_bignum)) {
     TypeSelection sel;
     sel.add(TypeExactClass(mri::Class::fixnumClass()));
     sel.add(TypeExactClass(mri::Class::bignumClass()));

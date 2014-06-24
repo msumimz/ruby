@@ -8,6 +8,7 @@
 #include "rbjit/methodinfo.h"
 #include "rbjit/primitivestore.h"
 #include "rbjit/opcode.h"
+#include "rbjit/idstore.h"
 
 extern "C" {
 #include "ruby.h"
@@ -69,7 +70,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
   assert(nd_type(node) == NODE_SCOPE);
 
   // self
-  Variable* self = buildNamedVariable(factory, mri::Id("<self>"));
+  Variable* self = buildNamedVariable(factory, IdStore::get(ID_self));
   self->setDefOpcode(0);
   self->defInfo()->addDefSite(factory->lastBlock()); // entry block
   cfg_->inputs()->push_back(self);
@@ -95,8 +96,8 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
   }
   else {
     // Vardiac arguments
-    Variable* argc = buildNamedVariable(factory, mri::Id("<argc>"));
-    Variable* argv = buildNamedVariable(factory, mri::Id("<argv>"));
+    Variable* argc = buildNamedVariable(factory, IdStore::get(ID_argc));
+    Variable* argv = buildNamedVariable(factory, IdStore::get(ID_argv));
     argc->setDefOpcode(0);
     argv->setDefOpcode(0);
     cfg_->inputs()->push_back(argc);
