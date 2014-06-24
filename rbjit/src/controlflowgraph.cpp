@@ -621,7 +621,6 @@ public:
 
 private:
 
-  static std::string getOpcodeShortName(Opcode* op);
   void putCommonOutput(Opcode* op);
   void put(const char* format, ...);
 
@@ -630,31 +629,10 @@ private:
   std::string out_;
 };
 
-std::string
-Dumper::getOpcodeShortName(Opcode* op)
-{
-  const char* opname;
-  if (typeid(*op) == typeid(BlockHeader)) {
-    opname = "Block";
-  }
-  else if (typeid(*op) == typeid(OpcodeImmediate)) {
-    opname = "Imm";
-  }
-  else if (typeid(*op) == typeid(OpcodePrimitive)) {
-    opname = "Prim";
-  }
-  else {
-    int skip = strlen("const rbjit::Opcode"); // hopefully optimized out
-    opname = typeid(*op).name() + skip;
-  }
-
-  return std::string(opname);
-}
-
 void
 Dumper::putCommonOutput(Opcode* op)
 {
-  std::string opname = getOpcodeShortName(op);
+  std::string opname = op->shortTypeName();
 
   out_ += stringFormat("  " PTRF " " PTRF " " PTRF " %d:%d ",
     op, op->prev(), op->next(), op->file(), op->line());
@@ -812,7 +790,7 @@ Dumper::dumpBlockHeaderAsDot(BlockHeader* b)
     else {
       out_ += stringFormat(PTRF " " SPCF " ", op);
     }
-    out_ += getOpcodeShortName(op);
+    out_ += op->shortTypeName();
     out_ += ' ';
     op->accept(this);
     out_ += "\\l";

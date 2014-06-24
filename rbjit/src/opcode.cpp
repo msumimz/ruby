@@ -30,6 +30,9 @@ Opcode::shortTypeName() const
   else if (typeid(*this) == typeid(OpcodeImmediate)) {
     return "Imm";
   }
+  else if (typeid(*this) == typeid(OpcodePrimitive)) {
+    return "Prim";
+  }
   else {
     return typeName();
   }
