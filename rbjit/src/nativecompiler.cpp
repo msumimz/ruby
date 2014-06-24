@@ -416,9 +416,9 @@ NativeCompiler::visitOpcode(OpcodeLookup* op)
   // Try compile-time lookup
   TypeLookup* type = dynamic_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lhs()));
   if (type && type->candidates().size() == 1) {
-    mri::MethodEntry me = type->candidates()[0].methodEntry();
+    mri::MethodEntry me = type->candidates()[0];
     if (!me.isNull()) {
-      value = getInt((int)me.methodEntry());
+      value = getInt((int)me.ptr());
     }
   }
 

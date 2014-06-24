@@ -54,20 +54,27 @@ public:
   // Copy contructor
   MethodEntry(rb_method_entry_t* me) : me_(me) {}
 
-  // Equality test
-  bool operator==(const MethodEntry& other) const { return me_ == other.me_; }
+  bool isNull() const { return me_ == nullptr; }
+  rb_method_entry_t* ptr() const { return me_; }
 
   // Accessors
-  rb_method_entry_t* methodEntry() const { return me_; }
-  bool isNull() const { return me_ == nullptr; }
-  MethodDefinition methodDefinition() const;
   ID methodName() const;
   Class class_() const;
 
-  bool canCall(CallType callType, Object self);
+  MethodInfo* methodInfo() const;
+  void setMethodInfo(MethodInfo* mi);
 
+  MethodDefinition methodDefinition() const;
+  void setMethodDefinition(MethodDefinition def);
+
+  // Calls
+  bool canCall(CallType callType, Object self);
   VALUE call(VALUE receiver, ID methodName, int argc, const VALUE* argv, VALUE defClass);
   VALUE call(VALUE receiver, int argc, const VALUE* argv);
+
+  // equality test
+  bool operator==(const MethodEntry other) const
+  { return me_ == other.me_; }
 
 private:
 
@@ -121,7 +128,8 @@ private:
 class MethodDefinition {
 public:
 
-  enum {
+#if 0
+  enum MethodType {
     VM_METHOD_TYPE_ISEQ,
     VM_METHOD_TYPE_CFUNC,
     VM_METHOD_TYPE_ATTRSET,
@@ -134,15 +142,18 @@ public:
     VM_METHOD_TYPE_MISSING,   /* wrapper for method_missing(id) */
     VM_METHOD_TYPE_REFINED
   };
+#endif
 
+  MethodDefinition() : def_(nullptr) {}
   MethodDefinition(rb_method_definition_t* def) : def_(def) {}
+  MethodDefinition(ID methodName, void* code, int argc);
+
+  bool isNull() const { return def_ == nullptr; }
+  rb_method_definition_t* ptr() const { return def_; }
 
   bool hasAstNode() const;
   RNode* astNode() const;
   int argc() const;
-
-  MethodInfo* methodInfo() const;
-  void setMethodInfo(MethodInfo* mi);
 
 private:
 

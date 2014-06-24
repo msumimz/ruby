@@ -212,8 +212,6 @@ make_method_entry_refined(rb_method_entry_t *me)
     *new_def->body.orig_me = *me;
     rb_vm_check_redefinition_opt_method(me, me->klass);
     if (me->def) me->def->alias_count++;
-    // Added by rbjit
-    new_def->jit_method_info = 0;
     me->def = new_def;
 }
 
@@ -332,6 +330,9 @@ rb_method_entry_make(VALUE klass, ID mid, rb_method_type_t type,
     RB_OBJ_WRITE(klass, &me->klass, defined_class);
     me->def = def;
 
+    // Added by rbjit
+    me->jit_method_info = 0;
+
     if (def) {
 	def->alias_count++;
 
@@ -416,7 +417,7 @@ static VALUE
     }
 }
 
-static void
+void
 setup_method_cfunc_struct(rb_method_cfunc_t *cfunc, VALUE (*func)(), int argc)
 {
     cfunc->func = func;
@@ -441,8 +442,6 @@ rb_add_method(VALUE klass, ID mid, rb_method_type_t type, void *opts, rb_method_
     def->type = type;
     def->original_id = mid;
     def->alias_count = 0;
-    // Added by rbjit
-    def->jit_method_info = 0;
     switch (type) {
       case VM_METHOD_TYPE_ISEQ: {
 	  rb_iseq_t *iseq = (rb_iseq_t *)opts;

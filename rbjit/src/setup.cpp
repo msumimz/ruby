@@ -50,22 +50,18 @@ dumptree(VALUE self, VALUE cls, VALUE methodName)
 static VALUE
 precompile(VALUE self, VALUE cls, VALUE methodName)
 {
-  PrecompiledMethodInfo* mi = PrecompiledMethodInfo::addToExistingMethod(mri::Class(cls), mri::Symbol(methodName).id());
+  PrecompiledMethodInfo* mi = PrecompiledMethodInfo::construct(mri::Class(cls), mri::Symbol(methodName).id());
   if (!mi) {
     rb_raise(rb_eArgError, "method does not have the source code to be compiled");
   }
 
-  mi->compile();
-  void* func = mi->methodBody();
-
+  // Preserve the existing method definition by aliasing
   const char* oldName = mri::Symbol(methodName).name();
   std::string newName(oldName);
   newName += "_orig";
-
-  int argc = mi->cfg()->hasOptionalArg() || mi->cfg()->hasRestArg() ? -1 : mi->cfg()->requiredArgCount();
-
   rb_define_alias(cls, newName.c_str(), oldName);
-  rb_define_method(cls, oldName, (VALUE (*)(...))func, argc);
+
+  mi->compile();
 
   return Qnil;
 }
@@ -84,9 +80,8 @@ Init_rbjit()
   rb_define_method(rb_cObject, "dumptree", (VALUE (*)(...))dumptree, 2);
   rb_define_method(rb_cObject, "precompile", (VALUE (*)(...))precompile, 2);
 
-  MethodInfo::addToNativeMethod(mri::Class::fixnumClass(), "+",
-    MethodInfo::NO, // hasDef
-    MethodInfo::NO, // hasEval
+  CMethodInfo::construct(
+    mri::Class::fixnumClass(), "+", false,
     TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
                           TypeExactClass::create(mri::Class::bignumClass())));
 }

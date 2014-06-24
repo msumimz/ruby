@@ -504,9 +504,9 @@ SanityChecker::check()
     // Check defOpcode
 
     if (!v->defOpcode()) {
-      if (!cfg_->containsInInputs(v)) {
-        addError("variable %d(%Ix)'s defOpcode is null", index, v);
-      }
+//      if (!cfg_->containsInInputs(v)) {
+//        addError("variable %d(%Ix)'s defOpcode is null", index, v);
+//      }
       continue;
     }
 

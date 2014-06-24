@@ -257,7 +257,7 @@ TypeLookup::debugPrint() const
     candidates_.size(), isDetermined() ? "true" : "false");
 
   for (auto i = candidates_.cbegin(), end = candidates_.cend(); i != end; ++i) {
-    out += stringFormat(" (%Ix)", i->methodEntry());
+    out += stringFormat(" (%Ix)", i->ptr());
   };
   return out;
 }

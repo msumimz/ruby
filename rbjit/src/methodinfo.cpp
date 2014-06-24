@@ -20,46 +20,99 @@
 RBJIT_NAMESPACE_BEGIN
 
 ////////////////////////////////////////////////////////////
-// MethodInfo
+// CMethodInfo
 
-MethodInfo::~MethodInfo()
+CMethodInfo::~CMethodInfo()
 {
   if (returnType_) {
     returnType_->destroy();
   }
 }
 
-void
-MethodInfo::addToNativeMethod(mri::Class cls, const char* methodName, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
+CMethodInfo*
+CMethodInfo::construct(mri::Class cls, const char* methodName, bool mutator, TypeConstraint* returnType)
 {
   auto me = cls.findMethod(methodName);
-  me.methodDefinition().setMethodInfo(new MethodInfo(cls, hasDef, hasEval, returnType));
+  CMethodInfo* mi = new CMethodInfo(me, mutator, returnType);
+  me.setMethodInfo(mi);
+
+  return mi;
 }
 
 ////////////////////////////////////////////////////////////
 // PrecompiledMethodInfo
 
-PrecompiledMethodInfo*
-PrecompiledMethodInfo::addToExistingMethod(mri::MethodEntry me)
+PrecompiledMethodInfo::~PrecompiledMethodInfo()
 {
-  mri::MethodDefinition def = me.methodDefinition();
+  if (returnType_) {
+    returnType_->destroy();
+  }
+  delete typeContext_;
+  delete cfg_;
+}
 
-  if (!def.hasAstNode()) {
+PrecompiledMethodInfo*
+PrecompiledMethodInfo::construct(mri::MethodEntry me)
+{
+  if (!me.methodDefinition().hasAstNode()) {
     return nullptr;
   }
 
-  PrecompiledMethodInfo* mi =
-    new PrecompiledMethodInfo(me.class_(), def.astNode(), mri::Id(me.methodName()).name());
-  def.setMethodInfo(mi);
+  PrecompiledMethodInfo* mi = new PrecompiledMethodInfo(me);
+  me.setMethodInfo(mi);
 
   return mi;
 }
 
 PrecompiledMethodInfo*
-PrecompiledMethodInfo::addToExistingMethod(mri::Class cls, ID methodName)
+PrecompiledMethodInfo::construct(mri::Class cls, ID methodName)
 {
   mri::MethodEntry me(cls, methodName);
-  return addToExistingMethod(me);
+  return construct(me);
+}
+
+TypeConstraint*
+PrecompiledMethodInfo::returnType()
+{
+  if (!returnType_) {
+    if (lock_) {
+      returnType_ = TypeRecursion::create(this);
+      return returnType_;
+    }
+    analyzeTypes();
+  }
+
+  return returnType_;
+}
+
+RNode*
+PrecompiledMethodInfo::astNode() const
+{
+  if (methodEntry().methodDefinition().hasAstNode()) {
+    return methodEntry().methodDefinition().astNode();
+  }
+  assert(!origDef_.isNull());
+  return origDef_.astNode();
+}
+
+bool
+PrecompiledMethodInfo::isMutator()
+{
+  return false;
+}
+
+void
+PrecompiledMethodInfo::compile()
+{
+  void* code = generateCode();
+  assert(code);
+
+  if (origDef_.isNull()) {
+    origDef_ = methodEntry().methodDefinition();
+
+    mri::MethodDefinition def(methodEntry().methodName(), code, origDef_.argc());
+    methodEntry().setMethodDefinition(def);
+  }
 }
 
 void
@@ -70,7 +123,7 @@ PrecompiledMethodInfo::buildCfg()
 
   {
     CfgBuilder builder;
-    cfg_ = builder.buildMethod(node_, this);
+    cfg_ = builder.buildMethod(astNode(), this);
   }
 
   RBJIT_DPRINT(debugPrintBanner("CFG building"));
@@ -116,7 +169,7 @@ PrecompiledMethodInfo::analyzeTypes()
   TypeAnalyzer ta(cfg_);
 
   // Set self's type
-  ta.setInputTypeConstraint(0, TypeClassOrSubclass(cls_));
+  ta.setInputTypeConstraint(0, TypeClassOrSubclass(methodEntry().class_()));
   typeContext_ = ta.analyze();
 
   lock_ = false;
@@ -130,8 +183,8 @@ PrecompiledMethodInfo::analyzeTypes()
   RBJIT_DPRINT(typeContext_->debugPrint());
 }
 
-void
-PrecompiledMethodInfo::compile()
+void*
+PrecompiledMethodInfo::generateCode()
 {
   if (!cfg_) {
     buildCfg();
@@ -146,39 +199,15 @@ PrecompiledMethodInfo::compile()
 
   RBJIT_DPRINT(debugPrintBanner("Compilation"));
 
-  methodBody_ = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, methodName_);
+  void* code = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, mri::Id(methodEntry().methodName()).name());
 
   RBJIT_DPRINT(NativeCompiler::instance()->debugPrint());
-}
 
-ControlFlowGraph*
-PrecompiledMethodInfo::cfg()
-{
-  if (!cfg_) {
-    buildCfg();
-  }
-  return cfg_;
-}
-
-TypeConstraint*
-PrecompiledMethodInfo::returnType()
-{
-  if (returnType_) {
-    return returnType_;
-  }
-
-  if (lock_) {
-    returnType_ = TypeRecursion::create(this);
-    return returnType_;
-  }
-
-  analyzeTypes();
-
-  return returnType_;
+  return code;
 }
 
 ////////////////////////////////////////////////////////////
-// debugPrintBanner
+// debugging methods
 
 std::string
 PrecompiledMethodInfo::debugPrintBanner(const char* stage) const
@@ -187,11 +216,8 @@ PrecompiledMethodInfo::debugPrintBanner(const char* stage) const
     "============================================================\n"
     "%s#%s (%Ix) [%s]\n"
     "============================================================\n",
-    class_().debugClassName().c_str(), methodName_, this, stage);
+    class_().debugClassName().c_str(), mri::Id(methodName()).name(), this, stage);
 }
-
-////////////////////////////////////////////////////////////
-// debugPrintAst
 
 // In node.h
 extern "C" {
@@ -201,9 +227,10 @@ VALUE rb_parser_dump_tree(RNode* node, int);
 std::string
 PrecompiledMethodInfo::debugPrintAst() const
 {
-  std::string out = stringFormat("[AST %Ix]\n", node_);
-  if (node_) {
-    mri::String ast = rb_parser_dump_tree(node_, 0);
+  RNode* node = astNode();
+  std::string out = stringFormat("[AST %Ix]\n", node);
+  if (node) {
+    mri::String ast = rb_parser_dump_tree(node, 0);
     std::string s = ast.toString();
     out += s.substr(s.find("\n\n#") + 2, std::string::npos);
     out += '\n';

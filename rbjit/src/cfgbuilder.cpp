@@ -39,8 +39,6 @@ CfgBuilder::buildMethod(const RNode* rootNode, MethodInfo* methodInfo)
 {
   cfg_ = new ControlFlowGraph;
 
-  methodInfo->setHasDef(MethodInfo::NO);
-  methodInfo->setHasEval(MethodInfo::NO);
   methodInfo_ = methodInfo;
 
   OpcodeFactory factory(cfg_);
@@ -442,10 +440,6 @@ CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
   // Call a method
   Variable* value = factory->addCall(lookup, args, args + argCount, useResult);
 
-  // Set properties
-  methodInfo_->setHasDef(MethodInfo::UNKNOWN);
-  methodInfo_->setHasDef(MethodInfo::UNKNOWN);
-
   return value;
 }
 
@@ -485,10 +479,6 @@ CfgBuilder::buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResu
 
     // Call a method
     value = factory->addCall(lookup, args, args + argCount, useResult);
-
-    // Set properties
-    methodInfo_->setHasDef(MethodInfo::UNKNOWN);
-    methodInfo_->setHasDef(MethodInfo::UNKNOWN);
   }
 
   return value;

@@ -214,9 +214,9 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   TypeSelection sel;
   for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
     assert(!i->isNull());
-    MethodInfo* mi = i->methodDefinition().methodInfo();
+    MethodInfo* mi = i->methodInfo();
     if (!mi && i->methodDefinition().hasAstNode()) {
-      mi = PrecompiledMethodInfo::addToExistingMethod(*i);
+      mi = PrecompiledMethodInfo::construct(*i);
     }
 
     if (mi) {
@@ -272,6 +272,12 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
 
   if (op->name() == mri::Id("rbjit__typecast_fixnum").id()) {
     updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::fixnumClass()));
+  }
+  else if (op->name() == mri::Id("rbjit__typecast_fixnum_bignum").id()) {
+    TypeSelection sel;
+    sel.add(TypeExactClass(mri::Class::fixnumClass()));
+    sel.add(TypeExactClass(mri::Class::bignumClass()));
+    updateTypeConstraint(op->lhs(), sel);
   }
 
   return true;

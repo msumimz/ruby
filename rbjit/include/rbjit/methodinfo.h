@@ -1,6 +1,6 @@
 #pragma once
 #include "rbjit/common.h"
-#include "rbjit/rubyobject.h"
+#include "rbjit/rubymethod.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -11,80 +11,88 @@ class TypeContext;
 class MethodInfo {
 public:
 
-  enum { UNKNOWN = 0, YES = 1, NO = 2 };
+  MethodInfo(mri::MethodEntry me) : me_(me) {}
 
-  MethodInfo()
-    : cls_(), hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
+  virtual ~MethodInfo() {}
+
+  mri::MethodEntry methodEntry() const { return me_; }
+  mri::Class class_() const { return me_.class_(); }
+  ID methodName() const { return me_.methodName(); }
+
+  virtual TypeConstraint* returnType() = 0;
+  virtual RNode* astNode() const = 0;
+  virtual bool isMutator() = 0;
+
+private:
+
+  mri::MethodEntry me_;
+
+};
+
+////////////////////////////////////////////////////////////
+// CMethodInfo
+
+class CMethodInfo : public MethodInfo {
+public:
+
+  CMethodInfo(mri::MethodEntry me, bool mutator, TypeConstraint* returnType)
+    : MethodInfo(me), mutator_(mutator), returnType_(returnType)
   {}
 
-  MethodInfo(mri::Class cls)
-    : cls_(cls), hasDef_(UNKNOWN), hasEval_(UNKNOWN), returnType_(0)
-  {}
+  ~CMethodInfo();
 
-  MethodInfo(mri::Class cls, unsigned hasDef, unsigned hasEval, TypeConstraint* returnType)
-    : cls_(cls), hasDef_(hasDef), hasEval_(hasEval), returnType_(returnType)
-  {}
-
-  virtual ~MethodInfo();
-
-  mri::Class class_() const { return cls_; }
-
-  unsigned hasDef() const { return hasDef_; }
-  unsigned hasEval() const { return hasEval_; }
+  static CMethodInfo* construct(mri::Class cls, const char* methodName,
+    bool mutator, TypeConstraint* returnType);
 
   virtual TypeConstraint* returnType() { return returnType_; }
-
-  void setHasDef(int state) { hasDef_ = state; }
-  void setHasEval(int state) { hasEval_ = state; }
-
-  bool isMutator() const { return hasDef_ != NO || hasEval_ != NO; }
-
-  static void addToNativeMethod(mri::Class cls, const char* methodName,
-    unsigned hasDef, unsigned hasEval, TypeConstraint* returnType);
+  virtual RNode* astNode() const { return 0; }
+  virtual bool isMutator() { return mutator_; }
 
 protected:
 
-  mri::Class cls_;
-
-  unsigned hasDef_ : 2;
-  unsigned hasEval_ : 2;
-
+  bool mutator_;
   TypeConstraint* returnType_;
 
 };
 
+////////////////////////////////////////////////////////////
+// PrecompiledMethodInfo
+
 class PrecompiledMethodInfo : public MethodInfo {
 public:
 
-  PrecompiledMethodInfo(mri::Class cls, RNode* node, const char* methodName)
-    : MethodInfo(cls), node_(node), methodName_(methodName), cfg_(0),
-      typeContext_(0), methodBody_(0), lock_(false)
+  PrecompiledMethodInfo(mri::MethodEntry me)
+    : MethodInfo(me), cfg_(0), typeContext_(0), returnType_(0),
+      origDef_(), lock_(false)
   {}
 
-  void* methodBody() { return methodBody_; }
+  ~PrecompiledMethodInfo();
 
-  void buildCfg();
-  void analyzeTypes();
-  void compile();
+  static PrecompiledMethodInfo* construct(mri::MethodEntry me);
+  static PrecompiledMethodInfo* construct(mri::Class cls, ID methodName);
 
-  ControlFlowGraph* cfg();
-  TypeContext* typeContext() { return typeContext_; }
   TypeConstraint* returnType();
+  RNode* astNode() const;
+  bool isMutator();
 
-  static PrecompiledMethodInfo* addToExistingMethod(mri::MethodEntry me);
-  static PrecompiledMethodInfo* addToExistingMethod(mri::Class cls, ID methodName);
+  ControlFlowGraph* cfg() { return cfg_; }
+  TypeContext* typeContext() { return typeContext_; }
+
+  void compile();
 
   std::string debugPrintBanner(const char* stage) const;
   std::string debugPrintAst() const;
 
 private:
 
-  RNode* node_; // method definition
-  const char* methodName_;
+  void buildCfg();
+  void analyzeTypes();
+  void* generateCode();
+
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;
-
-  void* methodBody_; // precompiled code
+  TypeConstraint* returnType_;
+  mri::MethodDefinition origDef_;
 
   bool lock_;
 };

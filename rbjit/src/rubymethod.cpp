@@ -18,6 +18,10 @@ typedef enum call_type {
 extern int
 rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
 
+// defined in vm_method.c
+extern void
+setup_method_cfunc_struct(rb_method_cfunc_t *cfunc, VALUE (*func)(), int argc);
+
 // defined in vm_insnhelper.c
 extern VALUE
 vm_call0(rb_thread_t* th, VALUE recv, ID id, int argc, const VALUE *argv,
@@ -39,10 +43,30 @@ MethodEntry::MethodEntry(VALUE cls, ID id)
   me_ = me;
 }
 
+MethodInfo*
+MethodEntry::methodInfo() const
+{
+  return static_cast<MethodInfo*>(me_->jit_method_info);
+}
+
+void
+MethodEntry::setMethodInfo(MethodInfo* mi)
+{
+  me_->jit_method_info = mi;
+}
+
+void setMethodInfo(MethodInfo* mi);
+
 MethodDefinition
 MethodEntry::methodDefinition() const
 {
-  return me_->def;
+  return MethodDefinition(me_->def);
+}
+
+void
+MethodEntry::setMethodDefinition(mri::MethodDefinition newDef)
+{
+  me_->def = newDef.ptr();
 }
 
 ID
@@ -88,6 +112,19 @@ MethodEntry::call(VALUE receiver, int argc, const VALUE* argv)
 ////////////////////////////////////////////////////////////
 // MethodDefinition
 
+MethodDefinition::MethodDefinition(ID methodName, void* code, int argc)
+{
+  // Borrowed to method.h:rb_add_method and other functions
+
+  def_ = ALLOC(rb_method_definition_t);
+
+  def_->type = VM_METHOD_TYPE_CFUNC;
+  def_->original_id = methodName;
+  def_->alias_count = 0;
+
+  setup_method_cfunc_struct(&def_->body.cfunc, (VALUE (*)())code, argc);
+}
+
 bool
 MethodDefinition::hasAstNode() const
 {
@@ -97,25 +134,16 @@ MethodDefinition::hasAstNode() const
 RNode*
 MethodDefinition::astNode() const
 {
-  return def_->body.iseq->node;
+  if (hasAstNode()) {
+    return def_->body.iseq->node;
+  }
+  return nullptr;
 }
 
 int
 MethodDefinition::argc() const
 {
   return def_->body.iseq->argc;
-}
-
-MethodInfo*
-MethodDefinition::methodInfo() const
-{
-  return static_cast<MethodInfo*>(def_->jit_method_info);
-}
-
-void
-MethodDefinition::setMethodInfo(MethodInfo* mi)
-{
-  def_->jit_method_info = mi;
 }
 
 } // namespace mri

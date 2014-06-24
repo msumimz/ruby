@@ -5,11 +5,11 @@ class Fixnum
   alias :old_add :+
 
   def +(other)
-    if rbjit__is_fixnum(self) && rbjit__is_fixnum(other) && rbjit__test_not(rbjit__bitwise_add_overflow(self, other))
-      sum = rbjit__bitwise_add(self, rbjit__bitwise_sub(other, rbjit__fixnum_to_int(1)))
+    if rbjit__is_fixnum(other) && rbjit__test_not(rbjit__bitwise_add_overflow(self, other))
+      sum = rbjit__bitwise_add(self, rbjit__bitwise_sub(other, 0))
       rbjit__typecast_fixnum(sum)
     else
-      self.old_add(other)
+      rbjit__typecast_fixnum_bignum(self.old_add(other))
     end
   end
 
@@ -31,4 +31,4 @@ end
 
 precompile Object, :m2
 
-assert(m2(2) == 3)
+assert(m2(2) == 6)

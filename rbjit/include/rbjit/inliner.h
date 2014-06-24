@@ -24,6 +24,7 @@ private:
 
   bool inlineCallSite(BlockHeader* block, OpcodeCall* op);
   Variable* replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result);
+  void removeOpcodeCall(OpcodeCall* op);
 
   PrecompiledMethodInfo* mi_;
   ControlFlowGraph* cfg_;

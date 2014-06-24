@@ -13,7 +13,7 @@ rbjit_lookupMethod(VALUE receiver, ID methodName)
   VALUE cls = CLASS_OF(receiver);
   mri::MethodEntry me(cls, methodName);
 
-  return me.methodEntry();
+  return me.ptr();
 }
 
 VALUE

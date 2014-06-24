@@ -92,10 +92,6 @@ typedef struct rb_method_definition_struct {
 	struct rb_method_entry_struct *orig_me;
     } body;
     int alias_count;
-
-    // rbjit: JIT Compilation information
-    // (defined in rbjit/methodinfo.h)
-    void* jit_method_info;
 } rb_method_definition_t;
 
 typedef struct rb_method_entry_struct {
@@ -104,6 +100,10 @@ typedef struct rb_method_entry_struct {
     rb_method_definition_t *def;
     ID called_id;
     VALUE klass;                    /* should be mark */
+
+    // rbjit: JIT Compilation information
+    // (defined in rbjit/methodinfo.h)
+    void* jit_method_info;
 } rb_method_entry_t;
 
 struct unlinked_method_entry_list_entry {
