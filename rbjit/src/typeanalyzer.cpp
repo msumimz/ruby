@@ -271,10 +271,26 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
     return true;
   }
 
-  if (op->name() == IdStore::get(ID_rbjit__typecast_fixnum)) {
+  ID name = op->name();
+  if (name == IdStore::get(ID_rbjit__is_fixnum)) {
+    TypeConstraint* type = typeContext_->typeConstraintOf(op->rhs());
+    if (type->isExactClass(mri::Class::fixnumClass())) {
+      updateTypeConstraint(op->lhs(), TypeConstant(mri::Object::trueObject()));
+    }
+    else if (type->isImpossibleToBeClass(mri::Class::fixnumClass())) {
+      updateTypeConstraint(op->lhs(), TypeConstant(mri::Object::falseObject()));
+    }
+    else {
+      TypeSelection sel;
+      sel.add(TypeConstant(mri::Object::trueObject()));
+      sel.add(TypeConstant(mri::Object::falseObject()));
+      updateTypeConstraint(op->lhs(), sel);
+    }
+  }
+  else if (name == IdStore::get(ID_rbjit__typecast_fixnum)) {
     updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::fixnumClass()));
   }
-  else if (op->name() == IdStore::get(ID_rbjit__typecast_fixnum_bignum)) {
+  else if (name == IdStore::get(ID_rbjit__typecast_fixnum_bignum)) {
     TypeSelection sel;
     sel.add(TypeExactClass(mri::Class::fixnumClass()));
     sel.add(TypeExactClass(mri::Class::bignumClass()));

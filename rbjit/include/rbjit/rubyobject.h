@@ -153,6 +153,8 @@ public:
   MethodEntry findMethod(ID methodName) const;
   MethodEntry findMethod(const char* methodName) const;
 
+  bool isSubclassOf(mri::Class base) const;
+
   // Subclasses
   SubclassEntry subclassEntry() const;
 

@@ -11,6 +11,8 @@ enum PredefinedId {
   ID_argv,
   ID_env,
 
+  ID_rbjit__is_fixnum,
+
   ID_rbjit__typecast_fixnum,
   ID_rbjit__typecast_fixnum_bignum,
 

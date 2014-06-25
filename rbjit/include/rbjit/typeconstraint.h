@@ -29,6 +29,8 @@ public:
   Lattice lattice() const { return lattice_; }
   void setLattice(Lattice l) { lattice_ = l; }
 
+  bool isDetermined() const { return lattice_ == DETERMINED; }
+
   const std::vector<mri::Class>& typeList() const { return list_; }
 
   size_t size() const { return list_.size(); }
@@ -123,6 +125,13 @@ public:
   // determined.
   virtual mri::Class evaluateClass() = 0;
 
+  // Test if the class is determined uniquely to be, or is impossible to be, a
+  // specified one.
+  // These methods are subsets of resolve(), and are defined to provide more
+  // efficient implementations for specialized purposes.
+  virtual bool isExactClass(mri::Class cls) = 0;
+  virtual bool isImpossibleToBeClass(mri::Class cls) = 0;
+
   // Resolve type constraints into a list of possible classes.
   // Callers are responsible for releasing TypeList*
   virtual TypeList* resolve() = 0;
@@ -157,7 +166,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -178,7 +190,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -201,7 +216,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -226,7 +244,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -251,7 +272,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -288,7 +312,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -320,7 +347,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -347,7 +377,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -373,7 +406,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -413,7 +449,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }
@@ -446,7 +485,10 @@ public:
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
   mri::Class evaluateClass();
+  bool isExactClass(mri::Class cls);
+  bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+
   std::string debugPrint() const;
 
   bool accept(TypeVisitor* visitor) { return visitor->visitType(this); }

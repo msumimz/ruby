@@ -35,6 +35,18 @@ TypeNone::evaluateClass()
   return mri::Class();
 }
 
+bool
+TypeNone::isExactClass(mri::Class cls)
+{
+  return false;
+}
+
+bool
+TypeNone::isImpossibleToBeClass(mri::Class cls)
+{
+  return true;
+}
+
 TypeList*
 TypeNone::resolve()
 {
@@ -74,6 +86,18 @@ TypeAny::evaluateClass()
   return mri::Class();
 }
 
+bool
+TypeAny::isExactClass(mri::Class cls)
+{
+  return false;
+}
+
+bool
+TypeAny::isImpossibleToBeClass(mri::Class cls)
+{
+  return false;
+}
+
 TypeList*
 TypeAny::resolve()
 {
@@ -108,6 +132,20 @@ TypeInteger::evaluateClass()
 {
   // Not defined because this is not a ruby object
   return mri::Class();
+}
+
+bool
+TypeInteger::isExactClass(mri::Class cls)
+{
+  // Always false because this is not a ruby object
+  return false;
+}
+
+bool
+TypeInteger::isImpossibleToBeClass(mri::Class cls)
+{
+  // Always true because this is not a ruby object
+  return true;
 }
 
 TypeList*
@@ -153,6 +191,18 @@ TypeConstant::evaluateClass()
   return value_.class_();
 }
 
+bool
+TypeConstant::isExactClass(mri::Class cls)
+{
+  return value_.class_() == cls;
+}
+
+bool
+TypeConstant::isImpossibleToBeClass(mri::Class cls)
+{
+  return value_.class_() != cls;
+}
+
 TypeList*
 TypeConstant::resolve()
 {
@@ -194,6 +244,18 @@ TypeEnv::evaluateClass()
 {
   // No corresponding Ruby class
   return mri::Class();
+}
+
+bool
+TypeEnv::isExactClass(mri::Class cls)
+{
+  return false;
+}
+
+bool
+TypeEnv::isImpossibleToBeClass(mri::Class cls)
+{
+  return true;
 }
 
 TypeList*
@@ -242,6 +304,18 @@ TypeLookup::evaluateClass()
 {
   // No corresponding Ruby class
   return mri::Class();
+}
+
+bool
+TypeLookup::isExactClass(mri::Class cls)
+{
+  return false;
+}
+
+bool
+TypeLookup::isImpossibleToBeClass(mri::Class cls)
+{
+  return true;
 }
 
 TypeList*
@@ -296,6 +370,18 @@ TypeSameAs::evaluateClass()
   return typeContext_->typeConstraintOf(source_)->evaluateClass();
 }
 
+bool
+TypeSameAs::isExactClass(mri::Class cls)
+{
+  return typeContext_->typeConstraintOf(source_)->isExactClass(cls);
+}
+
+bool
+TypeSameAs::isImpossibleToBeClass(mri::Class cls)
+{
+  return typeContext_->typeConstraintOf(source_)->isImpossibleToBeClass(cls);
+}
+
 TypeList*
 TypeSameAs::resolve()
 {
@@ -337,6 +423,18 @@ mri::Class
 TypeExactClass::evaluateClass()
 {
   return cls_;
+}
+
+bool
+TypeExactClass::isExactClass(mri::Class cls)
+{
+  return cls_ == cls;
+}
+
+bool
+TypeExactClass::isImpossibleToBeClass(mri::Class cls)
+{
+  return cls_ != cls;
 }
 
 TypeList*
@@ -381,13 +479,30 @@ TypeClassOrSubclass::evaluatesToBoolean()
 mri::Class
 TypeClassOrSubclass::evaluateClass()
 {
-  TypeList* list = resolve();
-  if (list->size() == 1) {
+  std::unique_ptr<TypeList> list(resolve());
+  if (list->isDetermined() && list->size() == 1) {
     mri::Class cls = list->typeList()[0];
-    delete list;
     return cls;
   }
   return mri::Class();
+}
+
+bool
+TypeClassOrSubclass::isExactClass(mri::Class cls)
+{
+  mri::SubclassEntry entry = cls_.subclassEntry();
+  if (!entry.isNull()) {
+    // If the class has any subclass, we can't determine the exact class.
+    return false;
+  }
+
+  return cls_ == cls;
+}
+
+bool
+TypeClassOrSubclass::isImpossibleToBeClass(mri::Class cls)
+{
+  return !cls.isSubclassOf(cls_);
 }
 
 TypeList*
@@ -602,6 +717,19 @@ TypeSelection::evaluateClass()
   return cls;
 }
 
+bool
+TypeSelection::isExactClass(mri::Class cls)
+{
+  return evaluateClass() == cls;
+}
+
+bool
+TypeSelection::isImpossibleToBeClass(mri::Class cls)
+{
+  std::unique_ptr<TypeList> list(resolve());
+  return list->isDetermined() && !list->includes(cls);
+}
+
 TypeList*
 TypeSelection::resolve()
 {
@@ -704,6 +832,18 @@ mri::Class
 TypeRecursion::evaluateClass()
 {
   return mri::Class();
+}
+
+bool
+TypeRecursion::isExactClass(mri::Class cls)
+{
+  return false;
+}
+
+bool
+TypeRecursion::isImpossibleToBeClass(mri::Class cls)
+{
+  return false;
 }
 
 TypeList*

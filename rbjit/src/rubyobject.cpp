@@ -3,7 +3,7 @@
 
 extern "C" {
 #include "ruby.h"
-#include "internal.h" // rb_classext_t, rb_subclass_entry_t
+#include "internal.h" // rb_classext_t, rb_subclass_entry_t, RCLASS_SUPER, RCLASS_ORIGIN
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -113,6 +113,22 @@ MethodEntry
 Class::findMethod(const char* methodName) const
 {
   return findMethod(mri::Id(methodName));
+}
+
+bool
+Class::isSubclassOf(mri::Class base) const
+{
+  // Borrowed from object.c:rb_obj_is_kind_of()
+  // (I don't understand the meanings of RCLASS_ORIGIN and RCLASS_M_TBL_WRAPPER...)
+  VALUE b = RCLASS_ORIGIN(base.value());
+  VALUE cls = value();
+  while (cls) {
+    if (cls == b || RCLASS_M_TBL_WRAPPER(cls) == RCLASS_M_TBL_WRAPPER(b)) {
+      return true;
+    }
+    cls = RCLASS_SUPER(cls);
+  }
+  return false;
 }
 
 SubclassEntry

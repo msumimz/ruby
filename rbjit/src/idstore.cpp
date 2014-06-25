@@ -9,6 +9,8 @@ const char* ID_NAMES[] = {
   "<argv>",
   "<env>",
 
+  "rbjit__is_fixnum",
+
   "rbjit__typecast_fixnum",
   "rbjit__typecast_fixnum_bignum",
 
