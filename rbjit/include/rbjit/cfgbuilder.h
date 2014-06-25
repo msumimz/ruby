@@ -60,6 +60,7 @@ private:
   Variable* buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildIf(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildReturn(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildCall(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResult);
 

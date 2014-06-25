@@ -168,6 +168,10 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildWhile(factory, node, useResult);
     break;
 
+  case NODE_RETURN:
+    v = buildReturn(factory, node, useResult);
+    break;
+
   case NODE_CALL:
     v = buildCall(factory, node, useResult);
     break;
@@ -415,6 +419,20 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
   *factory = exitFactory;
 
   return value;
+}
+Variable*
+CfgBuilder::buildReturn(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  Variable* ret;
+  if (node->nd_stts) {
+    ret = buildNode(factory, node->nd_stts, true);
+  }
+  else {
+    ret = factory->addImmediate(mri::Object::nilObject(), true);
+  }
+  factory->addJumpToReturnBlock(ret);
+
+  return ret;
 }
 
 Variable*
