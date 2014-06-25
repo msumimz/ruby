@@ -65,8 +65,8 @@ private:
   std::vector<int> ancestor_;
   std::vector<int> child_;
   std::vector<int> size_;
-
   std::vector<int> label_;
+
   bool computed_;
 };
 

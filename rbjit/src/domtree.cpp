@@ -42,7 +42,8 @@ DomTree::buildTree(ControlFlowGraph* cfg)
 {
   for (unsigned i = 0; i < size_; ++i) {
     BlockHeader* b = (*cfg->blocks())[i];
-    if (b == cfg->entry() || b == cfg->exit()) {
+    if (!b->idom()) {
+      assert(b == cfg->entry());
       continue;
     }
     addChild(b->idom(), b);
