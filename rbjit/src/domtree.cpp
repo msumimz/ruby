@@ -57,8 +57,10 @@ DomTree::debugPrint() const
   for (size_t i = 0; i < size_; ++i) {
     Node* n = nodes_ + i;
     result += stringFormat("%3d: %Ix(%d) firstChild=%Ix(%d) nextSibling=%Ix(%d)\n",
-      i, n, blockIndexOf(n), n->firstChild_, blockIndexOf(n->firstChild_),
-      n->nextSibling_, blockIndexOf(n->nextSibling_));
+      i,
+      n, n ? blockIndexOf(n) : -1,
+      n->firstChild_, n->firstChild_ ? blockIndexOf(n->firstChild_) : -1,
+      n->nextSibling_, n->nextSibling_ ? blockIndexOf(n->nextSibling_) : -1);
   }
 
   return result;
