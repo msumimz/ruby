@@ -55,8 +55,8 @@ SsaTranslator::computeDf()
   for (; i != end; ++i) {
     BlockHeader* b = *i;
 
-    // Skip entry and exit blocks
-    if (b == cfg_->entry() || b == cfg_->exit()) {
+    // Skip entry blocks
+    if (b == cfg_->entry()) {
       continue;
     }
 
