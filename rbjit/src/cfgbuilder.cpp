@@ -264,7 +264,13 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // false block
   OpcodeFactory falseFactory(*factory, 0);
   BlockHeader* falseBlock = falseFactory.lastBlock();
-  Variable* falseValue = buildNode(&falseFactory, node->nd_else, useResult);
+  Variable* falseValue;
+  if (node->nd_else) {
+    falseValue = buildNode(&falseFactory, node->nd_else, useResult);
+  }
+  else {
+    falseValue = falseFactory.addImmediate(mri::Object::nilObject(), useResult);
+  }
 
   // branch
   factory->addJumpIf(cond, trueBlock, falseBlock);
