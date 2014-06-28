@@ -168,6 +168,8 @@ PrecompiledMethodInfo::analyzeTypes()
     delete typeContext_;
   }
 
+  RBJIT_DPRINT(debugPrintBanner("Type analysis"));
+
   TypeAnalyzer ta(cfg_);
 
   // Set self's type
@@ -181,7 +183,6 @@ PrecompiledMethodInfo::analyzeTypes()
   }
   returnType_ = typeContext_->typeConstraintOf(cfg_->output())->independantClone();
 
-  RBJIT_DPRINT(debugPrintBanner("Type analysis"));
   RBJIT_DPRINT(typeContext_->debugPrint());
 }
 

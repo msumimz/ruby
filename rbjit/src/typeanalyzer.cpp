@@ -8,6 +8,7 @@
 #include "rbjit/methodinfo.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/idstore.h"
+#include "rbjit/debugprint.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -32,15 +33,19 @@ TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
 {
   assert(cfg_->containsVariable(v));
 
+  RBJIT_DPRINTF(("Update type: %Ix to %s", v, newType.debugPrint().c_str()));
   if (!v) {
+    RBJIT_DPRINT("\n");
     return;
   }
 
   if (typeContext_->updateTypeConstraint(v, newType)) {
+    RBJIT_DPRINT(" *");
     if (std::find(variables_.cbegin(), variables_.cend(), v) == variables_.cend()) {
       variables_.push_back(v);
     }
   }
+  RBJIT_DPRINT("\n");
 }
 
 void
@@ -80,10 +85,12 @@ TypeAnalyzer::analyze()
   blocks_.push_back(cfg_->entry());
 
   do {
-    BlockHeader* b = blocks_.back();
-    blocks_.pop_back();
+    do {
+      BlockHeader* b = blocks_.back();
+      blocks_.pop_back();
 
-    b->visitEachOpcode(this);
+      b->visitEachOpcode(this);
+    } while (!blocks_.empty());
 
     while (!variables_.empty()) {
       Variable* v = variables_.back();
@@ -93,7 +100,6 @@ TypeAnalyzer::analyze()
     }
 
   } while (!blocks_.empty());
-
 
   return typeContext_;
 }
@@ -119,7 +125,7 @@ TypeAnalyzer::visitOpcode(BlockHeader* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeCopy* op)
 {
-  updateTypeConstraint(op->lhs(), TypeSameAs(typeContext_, op->rhs()));
+  updateTypeConstraint(op->lhs(), *typeContext_->typeConstraintOf(op->rhs()));
   return true;
 }
 
@@ -310,12 +316,21 @@ TypeAnalyzer::visitOpcode(OpcodePhi* op)
     if (typeContext_->typeConstraintOf(*i)) {
       auto r = reachEdges_.find(std::make_pair(e->block(), block_));
       if (r != reachEdges_.end() && r->second == REACHABLE) {
-        types.add(*typeContext_->typeConstraintOf(*i));
+        TypeConstraint* t = typeContext_->typeConstraintOf(*i);
+        if (typeid(*t) == typeid(TypeEnv)) {
+          types.add(TypeSameAs(typeContext_, *i));
+        }
+        else {
+          types.add(*t->clone());
+        }
       }
     }
   }
 
-  if (types.types().size() == 1) {
+  if (types.types().empty()) {
+    updateTypeConstraint(op->lhs(), TypeAny());
+  }
+  else if (types.types().size() == 1) {
     updateTypeConstraint(op->lhs(), *types.types()[0]);
   }
   else {

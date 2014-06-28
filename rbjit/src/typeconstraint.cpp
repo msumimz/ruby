@@ -5,6 +5,7 @@
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
 #include "rbjit/typecontext.h"
+#include "rbjit/controlflowgraph.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -339,6 +340,21 @@ TypeLookup::debugPrint() const
 ////////////////////////////////////////////////////////////
 // TypeSameAs
 
+TypeSameAs::TypeSameAs(TypeContext* typeContext, Variable* source)
+  : typeContext_(typeContext)
+{
+  assert(typeContext->cfg()->containsVariable(source));
+  for (;;) {
+    TypeConstraint* t = typeContext->typeConstraintOf(source);
+    TypeSameAs* s = dynamic_cast<TypeSameAs*>(t);
+    if (!s) {
+      break;
+    }
+    source = s->source_;
+  }
+  source_ = source;
+}
+
 TypeConstraint*
 TypeSameAs::independantClone() const
 {
@@ -597,6 +613,21 @@ TypeSelection::clone() const
   return new TypeSelection(std::move(types));
 }
 
+TypeSelection*
+TypeSelection::independantClone() const
+{
+  std::vector<TypeConstraint*> types(types_.size());
+
+  auto p = types.begin();
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    // TODO: check duplicates
+    *p++ = (*i)->independantClone();
+  }
+  assert(p == types.end());
+
+  return new TypeSelection(std::move(types));
+}
+
 TypeSelection::~TypeSelection()
 {
   clear();
@@ -639,18 +670,23 @@ TypeSelection::equals(const TypeConstraint* other) const
     return types_.size() == 1 && types_[0]->equals(other);
   }
 
-  std::vector<TypeConstraint*> o = static_cast<const TypeSelection*>(other)->types_;
-
-  if (types_.size() != o.size()) {
+  if (types_.size() != static_cast<const TypeSelection*>(other)->types_.size()) {
     return false;
   }
 
+  std::vector<TypeConstraint*> o = static_cast<const TypeSelection*>(other)->types_;
+
   for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    bool matched = false;
     for (auto j = o.begin(), jend = o.end(); j != jend; ++j) {
-      if (!((*i)->equals(*j))) {
-        return false;
+      if (*j && (*i)->equals(*j)) {
+        matched = true;
+        *j = 0;
+        break;
       }
-      *j = 0;
+    }
+    if (!matched) {
+      return false;
     }
   }
 

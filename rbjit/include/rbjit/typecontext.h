@@ -16,6 +16,8 @@ public:
 
   ~TypeContext();
 
+  ControlFlowGraph* cfg() const { return cfg_; }
+
   void fitSizeToCfg();
 
   // Simply set the type constraint

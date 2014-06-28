@@ -11,9 +11,12 @@ def m1
   sum
 end
 
+puts Benchmark::CAPTION
+puts Benchmark.measure { 100.times { m1 } }
+
+load File.expand_path("../lib/fixnum.rb", File.dirname(__FILE__))
+
+debugbreak
 precompile Object, :m1
 
-Benchmark.bm do |bm|
-  bm.report("interpreted") { 100.times { m1_orig } }
-  bm.report("precompiled") { 100.times { m1 } }
-end
+puts Benchmark.measure { 100.times { m1 } }

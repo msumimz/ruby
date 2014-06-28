@@ -330,8 +330,7 @@ private:
 class TypeSameAs : public TypeConstraint {
 public:
 
-  TypeSameAs(TypeContext* typeContext, Variable* source)
-    : typeContext_(typeContext), source_(source) {}
+  TypeSameAs(TypeContext* typeContext, Variable* source);
 
   static TypeSameAs* create(TypeContext* typeContext, Variable* source)
   { return new TypeSameAs(typeContext, source); }
@@ -436,7 +435,7 @@ public:
   static TypeSelection* create(TypeConstraint* type1, TypeConstraint* type2, TypeConstraint* type3);
 
   TypeSelection* clone() const;
-  TypeSelection* independantClone() const { return clone(); }
+  TypeSelection* independantClone() const;
 
   // The add method adds the clone of the argument
   void add(const TypeConstraint& type);

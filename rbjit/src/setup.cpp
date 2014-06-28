@@ -86,5 +86,9 @@ Init_rbjit()
     mri::Class::fixnumClass(), "+", false,
     TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
                           TypeExactClass::create(mri::Class::bignumClass())));
+    CMethodInfo::construct(
+    mri::Class::bignumClass(), "+", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
+                          TypeExactClass::create(mri::Class::bignumClass())));
 }
 
