@@ -44,9 +44,9 @@ public:
   static CMethodInfo* construct(mri::Class cls, const char* methodName,
     bool mutator, TypeConstraint* returnType);
 
-  virtual TypeConstraint* returnType() { return returnType_; }
-  virtual RNode* astNode() const { return 0; }
-  virtual bool isMutator() { return mutator_; }
+  TypeConstraint* returnType() { return returnType_; }
+  RNode* astNode() const { return 0; }
+  bool isMutator() { return mutator_; }
 
 protected:
 
