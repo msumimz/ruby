@@ -96,6 +96,7 @@ public:
   std::string debugPrintVariables() const;
   std::string debugPrintTypeConstraints() const;
 
+  std::string debugPrintDotHeader();
   std::string debugPrintAsDot() const;
 
 private:

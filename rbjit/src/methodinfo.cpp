@@ -145,6 +145,7 @@ PrecompiledMethodInfo::buildCfg()
   cfg_->clearDefInfo();
 
   RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintDotHeader());
   RBJIT_DPRINT(cfg_->debugPrintAsDot());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());

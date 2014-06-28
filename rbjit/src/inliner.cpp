@@ -101,6 +101,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
   }
 
   RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintDotHeader());
   RBJIT_DPRINT(cfg_->debugPrintAsDot());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   RBJIT_DPRINT(typeContext_->debugPrint());

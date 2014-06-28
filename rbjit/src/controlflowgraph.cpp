@@ -840,6 +840,12 @@ ControlFlowGraph::debugPrint() const
 }
 
 std::string
+ControlFlowGraph::debugPrintDotHeader()
+{
+  return stringFormat("[Dot: %Ix]\n", this);
+}
+
+std::string
 ControlFlowGraph::debugPrintAsDot() const
 {
   Dumper dumper;
