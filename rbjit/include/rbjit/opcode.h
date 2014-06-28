@@ -5,7 +5,7 @@
 #include <string>
 #endif
 #include "rbjit/common.h"
-#include "rbjit/rubytypes.h"
+#include "rbjit/rubymethod.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -423,15 +423,25 @@ public:
     setRhs(1, env);
   }
 
+  OpcodeLookup(int file, int line, Opcode* prev, Variable* lhs, Variable* receiver, ID methodName, Variable* env, mri::MethodEntry me)
+    : OpcodeLR<2>(file, line, prev, lhs), methodName_(methodName), me_(me)
+  {
+    setRhs(0, receiver);
+    setRhs(1, env);
+  }
+
   Variable* receiver() const { return rhs(); }
   ID methodName() const { return methodName_; }
   Variable* env() const { return rhs(1); }
+  mri::MethodEntry methodEntry() const { return me_; }
+  void setMethodEntry(mri::MethodEntry me) { me_ = me; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
   ID methodName_;
+  mri::MethodEntry me_;
 };
 
 class OpcodeCall : public OpcodeVa {

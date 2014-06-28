@@ -406,6 +406,11 @@ NativeCompiler::visitOpcode(OpcodeEnv* op)
 bool
 NativeCompiler::visitOpcode(OpcodeLookup* op)
 {
+  mri::MethodEntry me = op->methodEntry();
+  if (!me.isNull()) {
+    return getInt((int)me.ptr());
+  }
+
   llvm::Value* rhs = getValue(op->rhs());
   if (!rhs) {
     return false;
