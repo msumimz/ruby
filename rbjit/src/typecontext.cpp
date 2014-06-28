@@ -36,9 +36,14 @@ TypeContext::updateTypeConstraint(Variable* v, const TypeConstraint& type)
     if (t->equals(&type)) {
       return false;
     }
-    t->destroy();
   }
   types_[i] = type.clone();
+  if (t) {
+    t->destroy();
+  }
+
+  // Test runtime type
+  assert(dynamic_cast<TypeSameAs*>(types_[i]) || !dynamic_cast<TypeSameAs*>(types_[i]));
 
   return true;
 }
@@ -79,7 +84,7 @@ TypeContext::isSameValueAs(Variable* v1, Variable* v2)
     }
   }
 
-  return typeConstraintOf(v1)->equals(typeConstraintOf(v2));
+  return false;
 }
 
 std::string

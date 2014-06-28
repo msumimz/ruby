@@ -6,6 +6,7 @@
 #include "rbjit/variable.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/controlflowgraph.h"
+#include "rbjit/debugprint.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -230,8 +231,7 @@ TypeEnv::equals(const TypeConstraint* other) const
 bool
 TypeEnv::isSameValueAs(TypeContext* typeContext, Variable* v)
 {
-  // Each TypeEnv is regarded as different from the other.
-  return false;
+  return equals(typeContext->typeConstraintOf(v));
 }
 
 TypeConstraint::Boolean
@@ -343,8 +343,8 @@ TypeLookup::debugPrint() const
 TypeSameAs::TypeSameAs(TypeContext* typeContext, Variable* source)
   : typeContext_(typeContext)
 {
-  assert(typeContext->cfg()->containsVariable(source));
   for (;;) {
+    assert(typeContext->cfg()->containsVariable(source));
     TypeConstraint* t = typeContext->typeConstraintOf(source);
     TypeSameAs* s = dynamic_cast<TypeSameAs*>(t);
     if (!s) {
