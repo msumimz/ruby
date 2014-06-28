@@ -1,44 +1,38 @@
 require "pp"
 
 within_dot = false
-cfg_name = nil
 dot_lines = []
-dot_files = {}
+dot_files = []
 File.open("rbjit_debug.log", "r") do |f|
   f.each_line do |line|
     if within_dot
       if /^[\[=]/.match(line)
         within_dot = false
-        dot_files[cfg_name] = dot_lines.join("")
+        dot_files.push dot_lines.join("")
         dot_lines.clear
       else
         dot_lines.push line
       end
     else
-      if m = /^\[Dot: ([0-9a-f]+)\]/.match(line)
+      if m = /^\[Dot:\s+\d+\s+([0-9a-f]+)\]/.match(line)
         within_dot = true
-        cfg_name = m[1]
       end
     end
   end
 end
 
 if dot_files.empty?
-  puts("not dot file found")
+  puts("dot file not found")
   exit(1)
 end
 
-dot = dot_files.values[-1]
+dot = dot_files[-1]
 if ARGV.size > 0
-  if m = /^(-\d+)/.match(ARGV[0])
-    dot = dot_files.values[m[1].to_i]
-  else
-    dot = dot_files[ARGV[0]]
-  end
+  dot = dot_files[ARGV[0].to_i]
 end
 
 if !dot
-  puts("illegal position")
+  puts("bad position specified")
   exit(1)
 end
 

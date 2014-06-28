@@ -842,7 +842,8 @@ ControlFlowGraph::debugPrint() const
 std::string
 ControlFlowGraph::debugPrintDotHeader()
 {
-  return stringFormat("[Dot: %Ix]\n", this);
+  static int count = 0;
+  return stringFormat("[Dot: %d %Ix]\n", count++, this);
 }
 
 std::string
