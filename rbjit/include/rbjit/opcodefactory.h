@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include "rbjit/common.h"
-#include "rbjit/rubytypes.h"
+#include "rbjit/rubymethod.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -48,9 +48,10 @@ public:
   Variable* addEnv(bool useResult);
   Variable* addEnv(Variable* env, bool useResult);
   Variable* addLookup(Variable* receiver, ID methodName);
+  Variable* addLookup(Variable* receiver, ID methodName, mri::MethodEntry me);
   // args includes a receiver as first argument
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
-  void duplicateCall(OpcodeCall* source, Variable* methodEntry);
+  Variable* addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useResult);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
   Variable* addPhi(Variable* lhs, int rhsCount, bool useResult);
   Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);

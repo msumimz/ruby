@@ -23,7 +23,8 @@ public:
 private:
 
   bool inlineCallSite(BlockHeader* block, OpcodeCall* op);
-  Variable* replaceCallWithMethodBody(PrecompiledMethodInfo* mi, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result);
+  Variable* replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result);
+  Variable* insertCall(MethodInfo* methodInfo, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op);
   void removeOpcodeCall(OpcodeCall* op);
 
   PrecompiledMethodInfo* mi_;

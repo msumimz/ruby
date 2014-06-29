@@ -236,12 +236,49 @@ OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 }
 
 Variable*
-OpcodeFactory::addCall(Variable* methodEntry, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
+OpcodeFactory::addLookup(Variable* receiver, ID methodName, mri::MethodEntry me)
+{
+  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->env(), me);
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addCall(Variable* lookup, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
 {
   int n = argsEnd - argsBegin;
 
   Variable* env = cfg_->env();
-  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, methodEntry, n, env);
+  OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, lookup, n, env);
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(useResult);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+  updateDefSite(env);
+
+  Variable** v = op->rhsBegin();
+  for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
+    *v++ = *arg;
+  }
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useResult)
+{
+  Variable*const* argsBegin = source->rhsBegin();
+  Variable*const* argsEnd = source->rhsEnd();
+  int n = argsEnd - argsBegin;
+
+  Variable* env = addEnv(true);
+  OpcodeCall* op = new OpcodeCall(source->file(), source->line(), lastOpcode_, 0, lookup, n, env);
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);

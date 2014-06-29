@@ -14,6 +14,12 @@ const char* ID_NAMES[] = {
   "rbjit__typecast_fixnum",
   "rbjit__typecast_fixnum_bignum",
 
+  // Symbols
+  "+",
+  "-",
+  "*",
+  "/",
+
   0
 };
 

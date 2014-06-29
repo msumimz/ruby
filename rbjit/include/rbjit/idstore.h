@@ -16,6 +16,12 @@ enum PredefinedId {
   ID_rbjit__typecast_fixnum,
   ID_rbjit__typecast_fixnum_bignum,
 
+  // Symbols
+  IDS_plus,
+  IDS_minus,
+  IDS_asterisk,
+  IDS_slash,
+
   PREDEFINED_ID_COUNT
 };
 

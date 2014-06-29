@@ -194,6 +194,14 @@ TypeAnalyzer::visitOpcode(OpcodeLookup* op)
   // The list of the receiver's possible classes
   std::unique_ptr<TypeList> list(typeContext_->typeConstraintOf(op->receiver())->resolve());
 
+  if (list->lattice() != TypeList::DETERMINED &&
+      (op->methodName() == IdStore::get(IDS_plus) ||
+       op->methodName() == IdStore::get(IDS_minus) ||
+       op->methodName() == IdStore::get(IDS_asterisk) ||
+       op->methodName() == IdStore::get(IDS_slash))) {
+    list->addType(mri::Class::fixnumClass());
+  }
+
   TypeLookup lookup(list->lattice() == TypeList::DETERMINED);
   for (auto i = list->typeList().cbegin(), end = list->typeList().cend(); i != end; ++i) {
     mri::MethodEntry me = (*i).findMethod(op->methodName());

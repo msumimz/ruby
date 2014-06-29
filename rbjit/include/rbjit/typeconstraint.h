@@ -234,6 +234,8 @@ class TypeConstant : public TypeConstraint {
 public:
 
   TypeConstant(mri::Object value) : value_(value) {}
+  static TypeConstant* create(mri::Object value) { return new TypeConstant(value); }
+
   TypeConstant* clone() const { return new TypeConstant(value_); }
   TypeConstant* independantClone() const { return clone(); }
 
