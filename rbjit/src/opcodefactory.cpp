@@ -277,12 +277,13 @@ OpcodeFactory::addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useRe
   Variable*const* argsEnd = source->rhsEnd();
   int n = argsEnd - argsBegin;
 
-  Variable* env = addEnv(true);
   OpcodeCall* op = new OpcodeCall(source->file(), source->line(), lastOpcode_, 0, lookup, n, env);
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);
+  Variable* env = createTemporary(true);
   op->setLhs(lhs);
+  op->seEnv(env);
   updateDefSite(lhs);
   updateDefSite(env);
 

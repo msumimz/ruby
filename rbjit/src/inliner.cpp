@@ -183,6 +183,7 @@ Inliner::insertCall(MethodInfo* mi, BlockHeader* entry, BlockHeader* exit, Opcod
   OpcodeFactory factory(cfg_, entry, entry->footer());
   Variable* newLookup = factory.addLookup(lookup->receiver(), lookup->methodName(), mi->methodEntry());
   Variable* result = factory.addDuplicateCall(op, newLookup, !!op->lhs());
+  factory.addJump(exit);
 
   // Set type constraints
   typeContext_->addNewTypeConstraint(newLookup, TypeConstant::create(reinterpret_cast<VALUE>(mi->methodEntry().ptr())));
