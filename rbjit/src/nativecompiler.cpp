@@ -167,6 +167,13 @@ NativeCompiler::updateValue(OpcodeL* op, llvm::Value* value)
   llvmValues_[op->lhs()->index()] = value;
 }
 
+void
+NativeCompiler::setBogusValue(Variable* v)
+{
+  assert(llvmValues_[v->index()] == 0);
+  llvmValues_[v->index()] = reinterpret_cast<llvm::Value*>(1);
+}
+
 ////////////////////////////////////////////////////////////
 // Translating blocks
 
@@ -317,15 +324,16 @@ NativeCompiler::translateBlocks()
     Opcode* footer = block_->footer();
     bool pending = false;
     do {
-      opcode_ = opcode_->next();
-      if (!opcode_) {
-	break;
-      }
+      RBJIT_DPRINTF(("compiling block %Ix opcode %Ix\n", block_, opcode_));
       if (!opcode_->accept(this)) {
         pending = true;
         break;
       }
-    } while (opcode_ != footer);
+      if (opcode_ == footer) {
+        break;
+      }
+      opcode_ = opcode_->next();
+    } while (opcode_);
 
     if (!pending) {
       BlockHeader* n;
@@ -347,7 +355,6 @@ NativeCompiler::translateBlocks()
 bool
 NativeCompiler::visitOpcode(BlockHeader* block)
 {
-  RBJIT_UNREACHABLE;
   return true;
 }
 
@@ -392,6 +399,7 @@ NativeCompiler::visitOpcode(OpcodeJumpIf* op)
 
 bool
 NativeCompiler::visitOpcode(OpcodeImmediate* op)
+
 {
   updateValue(op, getInt(op->value()));
   return true;
@@ -400,6 +408,7 @@ NativeCompiler::visitOpcode(OpcodeImmediate* op)
 bool
 NativeCompiler::visitOpcode(OpcodeEnv* op)
 {
+  setBogusValue(op->lhs());
   return true;
 }
 
@@ -439,6 +448,9 @@ NativeCompiler::visitOpcode(OpcodeLookup* op)
 bool
 NativeCompiler::visitOpcode(OpcodeCall* op)
 {
+  // The env will produce no code anyway
+  setBogusValue(op->env());
+
   std::vector<llvm::Value*> args(op->rhsCount() + 2);
   int count = 0;
 
@@ -499,6 +511,7 @@ bool
 NativeCompiler::visitOpcode(OpcodePhi* op)
 {
   if (OpcodeEnv::isEnv(op->lhs())) {
+    setBogusValue(op->lhs());
     return true;
   }
 

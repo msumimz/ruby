@@ -225,7 +225,7 @@ OpcodeFactory::addEnv(Variable* env, bool useResult)
 Variable*
 OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 {
-  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->env());
+  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->entryEnv());
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -238,7 +238,7 @@ OpcodeFactory::addLookup(Variable* receiver, ID methodName)
 Variable*
 OpcodeFactory::addLookup(Variable* receiver, ID methodName, mri::MethodEntry me)
 {
-  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->env(), me);
+  OpcodeLookup* op = new OpcodeLookup(file_, line_, lastOpcode_, 0, receiver, methodName, cfg_->entryEnv(), me);
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);
@@ -253,7 +253,7 @@ OpcodeFactory::addCall(Variable* lookup, Variable*const* argsBegin, Variable*con
 {
   int n = argsEnd - argsBegin;
 
-  Variable* env = cfg_->env();
+  Variable* env = cfg_->entryEnv();
   OpcodeCall* op = new OpcodeCall(file_, line_, lastOpcode_, 0, lookup, n, env);
   lastOpcode_ = op;
 
@@ -277,13 +277,13 @@ OpcodeFactory::addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useRe
   Variable*const* argsEnd = source->rhsEnd();
   int n = argsEnd - argsBegin;
 
-  OpcodeCall* op = new OpcodeCall(source->file(), source->line(), lastOpcode_, 0, lookup, n, env);
+  OpcodeCall* op = new OpcodeCall(source->file(), source->line(), lastOpcode_, 0, lookup, n, 0);
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);
   Variable* env = createTemporary(true);
   op->setLhs(lhs);
-  op->seEnv(env);
+  op->setEnv(env);
   updateDefSite(lhs);
   updateDefSite(env);
 
@@ -419,11 +419,14 @@ OpcodeFactory::createEntryExitBlocks()
   // entry block
   cfg_->entry_ = addFreeBlockHeader(0);
   cfg_->undefined_ = addImmediate(mri::Object::nilObject(), true);
-  cfg_->env_ = addEnv(true);
+  Variable* env = addEnv(true);
+  cfg_->entryEnv_ = cfg_->exitEnv_ = env;
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);
-  OpcodeExit* op = new OpcodeExit(0, 0, exit);
+  Opcode* op = new OpcodeCopy(0, 0, exit, env, env);
+  op = new OpcodeExit(0, 0, op);
+  env->defInfo()->increaseDefCount();
   exit->setFooter(op);
   cfg_->exit_ = exit;
 }

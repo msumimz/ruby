@@ -66,6 +66,7 @@ private:
   llvm::Value* getInt(size_t value) const;
   llvm::Value* getValue(Variable* v);
   void updateValue(OpcodeL* op, llvm::Value* value);
+  void setBogusValue(Variable* v);
 
   void translateToBitcode();
   void translateBlocks();

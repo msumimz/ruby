@@ -69,6 +69,8 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
   }
 
   if (!otherwise && cases.size() == 1) {
+    phi_ = nullptr;
+    envPhi_ = nullptr;
     BlockHeader* join = cfg_->splitBlock(block, op, true, true);
     join->setDebugName("inliner_join");
     BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
@@ -80,7 +82,8 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     OpcodeMultiplexer mul(cfg_);
     BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
 
-    OpcodePhi* phi = mul.phi();
+    phi_ = mul.phi();
+    envPhi_ = mul.envPhi();
     int size = methodInfos.size();
     for (int i = 0; i < size; ++i) {
       BlockHeader* block = mul.segments()[i];
@@ -94,8 +97,6 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
       else {
         result = insertCall(methodInfos[i], block, join, op);
       }
-      // TODO: phi node for envs
-      phi->setRhs(i, result);
     }
 
     if (otherwise) {
@@ -109,7 +110,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
         Variable* lhs = cfg_->copyVariable(block, op, op->lhs());
         typeContext_->addNewTypeConstraint(lhs, typeContext_->typeConstraintOf(op->lhs())->independantClone());
         op->setLhs(lhs);
-        phi->setRhs(methodInfos.size(), lhs);
+        phi_->setRhs(methodInfos.size(), lhs);
       }
     }
     else {
@@ -170,7 +171,14 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   }
 
   exitFactory.addJump(exit);
-
+/*
+  if (result && phi_) {
+    phi_->setRhs(i, result);
+  }
+  if (envPhi_) {
+    envPhi_->.setRhs(i, env);
+  }
+*/
   return result;
 }
 

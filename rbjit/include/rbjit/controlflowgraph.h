@@ -29,8 +29,11 @@ public:
 
   Variable* output() const {  return output_; }
   Variable* undefined() const { return undefined_; }
-  Variable* env() const { return env_; }
-  void setEnv(Variable* env) { env_ = env; }
+
+  Variable* entryEnv() const { return entryEnv_; }
+  void setEntryEnv(Variable* env) { entryEnv_ = env; }
+  Variable* exitEnv() const { return exitEnv_; }
+  void setExitEnv(Variable* env) { exitEnv_ = env; }
 
   DomTree* domTree();
 
@@ -130,7 +133,8 @@ private:
   // Environment
   // When two environments are equal, two method lookups with the same receiver
   // class and method name result in the same method entry.
-  Variable* env_;
+  Variable* entryEnv_;
+  Variable* exitEnv_;
 
   // Dominance tree
   DomTree* domTree_;

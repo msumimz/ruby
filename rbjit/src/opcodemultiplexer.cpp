@@ -65,13 +65,24 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
   segments_.push_back(factory.lastBlock());
   factory.addJump(exitBlock);
 
-  // Insert an empty phi node if the opcode has a left-hand side value
+  // Insert an empty phi node for the lhs variable
   Variable* lhs = opcode->lhs();
+  Opcode* last = exitBlock;
   if (lhs) {
     phi_ = new OpcodePhi(exitBlock->file(), exitBlock->line(), 0, lhs, count + 1, exitBlock);
     memset(phi_->rhsBegin(), 0, sizeof(Variable*) * (count + 1));
-    phi_->insertAfter(exitBlock);
+    phi_->insertAfter(last);
     lhs->updateDefSite(exitBlock, phi_);
+    last = phi_;
+  }
+
+  // Insert an empty phi node for the env
+  if (typeid(*opcode) == typeid(OpcodeCall)) {
+    OpcodeCall* call = static_cast<OpcodeCall*>(opcode);
+    envPhi_ = new OpcodePhi(exitBlock->file(), exitBlock->line(), 0, call->env(), count + 1, exitBlock);
+    memset(envPhi_->rhsBegin(), 0, sizeof(Variable*) * (count + 1));
+    envPhi_->insertAfter(last);
+    lhs->updateDefSite(exitBlock, envPhi_);
   }
 
   return exitBlock;

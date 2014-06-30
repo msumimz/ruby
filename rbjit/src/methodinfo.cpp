@@ -128,6 +128,8 @@ PrecompiledMethodInfo::buildCfg()
 
   RBJIT_DPRINT(debugPrintBanner("CFG building"));
   RBJIT_DPRINT(cfg_->debugPrint());
+  RBJIT_DPRINT(cfg_->debugPrintDotHeader());
+  RBJIT_DPRINT(cfg_->debugPrintAsDot());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
 
@@ -195,10 +197,10 @@ PrecompiledMethodInfo::generateCode()
 
   analyzeTypes();
 
-  RBJIT_DPRINT(debugPrintBanner("Inlining"));
+  //RBJIT_DPRINT(debugPrintBanner("Inlining"));
 
-  Inliner inliner(this);
-  inliner.doInlining();
+  //Inliner inliner(this);
+  //inliner.doInlining();
 
   RBJIT_DPRINT(debugPrintBanner("Compilation"));
 

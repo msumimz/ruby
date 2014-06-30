@@ -6,6 +6,7 @@
 #include "rbjit/domtree.h"
 #include "rbjit/variable.h"
 #include "rbjit/debugprint.h"
+#include "rbjit/idstore.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -179,6 +180,7 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
   if (b != footer) {
     Opcode* prev = b;
     for (Opcode* op = b->next(); op; prev = op, op = op->next()) {
+      RBJIT_DPRINTF(("block: %Ix opcode: %Ix\n", b, op));
       // Rename rhs (excluding phi fucntions)
       if (typeid(*op) != typeid(OpcodePhi)) {
         renameVariablesInRhs(op);
@@ -190,7 +192,7 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
         Variable* lhs = op->lhs();
         OpcodeCopy* copy;
         if (doCopyFolding_ && (copy = dynamic_cast<OpcodeCopy*>(op)) &&
-            lhs != cfg_->output() && lhs != cfg_->env()) {
+            lhs != cfg_->output() && !OpcodeEnv::isEnv(lhs)) {
           // Copy propagation
           renameStack_[lhs->index()].push_back(copy->rhs());
           if (lhs->defCount() == 1) {
@@ -245,8 +247,13 @@ SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
     Variable* temp = cfg_->copyVariable(b, opl, lhs);
     lhs->defInfo()->decreaseDefCount();
     renameStack_[lhs->index()].push_back(temp);
-    if (lhs == cfg_->env()) {
-      cfg_->setEnv(temp);
+    if (OpcodeEnv::isEnv(lhs)) {
+      if (b == cfg_->entry()) {
+        cfg_->setEntryEnv(temp);
+      }
+      else if (b == cfg_->exit()) {
+        cfg_->setExitEnv(temp);
+      }
     }
     opl->setLhs(temp);
 
@@ -279,6 +286,8 @@ SsaTranslator::renameEnvInLhs(BlockHeader* b, Opcode* op)
   }
   else {
     renameStack_[env->index()].push_back(env);
+    env->setDefBlock(b);
+    env->setDefOpcode(call);
   }
 }
 

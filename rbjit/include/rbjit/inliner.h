@@ -11,6 +11,7 @@ class TypeContext;
 class BlockHeader;
 class Opcode;
 class OpcodeCall;
+class OpcodePhi;
 class Variable;
 
 class Inliner {
@@ -32,6 +33,9 @@ private:
   TypeContext* typeContext_;
 
   std::unordered_set<Opcode*> inlined_;
+
+  OpcodePhi* phi_;
+  OpcodePhi* envPhi_;
 
 };
 

@@ -300,7 +300,7 @@ SanityChecker::checkRhs(OP op, bool nullable)
       }
     }
     else if (!cfg_->containsVariable(*i)) {
-      addError(op, "rhs variable %d does not belong to the cfg");
+      addError(op, "rhs variable %Ix does not belong to the cfg", *i);
     }
   }
 }
@@ -519,8 +519,8 @@ SanityChecker::check()
     if (opl->lhs() != v) {
       OpcodeCall* opc = dynamic_cast<OpcodeCall*>(opl);
       if (!opc || opc->env() != v) {
-        addError("variable %d(%Ix)'s defOpcode is %Ix, but that opcode's lhs variable is %Ix",
-	index, v, v->defOpcode(), opl->lhs());
+        addError("env variable %d(%Ix)'s defOpcode is %Ix, but that opcode's env is %Ix",
+	index, v, v->defOpcode(), opc->env());
         continue;
       }
     }
@@ -747,8 +747,8 @@ Dumper::visitOpcode(OpcodeExit* op)
 void
 Dumper::dumpCfgInfo(const ControlFlowGraph* cfg)
 {
-  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix env=%Ix\n",
-    cfg, cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
+  put("[CFG: %Ix]\nentry=%Ix exit=%Ix output=%Ix entryEnv=%Ix exitEnv=%Ix\n",
+    cfg, cfg->entry(), cfg->exit(), cfg->output(), cfg->entryEnv(), cfg->exitEnv());
 }
 
 void
@@ -815,8 +815,8 @@ Dumper::dumpBlockHeaderAsDot(BlockHeader* b)
 void
 Dumper::dumpAsDot(const ControlFlowGraph* cfg)
 {
-  std::string cfgInfo = stringFormat("entry=%Ix exit=%Ix output=%Ix env=%Ix",
-    cfg->entry(), cfg->exit(), cfg->output(), cfg->env());
+  std::string cfgInfo = stringFormat("entry=%Ix exit=%Ix output=%Ix entryEnv=%Ix exitEnv=%Ix",
+    cfg->entry(), cfg->exit(), cfg->output(), cfg->entryEnv(), cfg->exitEnv());
   out_ = "digraph {\n"
     "graph [label=\"" + cfgInfo + "\" labelloc=t labeljust=l fontname=\"Consolas\"]\n"
     "node [shape=box fontname=\"Consolas\"]\n";

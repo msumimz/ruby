@@ -17,13 +17,14 @@ class OpcodeMultiplexer {
 public:
 
   OpcodeMultiplexer(ControlFlowGraph* cfg)
-    : cfg_(cfg), phi_(0)
+    : cfg_(cfg), phi_(0), envPhi_(0)
   {}
 
   BlockHeader* multiplex(BlockHeader* block, Opcode* opcode, Variable* selector, const std::vector<mri::Class>& cases, bool otherwise);
 
   const std::vector<BlockHeader*> segments() const { return segments_; }
   OpcodePhi* phi() const { return phi_; }
+  OpcodePhi* envPhi() const { return envPhi_; }
 
 private:
 
@@ -33,6 +34,7 @@ private:
 
   std::vector<BlockHeader*> segments_;
   OpcodePhi* phi_;
+  OpcodePhi* envPhi_;
 
 };
 
