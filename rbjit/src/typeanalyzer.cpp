@@ -246,22 +246,24 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
     }
   }
 
-  if (lookup->isDetermined()) {
-    if (sel.types().empty()) {
-      updateTypeConstraint(op->lhs(), TypeAny());
-    }
-    else {
-      if (sel.types().size() == 1) {
-        updateTypeConstraint(op->lhs(), *sel.types()[0]);
+  if (op->lhs()) {
+    if (lookup->isDetermined()) {
+      if (sel.types().empty()) {
+	updateTypeConstraint(op->lhs(), TypeAny());
       }
       else {
-        updateTypeConstraint(op->lhs(), sel);
+	if (sel.types().size() == 1) {
+	  updateTypeConstraint(op->lhs(), *sel.types()[0]);
+	}
+	else {
+	  updateTypeConstraint(op->lhs(), sel);
+	}
       }
     }
-  }
-  else {
-    sel.add(TypeAny());
-    updateTypeConstraint(op->lhs(), sel);
+    else {
+      sel.add(TypeAny());
+      updateTypeConstraint(op->lhs(), sel);
+    }
   }
 
   if (mutator) {

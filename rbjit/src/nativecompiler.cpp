@@ -477,7 +477,10 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
   // call instruction
   llvm::CallInst* value = builder_->CreateCall(runtime_[RF_callMethod], args, "");
   value->setCallingConv(llvm::CallingConv::C);
-  updateValue(op, value);
+
+  if (op->lhs()) {
+    updateValue(op, value);
+  }
 
   return true;
 }

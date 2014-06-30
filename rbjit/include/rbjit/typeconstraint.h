@@ -287,13 +287,14 @@ public:
 class TypeLookup : public TypeConstraint {
 public:
 
-  TypeLookup() : determined_(false) {}
-
-  TypeLookup(bool determined) : determined_(determined) {}
+  TypeLookup(bool determined = false) : determined_(determined) {}
 
   TypeLookup(const std::vector<mri::MethodEntry>& candidates, bool determined)
     : candidates_(candidates), determined_(determined)
   {}
+
+  static TypeLookup* create(bool determined = false)
+  { return new TypeLookup(determined); }
 
   TypeLookup* clone() const;
   TypeLookup* independantClone() const { return clone(); }

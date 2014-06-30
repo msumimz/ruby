@@ -243,6 +243,10 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
 void
 SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
 {
+  if (!lhs) {
+    return;
+  }
+
   if (lhs->defCount() > 1) {
     Variable* temp = cfg_->copyVariable(b, opl, lhs);
     lhs->defInfo()->decreaseDefCount();

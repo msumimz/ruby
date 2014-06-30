@@ -389,10 +389,15 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
 
   // Create blocks
   OpcodeFactory preheaderFactory(*factory, 0);
+  preheaderFactory.lastBlock()->setDebugName("while_preheader");
   OpcodeFactory condFactory(*factory, 0);
+  condFactory.lastBlock()->setDebugName("while_cond");
   OpcodeFactory bodyFactory(*factory, 0);
+  bodyFactory.lastBlock()->setDebugName("while_body");
   OpcodeFactory preexitFactory(*factory, 0);
+  preexitFactory.lastBlock()->setDebugName("while_preexit");
   OpcodeFactory exitFactory(*factory, 0);
+  exitFactory.lastBlock()->setDebugName("while_exit");
 
   // Preheader block
   factory->addJump(preheaderFactory.lastBlock());
@@ -413,7 +418,9 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
 
   // Preexit block
   Variable* nil = preexitFactory.addImmediate(mri::Object::nilObject(), useResult);
-  preexitFactory.addCopy(value, nil);
+  if (useResult) {
+    preexitFactory.addCopy(value, nil, useResult);
+  }
   preexitFactory.addJump(exitFactory.lastBlock());
 
   // Body blcok

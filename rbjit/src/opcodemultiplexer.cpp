@@ -4,6 +4,8 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/opcodefactory.h"
 #include "rbjit/variable.h"
+#include "rbjit/typecontext.h"
+#include "rbjit/typeconstraint.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -30,6 +32,10 @@ OpcodeMultiplexer::generateTypeTestOpcode(OpcodeFactory* factory, Variable* sele
     factory->addPrimitive(cond, "rbjit__bitwise_compare_eq", 2, c, selc);
   }
 
+  typeContext_->addNewTypeConstraint(cond,
+      TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
+                            TypeExactClass::create(mri::Class::falseClass())));
+
   return cond;
 }
 
@@ -46,7 +52,6 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
 
   int count = cases.size() - 1 + otherwise;
   for (int i = 0; i < count; ++i) {
-    Variable* cls = factory.addImmediate(cfg_->createVariable(), cases[i].value(), true);
     Variable* cond = generateTypeTestOpcode(&factory, selector, cases[i].value());
     factory.addJumpIf(cond, 0, 0);
 

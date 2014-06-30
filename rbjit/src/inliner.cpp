@@ -95,7 +95,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->env());
   }
   else {
-    OpcodeMultiplexer mul(cfg_);
+    OpcodeMultiplexer mul(cfg_, typeContext_);
     BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
 
     OpcodePhi* phi = mul.phi();
@@ -176,11 +176,13 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   OpcodeFactory exitFactory(cfg_, dup.exit(), dup.exit()->footer());
 
   // Set the output variable
-  exitFactory.addCopy(result, dup.duplicatedVariableOf(mi->cfg()->output()), true);
-  if (!result && op->lhs()) {
-    result = cfg_->copyVariable(exitFactory.lastBlock(), exitFactory.lastOpcode(), op->lhs());
-    typeContext_->addNewTypeConstraint(result, typeContext_->typeConstraintOf(op->lhs())->clone());
-    static_cast<OpcodeL*>(exitFactory.lastOpcode())->setLhs(result);
+  if (op->lhs()) {
+    exitFactory.addCopy(result, dup.duplicatedVariableOf(mi->cfg()->output()), true);
+    if (!result) {
+      result = cfg_->copyVariable(exitFactory.lastBlock(), exitFactory.lastOpcode(), op->lhs());
+      typeContext_->addNewTypeConstraint(result, typeContext_->typeConstraintOf(op->lhs())->clone());
+      static_cast<OpcodeL*>(exitFactory.lastOpcode())->setLhs(result);
+    }
   }
 
   // Set the env variable
@@ -208,17 +210,20 @@ Inliner::insertCall(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, 
     typeContext_->addNewTypeConstraint(newLookup, TypeConstant::create(reinterpret_cast<VALUE>(me.ptr())));
   }
   else {
-    typeContext_->addNewTypeConstraint(newLookup, TypeAny::create());
+    typeContext_->addNewTypeConstraint(newLookup, TypeLookup::create());
   }
 
   // OpcodeCall
   Variable* result = factory.addDuplicateCall(op, newLookup, !!op->lhs());
-  typeContext_->addNewTypeConstraint(result, TypeAny::create());
-  typeContext_->addNewTypeConstraint(static_cast<OpcodeCall*>(result->defOpcode())->env(), TypeEnv::create());
+  Variable* env = static_cast<OpcodeCall*>(factory.lastOpcode())->env();
+  if (result) {
+    typeContext_->addNewTypeConstraint(result, TypeAny::create());
+  }
+  typeContext_->addNewTypeConstraint(env, TypeEnv::create());
 
   factory.addJump(exit);
 
-  return std::make_pair(result, static_cast<OpcodeCall*>(result->defOpcode())->env());
+  return std::make_pair(result, env);
 }
 
 void
