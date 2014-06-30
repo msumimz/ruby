@@ -12,11 +12,10 @@ def m1
 end
 
 puts Benchmark::CAPTION
-puts Benchmark.measure { 100.times { m1 } }
+puts Benchmark.measure { 30000.times { m1 } }
 
 load File.expand_path("../lib/fixnum.rb", File.dirname(__FILE__))
 
-debugbreak
 precompile Object, :m1
 
-puts Benchmark.measure { 100.times { m1 } }
+puts Benchmark.measure { 30000.times { m1 } }
