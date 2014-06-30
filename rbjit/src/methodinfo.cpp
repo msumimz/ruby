@@ -197,12 +197,12 @@ PrecompiledMethodInfo::generateCode()
 
   analyzeTypes();
 
-  //RBJIT_DPRINT(debugPrintBanner("Inlining"));
+  RBJIT_DPRINT(debugPrintBanner("Inlining"));
 
-  //Inliner inliner(this);
-  //inliner.doInlining();
+  Inliner inliner(this);
+  inliner.doInlining();
 
-  RBJIT_DPRINT(debugPrintBanner("Compilation"));
+  RBJIT_DPRINT(debugPrintBanner("LLVM Compilation"));
 
   void* code = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, mri::Id(methodEntry().methodName()).name());
 

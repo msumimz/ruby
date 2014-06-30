@@ -82,7 +82,7 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
     envPhi_ = new OpcodePhi(exitBlock->file(), exitBlock->line(), 0, call->env(), count + 1, exitBlock);
     memset(envPhi_->rhsBegin(), 0, sizeof(Variable*) * (count + 1));
     envPhi_->insertAfter(last);
-    lhs->updateDefSite(exitBlock, envPhi_);
+    call->env()->updateDefSite(exitBlock, envPhi_);
   }
 
   return exitBlock;

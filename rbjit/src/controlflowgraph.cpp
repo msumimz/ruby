@@ -518,9 +518,13 @@ SanityChecker::check()
 
     if (opl->lhs() != v) {
       OpcodeCall* opc = dynamic_cast<OpcodeCall*>(opl);
-      if (!opc || opc->env() != v) {
+      if (!opc) {
+	addError("variable %d(%Ix)'s defOpcode is %Ix, whose lhs is %Ix", index, v, v->defOpcode(), opl->lhs());
+	continue;
+      }
+      if (opc->env() != v) {
         addError("env variable %d(%Ix)'s defOpcode is %Ix, but that opcode's env is %Ix",
-	index, v, v->defOpcode(), opc->env());
+                 index, v, v->defOpcode(), opc->env());
         continue;
       }
     }
