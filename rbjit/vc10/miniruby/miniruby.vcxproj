@@ -149,7 +149,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS=1;RBJIT_ENABLED;RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_SCL_SECURE_NO_WARNINGS=1;RBJIT_ENABLED;RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_100;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include;$(ProjectDir)\..\..\..\rbjit</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
