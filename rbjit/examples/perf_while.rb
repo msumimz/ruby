@@ -11,11 +11,13 @@ def m1
   sum
 end
 
-puts Benchmark::CAPTION
+puts "\t\t" + Benchmark::CAPTION
+print "interprited\t"
 puts Benchmark.measure { 30000.times { m1 } }
 
 load File.expand_path("../lib/fixnum.rb", File.dirname(__FILE__))
 
 precompile Object, :m1
 
+print "compiled\t"
 puts Benchmark.measure { 30000.times { m1 } }
