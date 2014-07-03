@@ -83,28 +83,28 @@ Init_rbjit()
   rb_define_method(rb_cObject, "precompile", (VALUE (*)(...))precompile, 2);
 
   CMethodInfo::construct(
-  mri::Class::fixnumClass(), "+", false,
-  TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
-                        TypeExactClass::create(mri::Class::bignumClass())));
+    mri::Class::fixnumClass(), "+", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
+                          TypeExactClass::create(mri::Class::bignumClass())));
   CMethodInfo::construct(
-  mri::Class::fixnumClass(), "<=", false,
-  TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
-                        TypeExactClass::create(mri::Class::falseClass())));
+    mri::Class::fixnumClass(), "<=", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
+                          TypeExactClass::create(mri::Class::falseClass())));
   CMethodInfo::construct(
-  mri::Class::fixnumClass(), "<", false,
-  TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
-                        TypeExactClass::create(mri::Class::falseClass())));
+    mri::Class::fixnumClass(), "<", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
+                          TypeExactClass::create(mri::Class::falseClass())));
   CMethodInfo::construct(
-  mri::Class::bignumClass(), "+", false,
-  TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
-                        TypeExactClass::create(mri::Class::bignumClass())));
+    mri::Class::bignumClass(), "+", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::fixnumClass()),
+                          TypeExactClass::create(mri::Class::bignumClass())));
   CMethodInfo::construct(
-  mri::Class::bignumClass(), "<=", false,
-  TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
-                        TypeExactClass::create(mri::Class::falseClass())));
+    mri::Class::bignumClass(), "<=", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
+                          TypeExactClass::create(mri::Class::falseClass())));
   CMethodInfo::construct(
-  mri::Class::bignumClass(), "<", false,
-  TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
-                        TypeExactClass::create(mri::Class::falseClass())));
+    mri::Class::bignumClass(), "<", false,
+    TypeSelection::create(TypeExactClass::create(mri::Class::trueClass()),
+                          TypeExactClass::create(mri::Class::falseClass())));
 }
 
