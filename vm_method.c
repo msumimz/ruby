@@ -330,8 +330,10 @@ rb_method_entry_make(VALUE klass, ID mid, rb_method_type_t type,
     RB_OBJ_WRITE(klass, &me->klass, defined_class);
     me->def = def;
 
+#ifdef RBJIT_ENABLED
     // Added by rbjit
     me->jit_method_info = 0;
+#endif
 
     if (def) {
 	def->alias_count++;

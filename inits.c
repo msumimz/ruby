@@ -61,6 +61,8 @@ rb_call_inits(void)
     CALL(Complex);
     CALL(version);
     CALL(vm_trace);
+#ifdef RBJIT_ENABLED
     CALL(rbjit);
+#endif
 }
 #undef CALL
