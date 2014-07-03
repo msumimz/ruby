@@ -9,7 +9,7 @@ class Fixnum
   alias :generic_ge :>=
 
   def +(other)
-    if rbjit__is_fixnum(other) && rbjit__test_not(rbjit__bitwise_add_overflow(self, other))
+    if rbjit__is_fixnum(other) && rbjit__test_not(rbjit__bitwise_add_overflow(self, rbjit__bitwise_sub(other, 0)))
       sum = rbjit__bitwise_add(self, rbjit__bitwise_sub(other, 0))
       rbjit__typecast_fixnum(sum)
     else
@@ -18,7 +18,7 @@ class Fixnum
   end
 
   def -(other)
-    if rbjit__is_fixnum(other) && rbjit__test_not(rbjit__bitwise_sub_overflow(self, other))
+    if rbjit__is_fixnum(other) && rbjit__test_not(rbjit__bitwise_sub_overflow(self, rbjit__bitwise_sub(other, 0)))
       sum = rbjit__bitwise_sub(self, rbjit__bitwise_sub(other, 0))
       rbjit__typecast_fixnum(sum)
     else
