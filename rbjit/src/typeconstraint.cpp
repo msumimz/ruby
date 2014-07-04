@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <utility> // std::move
 #include <cassert>
+#include <memory> // std::unique_ptr
 #include "rbjit/typeconstraint.h"
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"

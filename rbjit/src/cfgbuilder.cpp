@@ -9,11 +9,10 @@
 #include "rbjit/primitivestore.h"
 #include "rbjit/opcode.h"
 #include "rbjit/idstore.h"
+#include "rbjit/rubytypes.h"
 
-extern "C" {
 #include "ruby.h"
 #include "node.h"
-}
 
 RBJIT_NAMESPACE_BEGIN
 

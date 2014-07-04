@@ -35,6 +35,7 @@ if "%1" == "--with-baseruby" goto :baseruby
 if "%1" == "--with-ntver" goto :ntver
 if "%1" == "--without-ext" goto :witharg
 if "%1" == "--without-extensions" goto :witharg
+if "%1" == "--llvm-prefix" goto :llvmprefix
 if "%opt:~0,10%" == "--without-" goto :withoutarg
 if "%opt:~0,7%" == "--with-" goto :witharg
 if "%1" == "-h" goto :help
@@ -165,6 +166,12 @@ goto :loop
   echo>>confargs.tmp  %1 \
   shift
 goto :loop
+:llvmprefix
+  echo>> ~tmp~.mak 	"LLVM_PREFIX=%~2" \
+  echo>>confargs.tmp  %1=%2 \
+  shift
+  shift
+goto :loop
 :help
   echo Configuration:
   echo   --help                  display this help
@@ -180,6 +187,7 @@ goto :loop
   echo   --without-ext="a,b,..." ignore extensions a, b, ...
   echo   --disable-install-doc   do not install rdoc indexes during install
   echo   --with-ntver=0xXXXX     target NT version (shouldn't use with old SDK)
+  echo   --llvm-prefix=PREFIX    LLVM library location [C:\llvm-3.4]
   del *.tmp
   del ~tmp~.mak
 goto :exit

@@ -1,8 +1,10 @@
 #include <intrin.h> // suppress warning in ruby_atomic.h
 #include "rbjit/rubymethod.h"
 
-extern "C" {
 #include "ruby.h"
+
+extern "C" {
+
 #include "method.h" // rb_method_entry_t, rb_method_definition_t
 #include "vm_core.h" // rb_iseq_t, rb_thread_t, GET_THREAD
 

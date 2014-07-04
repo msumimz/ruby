@@ -1,10 +1,8 @@
 #include "rbjit/rubyobject.h"
 #include "rbjit/rubymethod.h"
 
-extern "C" {
 #include "ruby.h"
 #include "internal.h" // rb_classext_t, rb_subclass_entry_t, RCLASS_SUPER, RCLASS_ORIGIN
-}
 
 RBJIT_NAMESPACE_BEGIN
 

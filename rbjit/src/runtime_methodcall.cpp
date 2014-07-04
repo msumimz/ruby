@@ -1,9 +1,7 @@
 #include "rbjit/common.h"
 #include "rbjit/rubymethod.h"
 
-extern "C" {
 #include "ruby.h"
-}
 
 RBJIT_NAMESPACE_BEGIN
 

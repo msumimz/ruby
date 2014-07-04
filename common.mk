@@ -36,6 +36,8 @@ EXTSOLIBS     =
 MINIOBJS      = $(ARCHMINIOBJS) miniinit.$(OBJEXT) miniprelude.$(OBJEXT)
 ENC_MK        = enc.mk
 
+!include rbjit_objs.mk
+
 COMMONOBJS    = array.$(OBJEXT) \
 		bignum.$(OBJEXT) \
 		class.$(OBJEXT) \
@@ -97,7 +99,8 @@ COMMONOBJS    = array.$(OBJEXT) \
 		cont.$(OBJEXT) \
 		$(BUILTIN_ENCOBJS) \
 		$(BUILTIN_TRANSOBJS) \
-		$(MISSING)
+		$(MISSING) \
+		$(RBJIT_OBJS)
 
 EXPORTOBJS    = $(DLNOBJ) \
 		localeinit.$(OBJEXT) \

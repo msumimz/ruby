@@ -10,10 +10,8 @@
 #include "rbjit/typeconstraint.h"
 #include "rbjit/controlflowgraph.h"
 
-extern "C" {
 #include "ruby.h"
 #include "node.h" // rb_parser_dump_tree
-}
 
 extern "C" {
 void Init_rbjit();

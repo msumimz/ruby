@@ -22,12 +22,12 @@ PrimitiveStore::load(void** pAddress, size_t* pSize)
 {
   HRSRC resHandle = FindResource(nullptr, MAKEINTRESOURCE(IDR_PRIMITIVES1), TEXT("PRIMITIVES"));
   if (!resHandle) {
-    abort();
+    throw std::runtime_error("Bug; Can't load primitives");
   }
 
   HGLOBAL res = LoadResource(nullptr, resHandle);
   if (!res) {
-    abort();
+    throw std::runtime_error("Bug; Can't load primitives");
   }
 
   *pAddress = LockResource(res);

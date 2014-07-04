@@ -12,6 +12,11 @@ srcdir = $(WIN32DIR)/..
 !ifndef prefix
 prefix = /usr
 !endif
+
+!ifndef LLVM_PREFIX
+LLVM_PREFIX = c:/llvm/llvm-3.4
+!endif
+
 BANG = !
 APPEND = echo.>>$(MAKEFILE)
 !ifdef MAKEFILE
@@ -61,6 +66,8 @@ NTVER = $(NTVER)
 !if defined(USE_RUBYGEMS)
 USE_RUBYGEMS = $(USE_RUBYGEMS)
 !endif
+
+LLVM_PREFIX = $(LLVM_PREFIX:\=/)
 
 <<
 !if !defined(BASERUBY)
