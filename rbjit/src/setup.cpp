@@ -72,9 +72,15 @@ Init_rbjit()
   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
 #endif
 
-  IdStore::setup();
-  PrimitiveStore::setup();
-  NativeCompiler::setup();
+  try {
+    IdStore::setup();
+    PrimitiveStore::setup();
+    NativeCompiler::setup();
+  }
+  catch (std::exception& e) {
+    ::MessageBoxA(nullptr, e.what(), "rbjit initialization error", MB_OK);
+    exit(1);
+  }
 
   rb_define_method(rb_cObject, "debugbreak", (VALUE (*)(...))debugbreak, 0);
   rb_define_method(rb_cObject, "dumptree", (VALUE (*)(...))dumptree, 2);

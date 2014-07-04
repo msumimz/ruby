@@ -17,21 +17,33 @@ PrimitiveStore::setup()
   instance_ = new PrimitiveStore;
 }
 
+static __declspec(noinline) HINSTANCE
+getDllModuleHandle()
+{
+  MEMORY_BASIC_INFORMATION mbi;
+  if (VirtualQuery(_ReturnAddress(), &mbi, sizeof(mbi))) {
+    return (HINSTANCE)mbi.AllocationBase;
+  }
+  return NULL;
+}
+
 void
 PrimitiveStore::load(void** pAddress, size_t* pSize)
 {
-  HRSRC resHandle = FindResource(nullptr, MAKEINTRESOURCE(IDR_PRIMITIVES1), TEXT("PRIMITIVES"));
+  HINSTANCE handle = getDllModuleHandle();
+
+  HRSRC resHandle = FindResource(handle, MAKEINTRESOURCE(IDR_PRIMITIVES1), TEXT("PRIMITIVES"));
   if (!resHandle) {
-    throw std::runtime_error("Bug; Can't load primitives");
+    throw std::runtime_error("[Bug] FindResource failed; Can't load primitives");
   }
 
-  HGLOBAL res = LoadResource(nullptr, resHandle);
+  HGLOBAL res = LoadResource(handle, resHandle);
   if (!res) {
-    throw std::runtime_error("Bug; Can't load primitives");
+    throw std::runtime_error("[Bug] LoadResource failed; Can't load primitives");
   }
 
   *pAddress = LockResource(res);
-  *pSize = SizeofResource(nullptr, resHandle);
+  *pSize = SizeofResource(handle, resHandle);
 }
 
 void
