@@ -79,9 +79,9 @@ void *alloca();
 #endif /* __GNUC__ */
 
 #ifdef RBJIT_ENABLED
-// Moved the definitions of VALUE and ID to a different file.
-#include "rbjit/rubytypes.h"
-#define SIGNED_VALUE size_t
+typedef uintptr_t VALUE;
+typedef uintptr_t ID;
+#define SIGNED_VALUE intptr_t
 #define SIZEOF_VALUE SIZEOF_VOIDP
 #define PRI_VALUE_PREFIX "l"
 #else
