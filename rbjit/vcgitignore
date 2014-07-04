@@ -17,3 +17,5 @@ ipch/
 rbjit/temp/
 *.dot
 *.png
+*.rc
+!primitives/*.rc

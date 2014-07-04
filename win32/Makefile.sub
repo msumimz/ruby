@@ -244,7 +244,7 @@ MISSING = $(MISSING) acosh.obj cbrt.obj erf.obj tgamma.obj
 !endif
 DLNOBJ = dln.obj
 
-ARFLAGS = -machine:$(MACHINE) -out:
+ARFLAGS = $(RBJIT_ARFLAGS) -machine:$(MACHINE) -out:
 CC = $(CC) -nologo
 LD = $(CC)
 LDSHARED = $(LD) -LD
@@ -960,13 +960,13 @@ $(LIBRUBY):	$(RUBYDEF)
 		$(ECHO) linking import-library $(@:\=/)
 		$(Q) $(AR) $(ARFLAGS)$@ -def:$(RUBYDEF)
 
-$(LIBRUBY_SO):	$(LIBRUBY_A) $(DLDOBJS) $(RUBYDEF) $(RUBY_SO_NAME).res
+$(LIBRUBY_SO):	$(LIBRUBY_A) $(DLDOBJS) $(RUBYDEF) $(RUBY_SO_NAME).res $(rbjit_primdir)/primitives.res
 		@echo $(DLDOBJS)
 		@-$(PRE_LIBRUBY_UPDATE)
 		$(ECHO) linking shared-library $(@:\=/)
 		$(Q) $(LDSHARED) $(MAINOBJ) $(DLDOBJS) $(LIBRUBY_A) \
-			$(RUBY_SO_NAME).res $(LIBS) -Fe$@ -link $(LDFLAGS) \
-			$(LIBRUBY_DLDFLAGS)
+			$(LIBS) -Fe$@ -link $(LDFLAGS) \
+			$(RUBY_SO_NAME).res $(rbjit_primdir)/primitives.res $(LIBRUBY_DLDFLAGS)
 		@$(RM) dummy.lib dummy.exp
 		$(Q) $(LDSHARED_0)
 		$(Q) $(LDSHARED_1)
