@@ -39,12 +39,20 @@
 # define RUBY_REVISION_STR ""
 #endif
 
+#if RBJIT_ENABLED
+# define RBJIT_DESCRIPTION_STR " rbjit"
+#else
+# define RBJIT_DESCRIPTION_STR ""
+#endif
+
 # define RUBY_DESCRIPTION	    \
     "ruby "RUBY_VERSION		    \
     RUBY_PATCHLEVEL_STR		    \
     " ("RUBY_RELEASE_DATE	    \
     RUBY_REVISION_STR") "	    \
-    "["RUBY_PLATFORM"]"
+    "["RUBY_PLATFORM"]"             \
+    RBJIT_DESCRIPTION_STR
+
 # define RUBY_COPYRIGHT		    \
     "ruby - Copyright (C) "	    \
     STRINGIZE(RUBY_BIRTH_YEAR)"-"   \
