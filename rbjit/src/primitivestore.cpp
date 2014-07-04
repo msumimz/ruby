@@ -20,8 +20,10 @@ PrimitiveStore::setup()
 static __declspec(noinline) HINSTANCE
 getDllModuleHandle()
 {
+  // Find the module handle in which the caller function resides.
   MEMORY_BASIC_INFORMATION mbi;
   if (VirtualQuery(_ReturnAddress(), &mbi, sizeof(mbi))) {
+    // HINSTANCE is actually the base address of the module.
     return (HINSTANCE)mbi.AllocationBase;
   }
   return NULL;
