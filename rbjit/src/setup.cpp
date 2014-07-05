@@ -9,6 +9,7 @@
 #include "rbjit/rubymethod.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/controlflowgraph.h"
+#include  "rbjit/cfgbuilder.h" // UnsupportedSyntaxException
 
 #include "ruby.h"
 #include "node.h" // rb_parser_dump_tree
@@ -60,7 +61,12 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
   newName += "_orig";
   rb_define_alias(cls, newName.c_str(), oldName);
 
-  mi->compile();
+  try {
+    mi->compile();
+  }
+  catch (UnsupportedSyntaxException& e) {
+    rb_raise(rb_eArgError, e.what());
+  }
 
   return Qnil;
 }
@@ -78,6 +84,7 @@ Init_rbjit()
     NativeCompiler::setup();
   }
   catch (std::exception& e) {
+    // This is a build/setup error, and the message should be shown in the GUI environment (rubyw).
     ::MessageBoxA(nullptr, e.what(), "rbjit initialization error", MB_OK);
     exit(1);
   }

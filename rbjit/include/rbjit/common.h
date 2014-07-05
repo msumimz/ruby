@@ -21,7 +21,7 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-// sprintf that returns a std::string
+// Safe sprintf-like functions
 std::string stringFormat(const char* format, ...);
 std::string stringFormatVarargs(const char* format, va_list args);
 

@@ -14,7 +14,21 @@
 #include "ruby.h"
 #include "node.h"
 
+extern "C" {
+  const char* ruby_node_name(int node);
+}
+
 RBJIT_NAMESPACE_BEGIN
+
+////////////////////////////////////////////////////////////
+// UnsupportedSyntaxException
+
+UnsupportedSyntaxException::UnsupportedSyntaxException(std::string what)
+  : std::runtime_error(what)
+{}
+
+////////////////////////////////////////////////////////////
+// CfgBuilder
 
 Variable*
 CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name)
@@ -46,8 +60,14 @@ CfgBuilder::buildMethod(const RNode* rootNode, MethodInfo* methodInfo)
   cfg_->entry()->setDebugName("entry");
   cfg_->exit()->setDebugName("exit");
 
-  buildArguments(&factory, rootNode);
-  buildProcedureBody(&factory, rootNode, true);
+  try {
+    buildArguments(&factory, rootNode);
+    buildProcedureBody(&factory, rootNode, true);
+  }
+  catch (std::exception& e) {
+    delete cfg_;
+    throw;
+  };
 
   return cfg_;
 }
@@ -181,7 +201,9 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     break;
 
   default:
-    assert(!"node type not implemented");
+    std::string what = stringFormat("%s:%d: Node type %s is not implemented yet",
+      mri::Id(methodInfo_->methodName()).name(), nd_line(node), ruby_node_name(nd_type(node)));
+    throw UnsupportedSyntaxException(what);
   }
 
   return v;

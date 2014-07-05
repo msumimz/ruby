@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
+#include <string>
+#include <stdexcept>
 #include "rbjit/common.h"
 #include "rbjit/rubytypes.h"
 
@@ -31,6 +33,16 @@ private:
 
   size_t size_;
   ID* table_;
+};
+
+////////////////////////////////////////////////////////////
+// UnsupportedSyntaxException
+
+class UnsupportedSyntaxException : public std::runtime_error {
+public:
+
+  UnsupportedSyntaxException(std::string what);
+
 };
 
 ////////////////////////////////////////////////////////////

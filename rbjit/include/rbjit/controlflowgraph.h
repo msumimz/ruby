@@ -19,6 +19,7 @@ class ControlFlowGraph {
 public:
 
   ControlFlowGraph();
+  ~ControlFlowGraph();
 
   ControlFlowGraph* copy() const;
 

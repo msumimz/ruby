@@ -30,6 +30,11 @@ ControlFlowGraph::ControlFlowGraph()
     domTree_(0)
 {}
 
+ControlFlowGraph::~ControlFlowGraph()
+{
+  // TODO delete all opcodes and variables and a dom tree
+}
+
 DomTree*
 ControlFlowGraph::domTree()
 {
