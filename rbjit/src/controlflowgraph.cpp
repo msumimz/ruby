@@ -32,7 +32,31 @@ ControlFlowGraph::ControlFlowGraph()
 
 ControlFlowGraph::~ControlFlowGraph()
 {
-  // TODO delete all opcodes and variables and a dom tree
+  // Delete cfg
+  for (auto i = blocks_.begin(), end = blocks_.end(); i != end; ++i) {
+    BlockHeader* block = *i;
+    Opcode* footer = block->footer();
+
+    for (Opcode* op = block; op;) {
+      if (op == footer) {
+        delete op;
+        break;
+      }
+      else {
+        Opcode* prev = op;
+        op = op->next();
+        delete prev;
+      }
+    }
+  }
+
+  // Delete variables
+  for (auto i = variables_.begin(), end = variables_.end(); i != end; ++i) {
+    delete *i;
+  }
+
+  // domtree
+  delete domTree_;
 }
 
 DomTree*

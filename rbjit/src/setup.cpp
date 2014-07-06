@@ -65,6 +65,7 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
     mi->compile();
   }
   catch (UnsupportedSyntaxException& e) {
+    delete mi;
     rb_raise(rb_eArgError, e.what());
   }
 

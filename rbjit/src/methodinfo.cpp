@@ -118,13 +118,13 @@ PrecompiledMethodInfo::compile()
 void
 PrecompiledMethodInfo::buildCfg()
 {
-  RBJIT_DPRINT(debugPrintBanner("AST"));
-  RBJIT_DPRINT(debugPrintAst());
-
   {
     CfgBuilder builder;
     cfg_ = builder.buildMethod(astNode(), this);
   }
+
+  RBJIT_DPRINT(debugPrintBanner("AST"));
+  RBJIT_DPRINT(debugPrintAst());
 
   RBJIT_DPRINT(debugPrintBanner("CFG building"));
   RBJIT_DPRINT(cfg_->debugPrint());
