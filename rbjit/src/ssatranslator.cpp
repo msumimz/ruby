@@ -163,6 +163,14 @@ SsaTranslator::renameVariables()
 
   // Delete variables deleted through copy propagation
   cfg_->removeVariables(&folded_);
+
+  // Reset the definition sites of the input variables because the input
+  // variables don't have any actual definitions, and have no chance to update
+  // the definition sites.
+  for (auto i = cfg_->inputs()->cbegin(), end = cfg_->inputs()->cend(); i != end; ++i) {
+    (*i)->setDefBlock(cfg_->entry());
+    (*i)->setDefOpcode(0);
+  }
 }
 
 void
