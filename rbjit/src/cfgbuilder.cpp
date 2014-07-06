@@ -114,6 +114,9 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
     }
   }
   else {
+    std::string what = stringFormat("Method %s uses vardiac arguments, which is not implemented yet", mri::Id(methodInfo_->methodName()).name());
+    throw UnsupportedSyntaxException(what);
+#if 0
     // Vardiac arguments
     Variable* argc = buildNamedVariable(factory, IdStore::get(ID_argc));
     Variable* argv = buildNamedVariable(factory, IdStore::get(ID_argv));
@@ -121,6 +124,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
     argv->setDefOpcode(0);
     cfg_->inputs()->push_back(argc);
     cfg_->inputs()->push_back(argv);
+#endif
   }
 }
 
