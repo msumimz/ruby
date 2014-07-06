@@ -162,13 +162,13 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode,
   Opcode* o = latter;
   Opcode* footer = latter->footer();
   do {
-    OpcodeL* opl = dynamic_cast<OpcodeL*>(o);
-    if (opl) {
-      opl->lhs()->setDefBlock(latter);
-      OpcodeCall* opc = dynamic_cast<OpcodeCall*>(o);
-      if (opc) {
-        opc->env()->setDefBlock(latter);
-      }
+    Variable* lhs = o->lhs();
+    if (lhs) {
+      lhs->setDefBlock(latter);
+    }
+    OpcodeCall* opc = dynamic_cast<OpcodeCall*>(o);
+    if (opc) {
+      opc->env()->setDefBlock(latter);
     }
     o = o->next();
   } while (o && o != footer);
