@@ -284,7 +284,13 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   // true block
   OpcodeFactory trueFactory(*factory, 0);
   BlockHeader* trueBlock = trueFactory.lastBlock();
-  Variable* trueValue = buildNode(&trueFactory, node->nd_body, useResult);
+  Variable* trueValue;
+  if (node->nd_body) {
+    trueValue = buildNode(&trueFactory, node->nd_body, useResult);
+  }
+  else {
+    trueValue = trueFactory.addImmediate(mri::Object::nilObject(), useResult);
+  }
 
   // false block
   OpcodeFactory falseFactory(*factory, 0);
