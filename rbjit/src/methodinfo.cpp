@@ -12,6 +12,7 @@
 #include "rbjit/debugprint.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/inliner.h"
+#include "rbjit/codeduplicator.h"
 
 #ifdef RBJIT_DEBUG
 #include "rbjit/domtree.h"
@@ -118,6 +119,10 @@ PrecompiledMethodInfo::compile()
 void
 PrecompiledMethodInfo::buildCfg()
 {
+  if (cfg_) {
+    return;
+  }
+
   RBJIT_DPRINT(debugPrintBanner("AST"));
   RBJIT_DPRINT(debugPrintAst());
 
@@ -160,9 +165,7 @@ PrecompiledMethodInfo::analyzeTypes()
     return;
   }
 
-  if (!cfg_) {
-    buildCfg();
-  }
+  buildCfg();
 
   lock_ = true;
 
@@ -191,8 +194,11 @@ PrecompiledMethodInfo::analyzeTypes()
 void*
 PrecompiledMethodInfo::generateCode()
 {
-  if (!cfg_) {
-    buildCfg();
+  buildCfg();
+
+  {
+    CodeDuplicator dup;
+    origCfg_ = dup.duplicate(cfg_);
   }
 
   analyzeTypes();
@@ -211,8 +217,27 @@ PrecompiledMethodInfo::generateCode()
   return code;
 }
 
+void
+PrecompiledMethodInfo::invalidateCompiledCode()
+{
+  if (!cfg_) {
+    return;
+  }
+
+  if (origCfg_) {
+    delete cfg_;
+    cfg_ = origCfg_;
+  }
+
+  delete typeContext_;
+  typeContext_ = 0;
+
+  returnType_->destroy();
+  returnType_ = 0;
+}
+
 ////////////////////////////////////////////////////////////
-// debugging methods
+// Debugging methods
 
 std::string
 PrecompiledMethodInfo::debugPrintBanner(const char* stage) const

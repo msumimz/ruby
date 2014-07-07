@@ -13,9 +13,13 @@ class TypeContext;
 class CodeDuplicator : public OpcodeVisitor {
 public:
 
-  CodeDuplicator(ControlFlowGraph* src, TypeContext* srcTypes, ControlFlowGraph* dest, TypeContext* destTypes);
+  CodeDuplicator();
 
-  void duplicateCfg();
+  // Incorporate CFG src into CFG dest with type constraint information
+  void incorporate(ControlFlowGraph* src, TypeContext* srcTypes, ControlFlowGraph* dest, TypeContext* destTypes);
+
+  // Duplicate a CFG
+  ControlFlowGraph* duplicate(ControlFlowGraph* cfg);
 
   BlockHeader* entry() { return blockOf(src_->entry()); }
   BlockHeader* exit() { return blockOf(src_->exit()); }
@@ -42,16 +46,19 @@ private:
   void setDefSite(Variable* v);
   void copyRhs(OpcodeVa* dest, OpcodeVa* src);
 
+  void duplicateOpcodes();
+  void duplicateTypeContext(TypeContext* srcTypes, TypeContext* destTypes);
+
   BlockHeader* lastBlock_;
   Opcode* lastOpcode_;
 
   ControlFlowGraph* src_;
-  TypeContext* srcTypes_;
   ControlFlowGraph* dest_;
-  TypeContext* destTypes_;
 
   size_t blockIndexOffset_;
   size_t variableIndexOffset_;
+
+  bool emitExit_;
 };
 
 RBJIT_NAMESPACE_END

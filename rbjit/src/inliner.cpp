@@ -150,8 +150,8 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   assert(typeid(*methodInfo) == typeid(PrecompiledMethodInfo));
   PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(methodInfo);
 
-  CodeDuplicator dup(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
-  dup.duplicateCfg();
+  CodeDuplicator dup;
+  dup.incorporate(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
 
   // Duplicate the arguments
   OpcodeFactory entryFactory(cfg_, entry, entry->footer());

@@ -63,7 +63,7 @@ public:
 
   PrecompiledMethodInfo(mri::MethodEntry me)
     : MethodInfo(me), cfg_(0), typeContext_(0), returnType_(0),
-      origDef_(), lock_(false)
+      origDef_(), origCfg_(0), lock_(false)
   {}
 
   ~PrecompiledMethodInfo();
@@ -80,6 +80,9 @@ public:
 
   void compile();
 
+  void invalidateCompiledCode();
+
+  // Debugging methods
   std::string debugPrintBanner(const char* stage) const;
   std::string debugPrintAst() const;
 
@@ -92,7 +95,10 @@ private:
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;
   TypeConstraint* returnType_;
+
   mri::MethodDefinition origDef_;
+
+  ControlFlowGraph* origCfg_;
 
   bool lock_;
 };

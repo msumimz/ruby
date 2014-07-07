@@ -7,8 +7,10 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-CodeDuplicator::CodeDuplicator(ControlFlowGraph* src, TypeContext* srcTypes, ControlFlowGraph* dest, TypeContext* destTypes)
-  : src_(src), srcTypes_(srcTypes), dest_(dest), destTypes_(destTypes)
+CodeDuplicator::CodeDuplicator()
+  : lastBlock_(0), lastOpcode_(0), src_(0), dest_(0),
+    blockIndexOffset_(0), variableIndexOffset_(0),
+    emitExit_(false)
 {}
 
 BlockHeader*
@@ -39,7 +41,34 @@ CodeDuplicator::copyRhs(OpcodeVa* dest, OpcodeVa* src)
 }
 
 void
-CodeDuplicator::duplicateCfg()
+CodeDuplicator::incorporate(ControlFlowGraph* src, TypeContext* srcTypes, ControlFlowGraph* dest, TypeContext* destTypes)
+{
+  src_ = src;
+  dest_ = dest;
+  emitExit_ = false;
+
+  duplicateOpcodes();
+  duplicateTypeContext(srcTypes, destTypes);
+}
+
+ControlFlowGraph*
+CodeDuplicator::duplicate(ControlFlowGraph* cfg)
+{
+  ControlFlowGraph* newCfg = new ControlFlowGraph;
+
+  src_ = cfg;
+  dest_ = newCfg;
+  emitExit_ = true;
+
+  duplicateOpcodes();
+  newCfg->setEntry(entry());
+  newCfg->setExit(exit());
+
+  return newCfg;
+}
+
+void
+CodeDuplicator::duplicateOpcodes()
 {
   // Allocate space for new blocks
   std::vector<BlockHeader*>* blocks = dest_->blocks();
@@ -83,21 +112,24 @@ CodeDuplicator::duplicateCfg()
     (*i)->visitEachOpcode(this);
     RBJIT_DPRINT(src_->debugPrintBlock(blockOf(*i)));
   }
+}
 
-  // Duplicate type constraints
-  destTypes_->fitSizeToCfg();
+void
+CodeDuplicator::duplicateTypeContext(TypeContext* srcTypes, TypeContext* destTypes)
+{
+  destTypes->fitSizeToCfg();
   for (auto i = src_->variables()->cbegin(), end = src_->variables()->cend(); i != end; ++i) {
     Variable* v = *i;
     Variable* w = variableOf(v);
-    TypeConstraint* t = srcTypes_->typeConstraintOf(v);
+    TypeConstraint* t = srcTypes->typeConstraintOf(v);
     if (typeid(*t) == typeid(TypeSameAs)) {
-      t = TypeSameAs::create(destTypes_, w);
+      t = TypeSameAs::create(destTypes, w);
     }
     else {
       t = t->clone();
     }
-    assert(!destTypes_->typeConstraintOf(w));
-    destTypes_->setTypeConstraint(w, t);
+    assert(!destTypes->typeConstraintOf(w));
+    destTypes->setTypeConstraint(w, t);
   }
 }
 
@@ -229,11 +261,12 @@ CodeDuplicator::visitOpcode(OpcodePhi* op)
 bool
 CodeDuplicator::visitOpcode(OpcodeExit* op)
 {
-  // Emit nothing, because it is more useful when the duplicated code will be inlined.
+  // When duplicating for incorporate(), Exit will not be emitted
+  if (emitExit_) {
+    OpcodeExit* newOp = new OpcodeExit(op->file(), op->line(), lastOpcode_);
+    lastOpcode_ = newOp;
+  }
 
-  // Temporarily set the footer to the last opcode, which is inconsistent
-  // against the invariants of the CFG because a footer should be a terminator.
-  // Callers should recover this inconsistency.
   lastBlock_->setFooter(lastOpcode_);
 
   return true;
