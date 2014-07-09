@@ -333,6 +333,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\opcodemultiplexer.cpp" />
     <ClCompile Include="..\..\src\primitivestore.cpp" />
+    <ClCompile Include="..\..\src\recompilationmanager.cpp" />
     <ClCompile Include="..\..\src\rubymethod.cpp" />
     <ClCompile Include="..\..\src\rubyobject.cpp" />
     <ClCompile Include="..\..\src\runtime_methodcall.cpp" />
@@ -362,6 +363,7 @@
     <ClInclude Include="..\..\include\rbjit\typeanalyzer.h" />
     <ClInclude Include="..\..\include\rbjit\typecontext.h" />
     <ClInclude Include="..\..\primitives\resource.h" />
+    <ClInclude Include="..\..\recompilationmanager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def" />

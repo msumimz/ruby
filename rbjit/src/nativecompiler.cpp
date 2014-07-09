@@ -31,9 +31,11 @@
 #include "rbjit/primitivestore.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/rubyobject.h"
+#include "rbjit/recompilationmanager.h"
+#include "rbjit/methodinfo.h"
 
 #define NOMINMAX
-#include <Windows.h>
+#include <windows.h>
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -178,12 +180,15 @@ NativeCompiler::setBogusValue(Variable* v)
 // Translating blocks
 
 void*
-NativeCompiler::compileMethod(ControlFlowGraph* cfg, TypeContext* typeContext, const char* name)
+NativeCompiler::compileMethod(PrecompiledMethodInfo* mi)
 {
-  cfg_ = cfg;
-  typeContext_ = typeContext;
-  funcName_ = name;
+  mi_ = mi;
+  cfg_ = mi->cfg();
+  typeContext_ = mi->typeContext();
   translateToBitcode();
+
+  RecompilationManager::instance()->addCalleeCallerRelation(mi->methodName(), mi);
+
   return ee_->getPointerToFunction(func_);
 }
 
@@ -201,7 +206,7 @@ NativeCompiler::translateToBitcode()
   }
   llvm::FunctionType *ft = llvm::FunctionType::get(valueType_, argTypes, false);
 
-  std::string name = getUniqueName(funcName_);
+  std::string name = getUniqueName(mri::Id(mi_->methodName()).name());
   func_ = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module_);
 
   // Initialize arguments
@@ -434,6 +439,7 @@ NativeCompiler::visitOpcode(OpcodeLookup* op)
     mri::MethodEntry me = type->candidates()[0];
     if (!me.isNull()) {
       value = getInt((int)me.ptr());
+      RecompilationManager::instance()->addCalleeCallerRelation(mi_->methodName(), mi_);
     }
   }
 

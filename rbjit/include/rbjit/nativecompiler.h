@@ -23,6 +23,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class IRBuilder;
 
+class PrecompiledMethodInfo;
 class ControlFlowGraph;
 class TypeContext;
 
@@ -37,7 +38,7 @@ public:
   static void setup();
   static NativeCompiler* instance() { return nativeCompiler_; }
 
-  void* compileMethod(ControlFlowGraph* cfg, TypeContext* typeContext, const char* name);
+  void* compileMethod(PrecompiledMethodInfo* mi);
 
   std::string debugPrint();
 
@@ -90,9 +91,9 @@ private:
 
   // Updated with each compilation session
 
+  PrecompiledMethodInfo* mi_;
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;
-  const char* funcName_;
 
   llvm::Function* func_;
   std::vector<llvm::BasicBlock*> llvmBlocks_;

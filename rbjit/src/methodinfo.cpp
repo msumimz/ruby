@@ -13,6 +13,7 @@
 #include "rbjit/typecontext.h"
 #include "rbjit/inliner.h"
 #include "rbjit/codeduplicator.h"
+#include "rbjit/recompilationmanager.h"
 
 #ifdef RBJIT_DEBUG
 #include "rbjit/domtree.h"
@@ -210,7 +211,7 @@ PrecompiledMethodInfo::generateCode()
 
   RBJIT_DPRINT(debugPrintBanner("LLVM Compilation"));
 
-  void* code = NativeCompiler::instance()->compileMethod(cfg_, typeContext_, mri::Id(methodEntry().methodName()).name());
+  void* code = NativeCompiler::instance()->compileMethod(this);
 
   RBJIT_DPRINT(NativeCompiler::instance()->debugPrint());
 
