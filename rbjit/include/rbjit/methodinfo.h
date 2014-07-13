@@ -79,8 +79,8 @@ public:
   TypeContext* typeContext() { return typeContext_; }
 
   void compile();
+  void recompile();
 
-  void invalidateCompiledCode();
 
   // Debugging methods
   std::string debugPrintBanner(const char* stage) const;
@@ -91,6 +91,8 @@ private:
   void buildCfg();
   void analyzeTypes();
   void* generateCode();
+
+  void reset();
 
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;

@@ -17,17 +17,17 @@ typedef enum call_type {
 } call_type;
 
 // defined in vm_eval.c
-extern int
-rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
+extern int rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
 
 // defined in vm_method.c
-extern void
-setup_method_cfunc_struct(rb_method_cfunc_t *cfunc, VALUE (*func)(), int argc);
+extern void setup_method_cfunc_struct(rb_method_cfunc_t *cfunc, VALUE (*func)(), int argc);
+
+extern VALUE (*call_cfunc_invoker_func(int argc))(VALUE (*func)(...), VALUE recv, int argc, const VALUE *);
 
 // defined in vm_insnhelper.c
-extern VALUE
-vm_call0(rb_thread_t* th, VALUE recv, ID id, int argc, const VALUE *argv,
-         const rb_method_entry_t *me, VALUE defined_class);
+extern VALUE vm_call0(rb_thread_t* th, VALUE recv, ID id, int argc, const VALUE *argv, const rb_method_entry_t *me, VALUE defined_class);
+
+
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -146,6 +146,30 @@ int
 MethodDefinition::argc() const
 {
   return def_->body.iseq->argc;
+}
+
+MethodDefinition::CFunc
+MethodDefinition::cFunc() const
+{
+  return def_->body.cfunc.func;
+}
+
+void
+MethodDefinition::setCFunc(CFunc func)
+{
+  def_->body.cfunc.func = func;
+}
+
+void
+MethodDefinition::setCFuncInvoker(Invoker invoker)
+{
+  def_->body.cfunc.invoker = invoker;
+}
+
+MethodDefinition::Invoker
+MethodDefinition::defaultCFuncInvoker()
+{
+  return call_cfunc_invoker_func(def_->body.cfunc.argc);
 }
 
 } // namespace mri

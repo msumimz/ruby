@@ -22,12 +22,18 @@ CodeDuplicator::blockOf(BlockHeader* srcBlock)
 Variable*
 CodeDuplicator::variableOf(Variable* srcVariable)
 {
+  if (!srcVariable) {
+    return nullptr;
+  }
   return (*dest_->variables())[srcVariable->index() + variableIndexOffset_];
 }
 
 void
 CodeDuplicator::setDefSite(Variable* lhs)
 {
+  if (!lhs) {
+    return;
+  }
   lhs->updateDefSite(lastBlock_, lastOpcode_);
 }
 
@@ -63,6 +69,8 @@ CodeDuplicator::duplicate(ControlFlowGraph* cfg)
   duplicateOpcodes();
   newCfg->setEntry(entry());
   newCfg->setExit(exit());
+  newCfg->setEntryEnv(variableOf(cfg->entryEnv()));
+  newCfg->setExitEnv(variableOf(cfg->exitEnv()));
 
   return newCfg;
 }
@@ -110,7 +118,7 @@ CodeDuplicator::duplicateOpcodes()
   // Main loop: iterate over the control flow graph and copy blocks
   for (auto i = src_->blocks()->cbegin(), end = src_->blocks()->cend(); i != end; ++i) {
     (*i)->visitEachOpcode(this);
-    RBJIT_DPRINT(src_->debugPrintBlock(blockOf(*i)));
+//    RBJIT_DPRINT(src_->debugPrintBlock(blockOf(*i)));
   }
 }
 

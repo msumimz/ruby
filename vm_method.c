@@ -41,6 +41,10 @@ static struct cache_entry global_method_cache[GLOBAL_METHOD_CACHE_SIZE];
 #define ruby_running (GET_VM()->running)
 /* int ruby_running = 0; */
 
+#ifdef RBJIT_ENABLED
+void rbjit_notifyMethodRedefined(ID name);
+#endif
+
 static void
 rb_class_clear_method_cache(VALUE klass)
 {
@@ -223,6 +227,9 @@ rb_add_refined_method_entry(VALUE refined_class, ID mid)
     if (me) {
 	make_method_entry_refined(me);
 	rb_clear_method_cache_by_class(refined_class);
+#ifdef RBJIT_ENABLED
+        rbjit_notifyMethodRedefined(mid);
+#endif
     }
     else {
 	rb_add_method(refined_class, mid, VM_METHOD_TYPE_REFINED, 0,
@@ -323,6 +330,9 @@ rb_method_entry_make(VALUE klass, ID mid, rb_method_type_t type,
     me = ALLOC(rb_method_entry_t);
 
     rb_clear_method_cache_by_class(klass);
+#ifdef RBJIT_ENABLED
+    rbjit_notifyMethodRedefined(mid);
+#endif
 
     me->flag = NOEX_WITH_SAFE(noex);
     me->mark = 0;
@@ -392,7 +402,7 @@ method_added(VALUE klass, ID mid)
     }
 }
 
-static VALUE
+VALUE
 (*call_cfunc_invoker_func(int argc))(VALUE (*func)(ANYARGS), VALUE recv, int argc, const VALUE *)
 {
     switch (argc) {
@@ -738,6 +748,9 @@ remove_method(VALUE klass, ID mid)
     rb_vm_check_redefinition_opt_method(me, klass);
     rb_clear_method_cache_by_class(klass);
     rb_unlink_method_entry(me);
+#ifdef RBJIT_ENABLED
+    rbjit_notifyMethodRedefined(mid);
+#endif
 
     CALL_METHOD_HOOK(self, removed, mid);
 }
@@ -821,6 +834,9 @@ rb_export_method(VALUE klass, ID name, rb_method_flag_t noex)
 		me->def->body.orig_me->flag = noex;
 	    }
 	    rb_clear_method_cache_by_class(klass);
+#ifdef RBJIT_ENABLED
+	    rbjit_notifyMethodRedefined(name);
+#endif
 	}
 	else {
 	    rb_add_method(klass, name, VM_METHOD_TYPE_ZSUPER, 0, noex);

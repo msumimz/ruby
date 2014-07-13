@@ -124,6 +124,12 @@ private:
 //    // (defined in rbjit/methodinfo.h)
 //    void* jit_method_info;
 // } rb_method_definition_t;
+//
+// typedef struct rb_method_cfunc_struct {
+//     VALUE (*func)(ANYARGS);
+//     VALUE (*invoker)(VALUE (*func)(ANYARGS), VALUE recv, int argc, const VALUE *argv);
+//     int argc;
+// } rb_method_cfunc_t;
 
 class MethodDefinition {
 public:
@@ -144,6 +150,9 @@ public:
   };
 #endif
 
+  typedef VALUE (*CFunc)(...);
+  typedef VALUE(*Invoker)(CFunc func, VALUE recv, int argc, const VALUE *);
+
   MethodDefinition() : def_(nullptr) {}
   MethodDefinition(rb_method_definition_t* def) : def_(def) {}
   MethodDefinition(ID methodName, void* code, int argc);
@@ -154,6 +163,12 @@ public:
   bool hasAstNode() const;
   RNode* astNode() const;
   int argc() const;
+
+  // Update rb_method_cfunc_t
+  CFunc cFunc() const;
+  void setCFunc(CFunc func);
+  void setCFuncInvoker(Invoker invoker);
+  Invoker defaultCFuncInvoker();
 
 private:
 

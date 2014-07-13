@@ -111,10 +111,16 @@ PrecompiledMethodInfo::compile()
 
   if (origDef_.isNull()) {
     origDef_ = methodEntry().methodDefinition();
-
     mri::MethodDefinition def(methodEntry().methodName(), code, origDef_.argc());
     methodEntry().setMethodDefinition(def);
   }
+}
+
+void
+PrecompiledMethodInfo::recompile()
+{
+  reset();
+  compile();
 }
 
 void
@@ -198,16 +204,20 @@ PrecompiledMethodInfo::generateCode()
   buildCfg();
 
   {
+    RBJIT_DPRINT(debugPrintBanner("Code Duplication"));
     CodeDuplicator dup;
     origCfg_ = dup.duplicate(cfg_);
+    RBJIT_DPRINT(origCfg_->debugPrint());
+    assert(origCfg_->checkSanity());
   }
 
   analyzeTypes();
 
-  RBJIT_DPRINT(debugPrintBanner("Inlining"));
-
-  Inliner inliner(this);
-  inliner.doInlining();
+  {
+    RBJIT_DPRINT(debugPrintBanner("Inlining"));
+    Inliner inliner(this);
+    inliner.doInlining();
+  }
 
   RBJIT_DPRINT(debugPrintBanner("LLVM Compilation"));
 
@@ -219,7 +229,7 @@ PrecompiledMethodInfo::generateCode()
 }
 
 void
-PrecompiledMethodInfo::invalidateCompiledCode()
+PrecompiledMethodInfo::reset()
 {
   if (!cfg_) {
     return;
