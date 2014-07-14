@@ -21,7 +21,9 @@ public:
 
   virtual TypeConstraint* returnType() = 0;
   virtual RNode* astNode() const = 0;
+
   virtual bool isMutator() = 0;
+  virtual bool isJitOnly() = 0;
 
 private:
 
@@ -46,12 +48,14 @@ public:
 
   TypeConstraint* returnType() { return returnType_; }
   RNode* astNode() const { return 0; }
+
   bool isMutator() { return mutator_; }
+  bool isJitOnly() { return false; }
 
 protected:
 
-  bool mutator_;
   TypeConstraint* returnType_;
+  bool mutator_;
 
 };
 
@@ -63,7 +67,7 @@ public:
 
   PrecompiledMethodInfo(mri::MethodEntry me)
     : MethodInfo(me), cfg_(0), typeContext_(0), returnType_(0),
-      origDef_(), origCfg_(0), lock_(false)
+      mutator_(UNKNOWN), jitOnly_(UNKNOWN), origDef_(), origCfg_(0), lock_(false)
   {}
 
   ~PrecompiledMethodInfo();
@@ -74,6 +78,7 @@ public:
   TypeConstraint* returnType();
   RNode* astNode() const;
   bool isMutator();
+  bool isJitOnly();
 
   ControlFlowGraph* cfg() { return cfg_; }
   TypeContext* typeContext() { return typeContext_; }
@@ -87,6 +92,8 @@ public:
 
 private:
 
+  enum State { UNKNOWN, YES, NO };
+
   void buildCfg();
   void analyzeTypes();
   void* generateCode();
@@ -94,9 +101,10 @@ private:
   ControlFlowGraph* cfg_;
   TypeContext* typeContext_;
   TypeConstraint* returnType_;
+  State mutator_;
+  State jitOnly_;
 
   mri::MethodDefinition origDef_;
-
   ControlFlowGraph* origCfg_;
 
   bool lock_;

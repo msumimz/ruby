@@ -60,6 +60,11 @@ PrecompiledMethodInfo::construct(mri::MethodEntry me)
     return nullptr;
   }
 
+  if (me.methodInfo()) {
+    assert(typeid(*me.methodInfo()) == typeid(PrecompiledMethodInfo));
+    return static_cast<PrecompiledMethodInfo*>(me.methodInfo());
+  }
+
   PrecompiledMethodInfo* mi = new PrecompiledMethodInfo(me);
   me.setMethodInfo(mi);
 
@@ -100,7 +105,30 @@ PrecompiledMethodInfo::astNode() const
 bool
 PrecompiledMethodInfo::isMutator()
 {
-  return false;
+  if (mutator_ == UNKNOWN) {
+    if (lock_) {
+      // If this is a query from a recursive call, we can safely return false
+      // because the overall result would depend on the caller's mutator state,
+      // and the caller is itself.
+      return false;
+    }
+    analyzeTypes();
+  }
+
+  return mutator_ == YES;
+}
+
+bool
+PrecompiledMethodInfo::isJitOnly()
+{
+  if (jitOnly_ == UNKNOWN) {
+    if (lock_) {
+      return false;
+    }
+    analyzeTypes();
+  }
+
+  return jitOnly_ == YES;
 }
 
 void
@@ -141,6 +169,8 @@ PrecompiledMethodInfo::restoreISeqDefinition()
 
   returnType_->destroy();
   returnType_ = 0;
+
+  mutator_ = UNKNOWN;
 }
 
 void
@@ -206,7 +236,10 @@ PrecompiledMethodInfo::analyzeTypes()
 
   // Set self's type
   ta.setInputTypeConstraint(0, TypeClassOrSubclass(methodEntry().class_()));
-  typeContext_ = ta.analyze();
+  auto result = ta.analyze();
+  typeContext_ = std::get<0>(result);
+  mutator_ = std::get<1>(result) ? YES : NO;
+  jitOnly_ = std::get<2>(result) ? YES : NO;
 
   lock_ = false;
 

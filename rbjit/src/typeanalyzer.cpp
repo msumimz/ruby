@@ -19,7 +19,8 @@ TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg)
   : cfg_(cfg),
     reachBlocks_(cfg->blocks()->size(), UNKNOWN),
     defUseChain_(cfg),
-    typeContext_(new TypeContext(cfg))
+    typeContext_(new TypeContext(cfg)),
+    mutator_(false), jitOnly_(false)
 {}
 
 void
@@ -72,7 +73,7 @@ TypeAnalyzer::makeEdgeUnreachable(BlockHeader* from, BlockHeader* to)
   reachEdges_[std::make_pair(from, to)] = UNREACHABLE;
 }
 
-TypeContext*
+std::tuple<TypeContext*, bool, bool>
 TypeAnalyzer::analyze()
 {
   // Initialize type constraints
@@ -101,7 +102,7 @@ TypeAnalyzer::analyze()
 
   } while (!blocks_.empty());
 
-  return typeContext_;
+  return std::make_tuple(typeContext_, mutator_, jitOnly_);
 }
 
 void
@@ -225,7 +226,7 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
     updateTypeConstraint(op->lhs(), TypeAny());
   }
 
-  bool mutator = false;
+  assert(!mutator_);
   TypeSelection sel;
   for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
     assert(!i->isNull());
@@ -236,11 +237,11 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
 
     if (mi) {
       sel.add(*mi->returnType());
-      mutator = mutator || mi->isMutator();
+      mutator_ = mutator_ || mi->isMutator();
     }
     else {
       // If there is any method without method info, type inference will fail.
-      mutator = true;
+      mutator_ = true;
       sel.clear();
       break;
     }
@@ -249,15 +250,15 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   if (op->lhs()) {
     if (lookup->isDetermined()) {
       if (sel.types().empty()) {
-	updateTypeConstraint(op->lhs(), TypeAny());
+        updateTypeConstraint(op->lhs(), TypeAny());
       }
       else {
-	if (sel.types().size() == 1) {
-	  updateTypeConstraint(op->lhs(), *sel.types()[0]);
-	}
-	else {
-	  updateTypeConstraint(op->lhs(), sel);
-	}
+        if (sel.types().size() == 1) {
+          updateTypeConstraint(op->lhs(), *sel.types()[0]);
+        }
+        else {
+          updateTypeConstraint(op->lhs(), sel);
+        }
       }
     }
     else {
@@ -266,7 +267,7 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
     }
   }
 
-  if (mutator) {
+  if (mutator_) {
     updateTypeConstraint(op->env(), TypeEnv());
   }
   else {
@@ -282,6 +283,8 @@ TypeAnalyzer::visitOpcode(OpcodePrimitive* op)
 {
   // TODO: If the primitive is one of Fixnum comparisons or type tests, check
   // if it is used as a condition of JumpIf and re-visit JumpIf.
+
+  jitOnly_ = true;
 
   if (!op->lhs()) {
     return true;

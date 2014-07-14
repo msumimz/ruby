@@ -67,10 +67,24 @@ CodeDuplicator::duplicate(ControlFlowGraph* cfg)
   emitExit_ = true;
 
   duplicateOpcodes();
-  newCfg->setEntry(entry());
-  newCfg->setExit(exit());
-  newCfg->setEntryEnv(variableOf(cfg->entryEnv()));
-  newCfg->setExitEnv(variableOf(cfg->exitEnv()));
+
+  newCfg->entry_ = entry();
+  newCfg->exit_ = exit();
+  newCfg->entryEnv_ = variableOf(cfg->entryEnv());
+  newCfg->exitEnv_ = variableOf(cfg->exitEnv());
+  newCfg->output_ = variableOf(cfg->output());
+  newCfg->undefined_ = variableOf(cfg->undefined());
+
+  // Input variables
+  newCfg->inputs_.resize(cfg->inputs_.size(), nullptr);
+  auto n = &newCfg->inputs_[0];
+  for (auto i = cfg->inputs()->cbegin(), end = cfg->inputs()->cend(); i != end; ++i) {
+    *n++ = variableOf(*i);
+  }
+
+  newCfg->requiredArgCount_ = cfg->requiredArgCount_;
+  newCfg->hasOptionalArg_ = cfg->hasOptionalArg_;
+  newCfg->hasRestArg_ = cfg->hasRestArg_;
 
   return newCfg;
 }

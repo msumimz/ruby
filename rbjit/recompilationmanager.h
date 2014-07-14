@@ -5,8 +5,6 @@
 #include "rbjit/common.h"
 #include "rbjit/rubymethod.h"
 
-extern "C" void rbjit_notifyMethodRedefined(ID name);
-
 RBJIT_NAMESPACE_BEGIN
 
 class PrecompiledMethodInfo;
@@ -17,7 +15,8 @@ public:
   void addCalleeCallerRelation(ID callee, PrecompiledMethodInfo* caller);
   std::unordered_set<PrecompiledMethodInfo*>* callerList(ID callee);
 
-  void notifyMethodRedefined(ID name);
+  void invalidateCompiledCodeByName(ID name);
+  void removeMethodInfoFromMethodEntry(mri::MethodEntry me);
 
   static RecompilationManager* instance();
   static VALUE recompile(mri::MethodDefinition::CFunc func, VALUE recv, int argc, const VALUE *argv);

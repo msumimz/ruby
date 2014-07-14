@@ -63,6 +63,7 @@ public:
 
   MethodInfo* methodInfo() const;
   void setMethodInfo(MethodInfo* mi);
+  void clearMethodInfo();
 
   MethodDefinition methodDefinition() const;
   void setMethodDefinition(MethodDefinition def);

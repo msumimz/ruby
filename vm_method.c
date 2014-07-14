@@ -42,7 +42,9 @@ static struct cache_entry global_method_cache[GLOBAL_METHOD_CACHE_SIZE];
 /* int ruby_running = 0; */
 
 #ifdef RBJIT_ENABLED
-void rbjit_notifyMethodRedefined(ID name);
+// Defined in recompilationmanager.cpp
+void rbjit_invalidateCompiledCodeByName(ID name);
+void rbjit_removeMethodInfoFromMethodEntry(rb_method_entry_t* me);
 #endif
 
 static void
@@ -118,6 +120,13 @@ void
 rb_unlink_method_entry(rb_method_entry_t *me)
 {
     struct unlinked_method_entry_list_entry *ume = ALLOC(struct unlinked_method_entry_list_entry);
+
+#ifdef RBJIT_ENABLED
+    // Every code path for updating/deleting the existing method definitions
+    // goes through this function
+    rbjit_removeMethodInfoFromMethodEntry(me);
+#endif
+
     ume->me = me;
     ume->next = GET_VM()->unlinked_method_entry_list;
     GET_VM()->unlinked_method_entry_list = ume;
@@ -442,7 +451,7 @@ rb_add_method(VALUE klass, ID mid, rb_method_type_t type, void *opts, rb_method_
 
 #ifdef RBJIT_ENABLED
     // I believe this function is the single entry point for method definition
-    rbjit_notifyMethodRedefined(mid);
+    rbjit_invalidateCompiledCodeByName(mid);
 #endif
 
     if (me->def && me->def->type == VM_METHOD_TYPE_REFINED) {
@@ -730,11 +739,6 @@ remove_method(VALUE klass, ID mid)
     rb_method_entry_t *me = 0;
     VALUE self = klass;
 
-#ifdef RBJIT_ENABLED
-    // The single entry point for method removal
-    rbjit_notifyMethodRedefined(mid);
-#endif
-
     klass = RCLASS_ORIGIN(klass);
     rb_check_frozen(klass);
     if (mid == object_id || mid == id__send__ || mid == idInitialize) {
@@ -747,6 +751,11 @@ remove_method(VALUE klass, ID mid)
 	rb_name_error(mid, "method `%s' not defined in %s",
 		      rb_id2name(mid), rb_class2name(klass));
     }
+
+#ifdef RBJIT_ENABLED
+    rbjit_invalidateCompiledCodeByName(mid);
+#endif
+
     key = (st_data_t)mid;
     st_delete(RCLASS_M_TBL(klass), &key, &data);
 

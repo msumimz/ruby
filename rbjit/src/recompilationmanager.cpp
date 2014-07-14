@@ -41,7 +41,7 @@ RecompilationManager::instance()
 }
 
 void
-RecompilationManager::notifyMethodRedefined(ID name)
+RecompilationManager::invalidateCompiledCodeByName(ID name)
 {
   std::unordered_set<PrecompiledMethodInfo*>* callers = callerList(name);
   if (!callers) {
@@ -49,15 +49,29 @@ RecompilationManager::notifyMethodRedefined(ID name)
   }
 
   for (auto i = callers->cbegin(), end = callers->cend(); i != end; ++i) {
-    (*i)->restoreISeqDefinition();
+    PrecompiledMethodInfo* mi = *i;
+    mi->restoreISeqDefinition();
+    if (mi->isJitOnly()) {
+      mi->compile();
+    }
   }
   callers->clear();
 }
 
-extern "C" void
-rbjit_notifyMethodRedefined(ID name)
+extern "C" {
+
+void
+rbjit_invalidateCompiledCodeByName(ID name)
 {
-  RecompilationManager::instance()->notifyMethodRedefined(name);
+  RecompilationManager::instance()->invalidateCompiledCodeByName(name);
+}
+
+void
+rbjit_removeMethodInfoFromMethodEntry(rb_method_entry_t* me)
+{
+  mri::MethodEntry(me).clearMethodInfo();
+}
+
 }
 
 RBJIT_NAMESPACE_END

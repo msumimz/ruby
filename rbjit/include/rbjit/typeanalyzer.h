@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <tuple>
 #include "rbjit/opcode.h"
 #include "rbjit/defusechain.h"
 
@@ -35,7 +36,7 @@ public:
 
   void setInputTypeConstraint(int index, const TypeConstraint& type);
 
-  TypeContext* analyze();
+  std::tuple<TypeContext*, bool, bool> analyze();
 
   // Evaluate expressions
   bool visitOpcode(BlockHeader* opcode);
@@ -72,6 +73,8 @@ protected:
   DefUseChain defUseChain_;
 
   TypeContext* typeContext_;
+  bool mutator_;
+  bool jitOnly_;
 
 };
 

@@ -24,9 +24,7 @@ public:
   // Accessors
 
   BlockHeader* entry() const { return entry_; }
-  void setEntry(BlockHeader* entry) { entry_ = entry; }
   BlockHeader* exit() const { return exit_; }
-  void setExit(BlockHeader* exit) { exit_ = exit; }
 
   Variable* output() const {  return output_; }
   Variable* undefined() const { return undefined_; }
@@ -106,6 +104,7 @@ public:
 private:
 
   friend class OpcodeFactory;
+  friend class CodeDuplicator;
 
   BlockHeader* entry_;
   BlockHeader* exit_;
