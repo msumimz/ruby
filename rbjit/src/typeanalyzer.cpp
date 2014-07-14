@@ -225,45 +225,45 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   if (count == 0) {
     updateTypeConstraint(op->lhs(), TypeAny());
   }
+  else {
+    TypeSelection sel;
+    for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
+      assert(!i->isNull());
+      MethodInfo* mi = i->methodInfo();
+      if (!mi && i->methodDefinition().hasAstNode()) {
+	mi = PrecompiledMethodInfo::construct(*i);
+      }
 
-  assert(!mutator_);
-  TypeSelection sel;
-  for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
-    assert(!i->isNull());
-    MethodInfo* mi = i->methodInfo();
-    if (!mi && i->methodDefinition().hasAstNode()) {
-      mi = PrecompiledMethodInfo::construct(*i);
-    }
-
-    if (mi) {
-      sel.add(*mi->returnType());
-      mutator_ = mutator_ || mi->isMutator();
-    }
-    else {
-      // If there is any method without method info, type inference will fail.
-      mutator_ = true;
-      sel.clear();
-      break;
-    }
-  }
-
-  if (op->lhs()) {
-    if (lookup->isDetermined()) {
-      if (sel.types().empty()) {
-        updateTypeConstraint(op->lhs(), TypeAny());
+      if (mi) {
+	sel.add(*mi->returnType());
+	mutator_ = mutator_ || mi->isMutator();
       }
       else {
-        if (sel.types().size() == 1) {
-          updateTypeConstraint(op->lhs(), *sel.types()[0]);
-        }
-        else {
-          updateTypeConstraint(op->lhs(), sel);
-        }
+	// If there is any method without method info, type inference will fail.
+	mutator_ = true;
+	sel.clear();
+	break;
       }
     }
-    else {
-      sel.add(TypeAny());
-      updateTypeConstraint(op->lhs(), sel);
+
+    if (op->lhs()) {
+      if (lookup->isDetermined()) {
+	if (sel.types().empty()) {
+	  updateTypeConstraint(op->lhs(), TypeAny());
+	}
+	else {
+	  if (sel.types().size() == 1) {
+	    updateTypeConstraint(op->lhs(), *sel.types()[0]);
+	  }
+	  else {
+	    updateTypeConstraint(op->lhs(), sel);
+	  }
+	}
+      }
+      else {
+	sel.add(TypeAny());
+	updateTypeConstraint(op->lhs(), sel);
+      }
     }
   }
 

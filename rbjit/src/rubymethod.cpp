@@ -58,15 +58,6 @@ MethodEntry::setMethodInfo(MethodInfo* mi)
   me_->jit_method_info = mi;
 }
 
-void
-MethodEntry::clearMethodInfo()
-{
-  if (me_->jit_method_info) {
-    delete reinterpret_cast<MethodInfo*>(me_->jit_method_info);
-    me_->jit_method_info = nullptr;
-  }
-}
-
 void setMethodInfo(MethodInfo* mi);
 
 MethodDefinition

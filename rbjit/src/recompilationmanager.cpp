@@ -21,6 +21,7 @@ RecompilationManager::addCalleeCallerRelation(ID callee, PrecompiledMethodInfo* 
   else {
     i->second.insert(caller);
   }
+  caller->addRef();
 }
 
 std::unordered_set<PrecompiledMethodInfo*>*
@@ -50,10 +51,13 @@ RecompilationManager::invalidateCompiledCodeByName(ID name)
 
   for (auto i = callers->cbegin(), end = callers->cend(); i != end; ++i) {
     PrecompiledMethodInfo* mi = *i;
-    mi->restoreISeqDefinition();
-    if (mi->isJitOnly()) {
-      mi->compile();
+    if (mi->isActive()) {
+      mi->restoreISeqDefinition();
+      if (mi->isJitOnly()) {
+        mi->compile();
+      }
     }
+    mi->release();
   }
   callers->clear();
 }
@@ -69,7 +73,11 @@ rbjit_invalidateCompiledCodeByName(ID name)
 void
 rbjit_removeMethodInfoFromMethodEntry(rb_method_entry_t* me)
 {
-  mri::MethodEntry(me).clearMethodInfo();
+  MethodInfo* mi = mri::MethodEntry(me).methodInfo();
+  if (mi) {
+    mi->detachMethodEntry();
+    mri::MethodEntry(me).setMethodInfo(nullptr);
+  }
 }
 
 }
