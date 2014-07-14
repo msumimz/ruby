@@ -11,6 +11,9 @@ rbjit_lookupMethod(VALUE receiver, ID methodName)
   VALUE cls = CLASS_OF(receiver);
   mri::MethodEntry me(cls, methodName);
 
+  // TODO: call method_missing
+  assert(!me.isNull());
+
   return me.ptr();
 }
 

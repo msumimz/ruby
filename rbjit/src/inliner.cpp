@@ -8,6 +8,7 @@
 #include "rbjit/opcodefactory.h"
 #include "rbjit/debugprint.h"
 #include "rbjit/opcodemultiplexer.h"
+#include "rbjit/recompilationmanager.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -29,11 +30,14 @@ loop:
 
     Opcode* footer = block->footer();
     for (Opcode* op = block->next(); op != footer; op = op->next()) {
-      if (typeid(*op) == typeid(OpcodeCall)) {
-	if (inlineCallSite(block, static_cast<OpcodeCall*>(op))) {
-	  visited_.resize(cfg_->blocks()->size());
-	  goto loop;
-	}
+      OpcodeCall* call = dynamic_cast<OpcodeCall*>(op);
+      if (call) {
+        ID methodName = call->lookupOpcode()->methodName();
+        if (inlineCallSite(block, call)) {
+          visited_.resize(cfg_->blocks()->size());
+          RecompilationManager::instance()->addCalleeCallerRelation(methodName, mi_);
+          goto loop;
+        }
       }
     }
 

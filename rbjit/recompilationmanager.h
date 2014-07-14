@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include "rbjit/common.h"
 #include "rbjit/rubymethod.h"
 
@@ -14,7 +15,7 @@ class RecompilationManager {
 public:
 
   void addCalleeCallerRelation(ID callee, PrecompiledMethodInfo* caller);
-  std::vector<PrecompiledMethodInfo*>* callerList(ID callee);
+  std::unordered_set<PrecompiledMethodInfo*>* callerList(ID callee);
 
   void notifyMethodRedefined(ID name);
 
@@ -27,8 +28,7 @@ private:
   PrecompiledMethodInfo* findMethodInfo(void* func) const;
   void removeMethodInfo(void* func);
 
-  std::unordered_map<ID, std::vector<PrecompiledMethodInfo*>> calleeCallerMap_;
-  std::unordered_map<void*, PrecompiledMethodInfo*> methodInfoMap_;
+  std::unordered_map<ID, std::unordered_set<PrecompiledMethodInfo*>> calleeCallerMap_;
 
 };
 

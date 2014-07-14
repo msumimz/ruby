@@ -11,7 +11,9 @@ TypeContext::TypeContext(ControlFlowGraph* cfg)
 TypeContext::~TypeContext()
 {
   for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
-    (*i)->destroy();
+    if (*i) {
+      (*i)->destroy();
+    }
   }
 }
 

@@ -117,10 +117,30 @@ PrecompiledMethodInfo::compile()
 }
 
 void
-PrecompiledMethodInfo::recompile()
+PrecompiledMethodInfo::restoreISeqDefinition()
 {
-  reset();
-  compile();
+  if (origDef_.isNull()) {
+    return;
+  }
+
+  methodEntry().methodDefinition().destroy();
+  methodEntry().setMethodDefinition(origDef_);
+  origDef_.clear();
+
+  if (!cfg_) {
+    return;
+  }
+
+  if (origCfg_) {
+    delete cfg_;
+    cfg_ = origCfg_;
+  }
+
+  delete typeContext_;
+  typeContext_ = 0;
+
+  returnType_->destroy();
+  returnType_ = 0;
 }
 
 void
@@ -226,25 +246,6 @@ PrecompiledMethodInfo::generateCode()
   RBJIT_DPRINT(NativeCompiler::instance()->debugPrint());
 
   return code;
-}
-
-void
-PrecompiledMethodInfo::reset()
-{
-  if (!cfg_) {
-    return;
-  }
-
-  if (origCfg_) {
-    delete cfg_;
-    cfg_ = origCfg_;
-  }
-
-  delete typeContext_;
-  typeContext_ = 0;
-
-  returnType_->destroy();
-  returnType_ = 0;
 }
 
 ////////////////////////////////////////////////////////////

@@ -21,6 +21,7 @@ extern int rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, c
 
 // defined in vm_method.c
 extern void setup_method_cfunc_struct(rb_method_cfunc_t *cfunc, VALUE (*func)(), int argc);
+extern void release_method_definition(rb_method_definition_t *def);
 
 extern VALUE (*call_cfunc_invoker_func(int argc))(VALUE (*func)(...), VALUE recv, int argc, const VALUE *);
 
@@ -125,6 +126,19 @@ MethodDefinition::MethodDefinition(ID methodName, void* code, int argc)
   def_->alias_count = 0;
 
   setup_method_cfunc_struct(&def_->body.cfunc, (VALUE (*)())code, argc);
+}
+
+void
+MethodDefinition::clear()
+{
+  def_ = nullptr;
+}
+
+void
+MethodDefinition::destroy()
+{
+  release_method_definition(def_);
+  def_ = nullptr;
 }
 
 bool

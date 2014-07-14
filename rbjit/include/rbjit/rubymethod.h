@@ -157,6 +157,12 @@ public:
   MethodDefinition(rb_method_definition_t* def) : def_(def) {}
   MethodDefinition(ID methodName, void* code, int argc);
 
+  // Just clear the internal pointer to null
+  void clear();
+
+  // Release a rb_method_definition instance
+  void destroy();
+
   bool isNull() const { return def_ == nullptr; }
   rb_method_definition_t* ptr() const { return def_; }
 
