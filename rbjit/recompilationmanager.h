@@ -24,10 +24,6 @@ public:
 
 private:
 
-  void addMethodInfo(void* func, PrecompiledMethodInfo* mi);
-  PrecompiledMethodInfo* findMethodInfo(void* func) const;
-  void removeMethodInfo(void* func);
-
   std::unordered_map<ID, std::unordered_set<PrecompiledMethodInfo*>> calleeCallerMap_;
 
 };
