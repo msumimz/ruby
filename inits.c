@@ -19,6 +19,9 @@ rb_call_inits(void)
 {
     CALL(RandomSeed);
     CALL(sym);
+#ifdef RBJIT_ENABLED
+    CALL(rbjitSetup);
+#endif
     CALL(var_tables);
     CALL(Object);
     CALL(top_self);
@@ -62,7 +65,7 @@ rb_call_inits(void)
     CALL(version);
     CALL(vm_trace);
 #ifdef RBJIT_ENABLED
-    CALL(rbjit);
+    CALL(rbjitMethodDefinitions);
 #endif
 }
 #undef CALL

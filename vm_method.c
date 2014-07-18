@@ -45,6 +45,9 @@ static struct cache_entry global_method_cache[GLOBAL_METHOD_CACHE_SIZE];
 // Defined in recompilationmanager.cpp
 void rbjit_invalidateCompiledCodeByName(ID name);
 void rbjit_removeMethodInfoFromMethodEntry(rb_method_entry_t* me);
+
+// Defined in mutatortester.cpp
+void rbjit_addMutatorAlias(rb_method_entry_t* me, ID newName);
 #endif
 
 static void
@@ -1298,6 +1301,10 @@ rb_alias(VALUE klass, ID name, ID def)
 
     if (flag == NOEX_UNDEF) flag = orig_me->flag;
     method_entry_set(target_klass, name, orig_me, flag, defined_class);
+
+#ifdef RBJIT_ENABLED
+    rbjit_addMutatorAlias(orig_me, name);
+#endif
 }
 
 /*

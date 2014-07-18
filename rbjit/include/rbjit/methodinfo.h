@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_set>
 #include "rbjit/common.h"
 #include "rbjit/rubymethod.h"
 

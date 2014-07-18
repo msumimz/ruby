@@ -134,22 +134,6 @@ private:
 class MethodDefinition {
 public:
 
-#if 0
-  enum MethodType {
-    VM_METHOD_TYPE_ISEQ,
-    VM_METHOD_TYPE_CFUNC,
-    VM_METHOD_TYPE_ATTRSET,
-    VM_METHOD_TYPE_IVAR,
-    VM_METHOD_TYPE_BMETHOD,
-    VM_METHOD_TYPE_ZSUPER,
-    VM_METHOD_TYPE_UNDEF,
-    VM_METHOD_TYPE_NOTIMPLEMENTED,
-    VM_METHOD_TYPE_OPTIMIZED, /* Kernel#send, Proc#call, etc */
-    VM_METHOD_TYPE_MISSING,   /* wrapper for method_missing(id) */
-    VM_METHOD_TYPE_REFINED
-  };
-#endif
-
   typedef VALUE (*CFunc)(...);
   typedef VALUE(*Invoker)(CFunc func, VALUE recv, int argc, const VALUE *);
 
@@ -169,6 +153,8 @@ public:
   bool hasAstNode() const;
   RNode* astNode() const;
   int argc() const;
+
+  int methodType() const;
 
   // Update rb_method_cfunc_t
   CFunc cFunc() const;

@@ -14,10 +14,6 @@
 #include "ruby.h"
 #include "node.h" // rb_parser_dump_tree
 
-extern "C" {
-void Init_rbjit();
-}
-
 using namespace rbjit;
 
 ////////////////////////////////////////////////////////////
@@ -72,8 +68,8 @@ precompile(VALUE self, VALUE cls, VALUE methodName)
   return Qnil;
 }
 
-void
-Init_rbjit()
+extern "C" void
+Init_rbjitSetup()
 {
 #ifdef _MSC_VER
   _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_WNDW);
@@ -89,7 +85,11 @@ Init_rbjit()
     ::MessageBoxA(nullptr, e.what(), "rbjit initialization error", MB_OK);
     exit(1);
   }
+}
 
+extern "C" void
+Init_rbjitMethodDefinitions()
+{
   rb_define_method(rb_cObject, "debugbreak", (VALUE (*)(...))debugbreak, 0);
   rb_define_method(rb_cObject, "dumptree", (VALUE (*)(...))dumptree, 2);
   rb_define_method(rb_cObject, "precompile", (VALUE (*)(...))precompile, 2);

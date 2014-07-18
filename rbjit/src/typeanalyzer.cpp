@@ -8,6 +8,7 @@
 #include "rbjit/methodinfo.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/idstore.h"
+#include "rbjit/mutatortester.h"
 #include "rbjit/debugprint.h"
 
 RBJIT_NAMESPACE_BEGIN
@@ -231,38 +232,37 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
       assert(!i->isNull());
       MethodInfo* mi = i->methodInfo();
       if (!mi && i->methodDefinition().hasAstNode()) {
-	mi = PrecompiledMethodInfo::construct(*i);
+        mi = PrecompiledMethodInfo::construct(*i);
       }
 
       if (mi) {
-	sel.add(*mi->returnType());
-	mutator_ = mutator_ || mi->isMutator();
+        sel.add(*mi->returnType());
+        mutator_ = mutator_ || mi->isMutator();
       }
       else {
-	// If there is any method without method info, type inference will fail.
-	mutator_ = true;
-	sel.clear();
-	break;
+        mutator_ = mutator_ || MutatorTester::instance()->isMutator(*i);
+        sel.clear();
+        break;
       }
     }
 
     if (op->lhs()) {
       if (lookup->isDetermined()) {
-	if (sel.types().empty()) {
-	  updateTypeConstraint(op->lhs(), TypeAny());
-	}
-	else {
-	  if (sel.types().size() == 1) {
-	    updateTypeConstraint(op->lhs(), *sel.types()[0]);
-	  }
-	  else {
-	    updateTypeConstraint(op->lhs(), sel);
-	  }
-	}
+        if (sel.types().empty()) {
+          updateTypeConstraint(op->lhs(), TypeAny());
+        }
+        else {
+          if (sel.types().size() == 1) {
+            updateTypeConstraint(op->lhs(), *sel.types()[0]);
+          }
+          else {
+            updateTypeConstraint(op->lhs(), sel);
+          }
+        }
       }
       else {
-	sel.add(TypeAny());
-	updateTypeConstraint(op->lhs(), sel);
+        sel.add(TypeAny());
+        updateTypeConstraint(op->lhs(), sel);
       }
     }
   }

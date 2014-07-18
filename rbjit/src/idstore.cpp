@@ -4,10 +4,24 @@
 RBJIT_NAMESPACE_BEGIN
 
 const char* ID_NAMES[] = {
+  "",
+
+  // Keywords
   "<self>",
   "<argc>",
   "<argv>",
   "<env>",
+
+  "eval",
+  "instance_eval",
+  "instance_exec",
+  "__send__",
+  "send",
+  "public_send",
+  "module_exec",
+  "class_exec",
+  "module_eval",
+  "class_eval",
 
   "rbjit__is_fixnum",
 

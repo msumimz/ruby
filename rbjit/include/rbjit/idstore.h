@@ -6,10 +6,24 @@
 RBJIT_NAMESPACE_BEGIN
 
 enum PredefinedId {
+  ID_NULL,
+
+  // Keywords
   ID_self,
   ID_argc,
   ID_argv,
   ID_env,
+
+  ID_eval,
+  ID_instance_eval,
+  ID_instance_exec,
+  ID___send__,
+  ID_send,
+  ID_public_send,
+  ID_module_exec,
+  ID_class_exec,
+  ID_module_eval,
+  ID_class_eval,
 
   ID_rbjit__is_fixnum,
 

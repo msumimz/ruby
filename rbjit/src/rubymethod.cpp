@@ -162,6 +162,12 @@ MethodDefinition::argc() const
   return def_->body.iseq->argc;
 }
 
+int
+MethodDefinition::methodType() const
+{
+  return def_->type;
+}
+
 MethodDefinition::CFunc
 MethodDefinition::cFunc() const
 {

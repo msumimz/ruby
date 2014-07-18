@@ -349,6 +349,9 @@
     <ClCompile Include="..\..\src\recompilationmanager.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\mutatortester.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -437,9 +440,6 @@
     <ClInclude Include="..\..\include\rbjit\codeduplicator.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\rbjit\analysisresult.h">
-      <Filter>rbjit</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\rbjit\typecontext.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
@@ -453,6 +453,9 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\recompilationmanager.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\mutatortester.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

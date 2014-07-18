@@ -313,6 +313,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\mutatortester.cpp" />
     <ClCompile Include="..\..\src\nativecompiler.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
@@ -353,11 +354,11 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
-    <ClInclude Include="..\..\include\rbjit\analysisresult.h" />
     <ClInclude Include="..\..\include\rbjit\codeduplicator.h" />
     <ClInclude Include="..\..\include\rbjit\defusechain.h" />
     <ClInclude Include="..\..\include\rbjit\idstore.h" />
     <ClInclude Include="..\..\include\rbjit\inliner.h" />
+    <ClInclude Include="..\..\include\rbjit\mutatortester.h" />
     <ClInclude Include="..\..\include\rbjit\opcodemultiplexer.h" />
     <ClInclude Include="..\..\include\rbjit\primitivestore.h" />
     <ClInclude Include="..\..\include\rbjit\typeanalyzer.h" />
