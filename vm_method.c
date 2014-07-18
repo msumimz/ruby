@@ -1304,6 +1304,7 @@ rb_alias(VALUE klass, ID name, ID def)
 
 #ifdef RBJIT_ENABLED
     rbjit_addMutatorAlias(orig_me, name);
+    rbjit_invalidateCompiledCodeByName(name);
 #endif
 }
 
