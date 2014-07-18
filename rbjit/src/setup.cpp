@@ -90,7 +90,7 @@ Init_rbjitSetup()
 extern "C" void
 Init_rbjitMethodDefinitions()
 {
-  VALUE c = rb_define_class("Jit", rb_cObject);
+  VALUE c = rb_define_module("Jit");
   rb_define_module_function(c, "debugbreak", (VALUE (*)(...))debugbreak, 0);
   rb_define_module_function(c, "dumptree", (VALUE (*)(...))dumptree, 2);
   rb_define_module_function(c, "precompile", (VALUE (*)(...))precompile, 2);
