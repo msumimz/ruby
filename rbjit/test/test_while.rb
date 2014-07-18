@@ -10,6 +10,6 @@ def m1
   sum
 end
 
-precompile Object, :m1
+Jit.precompile Object, :m1
 
 assert(m1 == 55)

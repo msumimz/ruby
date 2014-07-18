@@ -8,4 +8,4 @@ def m(n)
   end
 end
 
-precompile Object, :m
+Jit.precompile Object, :m

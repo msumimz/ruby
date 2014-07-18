@@ -12,6 +12,6 @@ def m(s)
   a + inlined
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m("def inlined; 5; end") == 8)

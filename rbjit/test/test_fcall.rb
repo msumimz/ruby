@@ -8,5 +8,5 @@ def m2
   m1 10, 20
 end
 
-precompile Object, :m2
+Jit.precompile Object, :m2
 assert(m2 == 30)

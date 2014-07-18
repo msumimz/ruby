@@ -15,13 +15,13 @@ class Fixnum
 
 end
 
-precompile Fixnum, :+
+Jit.precompile Fixnum, :+
 
 def m1
   1 + 2
 end
 
-precompile Object, :m1
+Jit.precompile Object, :m1
 
 assert(m1 == 3)
 
@@ -29,6 +29,6 @@ def m2(a)
   1 + a + 3
 end
 
-precompile Object, :m2
+Jit.precompile Object, :m2
 
 assert(m2(2) == 6)

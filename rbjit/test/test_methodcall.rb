@@ -4,6 +4,6 @@ def m
   1 + 2
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == 3)

@@ -4,7 +4,7 @@ def m
   1
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m_orig == 1)
 assert(m == 1)

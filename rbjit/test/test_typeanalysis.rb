@@ -35,8 +35,8 @@ def m5
   1 + 2
 end
 
-precompile Object, :m1
-precompile Object, :m2
-precompile Object, :m3
-precompile Object, :m4
-precompile Object, :m5
+Jit.precompile Object, :m1
+Jit.precompile Object, :m2
+Jit.precompile Object, :m3
+Jit.precompile Object, :m4
+Jit.precompile Object, :m5

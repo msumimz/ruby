@@ -14,7 +14,7 @@ end
 
 GC.start
 
-dumptree(Object, :m)
+Jit.dumptree(Object, :m)
 
 # If the program is not crashed, it will succeed
 assert(true)

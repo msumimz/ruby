@@ -8,7 +8,7 @@ def m
   callee
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == 1)
 
@@ -18,7 +18,7 @@ end
 
 assert(m == 3)
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == 3)
 

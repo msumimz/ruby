@@ -16,7 +16,7 @@ def m
   2.add_one
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == 3)
 

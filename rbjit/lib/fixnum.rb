@@ -67,11 +67,11 @@ class Fixnum
 
 end
 
-precompile Fixnum, :+
-precompile Fixnum, :-
-precompile Fixnum, :==
-precompile Fixnum, :<
-precompile Fixnum, :<=
-precompile Fixnum, :>
-precompile Fixnum, :>=
+Jit.precompile Fixnum, :+
+Jit.precompile Fixnum, :-
+Jit.precompile Fixnum, :==
+Jit.precompile Fixnum, :<
+Jit.precompile Fixnum, :<=
+Jit.precompile Fixnum, :>
+Jit.precompile Fixnum, :>=
 

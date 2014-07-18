@@ -16,6 +16,6 @@ f = 15.fib
 
 load File.expand_path("../lib/fixnum.rb", File.dirname(__FILE__))
 
-precompile Fixnum, :fib
+Jit.precompile Fixnum, :fib
 
 assert(15.fib == f)

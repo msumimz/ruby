@@ -21,7 +21,7 @@ class Bignum
 
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == 4)
 

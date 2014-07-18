@@ -4,7 +4,7 @@ def m
   1
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == 1)
 

@@ -11,6 +11,6 @@ def m
   b
 end
 
-precompile Object, :m
+Jit.precompile Object, :m
 
 assert(m == nil)

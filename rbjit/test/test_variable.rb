@@ -6,7 +6,7 @@ def m1
   a
 end
 
-precompile Object, :m1
+Jit.precompile Object, :m1
 assert(m1 == 10)
 
 def m2
@@ -18,7 +18,7 @@ def m2
   a
 end
 
-precompile Object, :m2
+Jit.precompile Object, :m2
 assert(m2 == 10)
 
 def m3
@@ -29,5 +29,5 @@ def m3
   a
 end
 
-#precompile Object, :m3
+#Jit.precompile Object, :m3
 assert(m3 == nil)

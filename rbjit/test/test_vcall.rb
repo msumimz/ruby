@@ -12,5 +12,5 @@ def m3
   m2
 end
 
-precompile Object, :m3
+Jit.precompile Object, :m3
 assert(m3 == 10)

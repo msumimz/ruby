@@ -6,6 +6,6 @@ class Fixnum
   end
 end
 
-precompile Fixnum, :add
+Jit.precompile Fixnum, :add
 
 assert(10.add(20) == 30)
