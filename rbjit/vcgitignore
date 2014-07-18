@@ -19,3 +19,4 @@ rbjit/temp/
 *.png
 *.rc
 !primitives/*.rc
+*-fake.rb
