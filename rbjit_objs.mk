@@ -16,11 +16,13 @@ RBJIT_OBJS = \
 	$(rbjit_objdir)/inliner.$(OBJEXT) \
 	$(rbjit_objdir)/ltdominatorfinder.$(OBJEXT) \
 	$(rbjit_objdir)/methodinfo.$(OBJEXT) \
+	$(rbjit_objdir)/mutatortester.$(OBJEXT) \
 	$(rbjit_objdir)/nativecompiler.$(OBJEXT) \
 	$(rbjit_objdir)/opcode.$(OBJEXT) \
 	$(rbjit_objdir)/opcodefactory.$(OBJEXT) \
 	$(rbjit_objdir)/opcodemultiplexer.$(OBJEXT) \
 	$(rbjit_objdir)/primitivestore.$(OBJEXT) \
+	$(rbjit_objdir)/recompilationmanager.$(OBJEXT) \
 	$(rbjit_objdir)/rubymethod.$(OBJEXT) \
 	$(rbjit_objdir)/rubyobject.$(OBJEXT) \
 	$(rbjit_objdir)/runtime_methodcall.$(OBJEXT) \
