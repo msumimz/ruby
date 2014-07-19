@@ -91,9 +91,10 @@ extern "C" void
 Init_rbjitMethodDefinitions()
 {
   VALUE c = rb_define_module("Jit");
-  rb_define_module_function(c, "debugbreak", (VALUE (*)(...))debugbreak, 0);
   rb_define_module_function(c, "dumptree", (VALUE (*)(...))dumptree, 2);
   rb_define_module_function(c, "precompile", (VALUE (*)(...))precompile, 2);
+
+  rb_define_method(rb_cObject, "debugbreak", (VALUE (*)(...))debugbreak, 0);
 
   CMethodInfo::construct(
     mri::Class::fixnumClass(), "+", false,
