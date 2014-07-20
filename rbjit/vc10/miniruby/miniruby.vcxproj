@@ -295,6 +295,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\cooperdominatorfinder.cpp" />
     <ClCompile Include="..\..\src\debugprint.cpp" />
+    <ClCompile Include="..\..\src\debugtools.cpp" />
     <ClCompile Include="..\..\src\definfo.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>

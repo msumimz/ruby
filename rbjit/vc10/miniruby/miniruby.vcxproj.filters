@@ -352,6 +352,9 @@
     <ClCompile Include="..\..\src\mutatortester.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\debugtools.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">

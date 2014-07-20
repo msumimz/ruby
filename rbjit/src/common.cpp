@@ -15,9 +15,10 @@ stringFormat(const char* format, ...)
 std::string
 stringFormatVarargs(const char* format, va_list args)
 {
-  char buf[256];
-  vsnprintf(buf, 255, format, args);
-  buf[255] = 0;
+  const int BUFFER_SIZE = 2048;
+  char buf[BUFFER_SIZE];
+  vsnprintf(buf, BUFFER_SIZE, format, args);
+  buf[BUFFER_SIZE-1] = 0;
 
   return std::string(buf);
 }

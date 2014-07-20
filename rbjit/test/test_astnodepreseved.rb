@@ -14,7 +14,7 @@ end
 
 GC.start
 
-Jit.dumptree(Object, :m)
+rbjit_dump_tree(Object, :m)
 
 # If the program is not crashed, it will succeed
 assert(true)

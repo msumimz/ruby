@@ -22,6 +22,12 @@ DebugPrint::println(const char* file, int line, const char* func, const char* ms
   out_ << msg << std::endl;
 }
 
+void
+DebugPrint::printBar()
+{
+  out_ << "============================================================\n";
+}
+
 RBJIT_NAMESPACE_END
 
 #endif // RBJIT_DEBUG

@@ -66,6 +66,7 @@ rb_call_inits(void)
     CALL(vm_trace);
 #ifdef RBJIT_ENABLED
     CALL(rbjitMethodDefinitions);
+    CALL(rbjitDebug);
 #endif
 }
 #undef CALL

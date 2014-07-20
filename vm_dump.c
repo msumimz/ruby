@@ -14,9 +14,14 @@
 #include "vm_core.h"
 #include "internal.h"
 
+#ifdef RBJIT_ENABLED
+int fprintfOverloaded(FILE* out, const char* format, ...);
+#define fprintf fprintfOverloaded
+#endif
+
 /* see vm_insnhelper.h for the values */
 #ifndef VMDEBUG
-#define VMDEBUG 0
+#define VMDEBUG 3
 #endif
 
 #define MAX_POSBUF 128
@@ -137,7 +142,7 @@ control_frame_dump(rb_thread_t *th, rb_control_frame_t *cfp)
 void
 rb_vmdebug_stack_dump_raw(rb_thread_t *th, rb_control_frame_t *cfp)
 {
-#if 0
+#if 1
     VALUE *sp = cfp->sp, *ep = cfp->ep;
     VALUE *p, *st, *t;
 
