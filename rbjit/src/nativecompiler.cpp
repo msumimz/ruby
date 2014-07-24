@@ -26,7 +26,7 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/variable.h"
 #include "rbjit/debugprint.h"
-#include "rbjit/runtime_methodcall.h"
+#include "rbjit/runtimefunctions.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/primitivestore.h"
 #include "rbjit/typecontext.h"
@@ -288,6 +288,12 @@ NativeCompiler::declareRuntimeFunctions()
   ft = llvm::FunctionType::get(valueType_, paramTypes, true);
   runtime_[RF_callMethod] = builder_->CreateIntToPtr(
     getInt((size_t)rbjit_callMethod), ft->getPointerTo(0), "");
+
+  // VALUE rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
+  paramTypes.assign(2, valueType_);
+  ft = llvm::FunctionType::get(valueType_, paramTypes, true);
+  runtime_[RF_findConstant] = builder_->CreateIntToPtr(
+    getInt((size_t)rbjit_findConstant), ft->getPointerTo(0), "");
 }
 
 void
@@ -456,7 +462,7 @@ bool
 NativeCompiler::visitOpcode(OpcodeCall* op)
 {
   // The env will produce no code anyway
-  setBogusValue(op->env());
+  setBogusValue(op->outEnv());
 
   std::vector<llvm::Value*> args(op->rhsCount() + 2);
   int count = 0;
@@ -485,6 +491,41 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
   value->setCallingConv(llvm::CallingConv::C);
 
   if (op->lhs()) {
+    updateValue(op, value);
+  }
+
+  return true;
+}
+
+bool
+NativeCompiler::visitOpcode(OpcodeConstant* op)
+{
+  setBogusValue(op->outEnv());
+
+  Variable* lhs = op->lhs();
+  if (lhs) {
+    TypeConstraint* type = typeContext_->typeConstraintOf(lhs);
+    if (typeid(*type) == typeid(TypeConstant)) {
+      updateValue(op, getInt(type->resolveToValues().first[0]));
+      RecompilationManager::instance()->addConstantReferrer(op->name(), mi_);
+      return true;
+    }
+  }
+  else {
+    if (typeContext_->isSameValueAs(op->inEnv(), op->outEnv())) {
+      // Emit nothing if autoloading is not defined
+      RecompilationManager::instance()->addConstantReferrer(op->name(), mi_);
+      return true;
+    }
+  }
+
+  std::vector<llvm::Value*> args(2);
+  args[0] = getValue(op->base());
+  args[1] = getInt(op->name());
+  llvm::CallInst* value = builder_->CreateCall(runtime_[RF_findConstant], args, "");
+  value->setCallingConv(llvm::CallingConv::C);
+
+  if (lhs) {
     updateValue(op, value);
   }
 

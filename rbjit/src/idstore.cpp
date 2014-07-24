@@ -22,6 +22,9 @@ const char* ID_NAMES[] = {
   "class_exec",
   "module_eval",
   "class_eval",
+  "load",
+  "require",
+  "gem",
 
   "rbjit__is_fixnum",
 

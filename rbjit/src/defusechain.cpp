@@ -50,12 +50,16 @@ DefUseChain::visitOpcodeVa(OpcodeVa* op)
     return true;
   }
 
-  auto i = op->rhsBegin();
-  auto end = op->rhsEnd();
-  for (; i < end; ++i) {
+  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i) {
     uses_[(*i)->index()].push_back(std::make_pair(block_, lhs));
   }
   return true;
+}
+
+void
+DefUseChain::addDefUseChain(Variable* def, Variable* use)
+{
+  uses_[use->index()].push_back(std::make_pair(block_, def));
 }
 
 bool
@@ -68,7 +72,7 @@ DefUseChain::visitOpcode(BlockHeader* op)
 bool
 DefUseChain::visitOpcode(OpcodeCopy* op)
 {
-  uses_[op->rhs()->index()].push_back(std::make_pair(block_, op->lhs()));
+  addDefUseChain(op->lhs(), op->rhs());
   return true;
 }
 
@@ -100,8 +104,8 @@ DefUseChain::visitOpcode(OpcodeEnv* op)
 bool
 DefUseChain::visitOpcode(OpcodeLookup* op)
 {
-  uses_[op->receiver()->index()].push_back(std::make_pair(block_, op->lhs()));
-  uses_[op->env()->index()].push_back(std::make_pair(block_, op->lhs()));
+  addDefUseChain(op->lhs(), op->receiver());
+  addDefUseChain(op->lhs(), op->env());
   return true;
 }
 
@@ -109,6 +113,19 @@ bool
 DefUseChain::visitOpcode(OpcodeCall* op)
 {
   return visitOpcodeVa(op);
+}
+
+bool
+DefUseChain::visitOpcode(OpcodeConstant* op)
+{
+  if (!op->lhs()) {
+    return true;
+  }
+  addDefUseChain(op->lhs(), op->base());
+  addDefUseChain(op->outEnv(), op->base());
+  addDefUseChain(op->lhs(), op->inEnv());
+  addDefUseChain(op->outEnv(), op->inEnv());
+  return true;
 }
 
 bool

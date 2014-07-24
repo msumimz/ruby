@@ -166,9 +166,9 @@ ControlFlowGraph::splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode,
     if (lhs) {
       lhs->setDefBlock(latter);
     }
-    OpcodeCall* opc = dynamic_cast<OpcodeCall*>(o);
-    if (opc) {
-      opc->env()->setDefBlock(latter);
+    Variable* env = o->outEnv();
+    if (env) {
+      env->setDefBlock(latter);
     }
     o = o->next();
   } while (o && o != footer);
@@ -222,6 +222,7 @@ public:
   bool visitOpcode(OpcodeEnv* op);
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodeConstant* op);
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
   bool visitOpcode(OpcodeExit* op);
@@ -238,6 +239,7 @@ private:
   void addError(Opcode* op, const char* format, ...);
 
   void checkLhs(OpcodeL* op, bool nullable);
+  template <class OP> void checkRhs(OP op, int pos, bool nullable);
   template <class OP> void checkRhs(OP op, bool nullable);
 
   const ControlFlowGraph* cfg_;
@@ -320,17 +322,24 @@ SanityChecker::checkLhs(OpcodeL* op, bool nullable)
 }
 
 template <class OP> void
+SanityChecker::checkRhs(OP op, int pos, bool nullable)
+{
+  Variable* rhs = op->rhs(pos);
+  if (!rhs) {
+    if (!nullable) {
+      addError(op, "rhs variable at %d is null", pos);
+    }
+  }
+  else if (!cfg_->containsVariable(rhs)) {
+    addError(op, "rhs variable %Ix does not belong to the cfg", rhs);
+  }
+}
+
+template <class OP> void
 SanityChecker::checkRhs(OP op, bool nullable)
 {
-  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i) {
-    if (!*i) {
-      if (!nullable) {
-        addError(op, "rhs variable at %d is null", i - op->rhsBegin());
-      }
-    }
-    else if (!cfg_->containsVariable(*i)) {
-      addError(op, "rhs variable %Ix does not belong to the cfg", *i);
-    }
+  for (int i = 0; i < op->rhsCount(); ++i) {
+    checkRhs(op, i, nullable);
   }
 }
 
@@ -470,6 +479,14 @@ SanityChecker::visitOpcode(OpcodeCall* op)
 }
 
 bool
+SanityChecker::visitOpcode(OpcodeConstant* op)
+{
+  checkLhs(op, true);
+  checkRhs(op, false);
+  return true;
+}
+
+bool
 SanityChecker::visitOpcode(OpcodePrimitive* op)
 {
   checkLhs(op, true);
@@ -546,21 +563,16 @@ SanityChecker::check()
     }
 
     if (opl->lhs() != v) {
-      OpcodeCall* opc = dynamic_cast<OpcodeCall*>(opl);
-      if (!opc) {
-	addError("variable %d(%Ix)'s defOpcode is %Ix, whose lhs is %Ix", index, v, v->defOpcode(), opl->lhs());
-	continue;
-      }
-      if (opc->env() != v) {
+      if (opl->outEnv() != v) {
         addError("env variable %d(%Ix)'s defOpcode is %Ix, but that opcode's env is %Ix",
-                 index, v, v->defOpcode(), opc->env());
+                 index, v, v->defOpcode(), opl->outEnv());
         continue;
       }
     }
 
     if (!v->defBlock()->containsOpcode(opl)) {
       addError("variable %d(%Ix)'s defOpcode is %Ix and defBlock is %Ix, but that block does not contain such an opcode",
-	index, v, opl, v->defBlock());
+               index, v, opl, v->defBlock());
       continue;
     }
   }
@@ -643,6 +655,7 @@ public:
   bool visitOpcode(OpcodeEnv* op);
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodeConstant* op);
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
   bool visitOpcode(OpcodeExit* op);
@@ -746,7 +759,17 @@ Dumper::visitOpcode(OpcodeCall* op)
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
     put(" %Ix", *i);
   }
-  put(" [%Ix]", op->env());
+  put(" [%Ix]", op->outEnv());
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeConstant* op)
+{
+  put("%Ix '%s' %s[%Ix <- %Ix]",
+    op->base(), mri::Id(op->name()).name(),
+    op->toplevel() ? "toplevel " : "",
+    op->outEnv(), op->inEnv());
   return true;
 }
 

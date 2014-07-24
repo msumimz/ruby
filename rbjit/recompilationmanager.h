@@ -15,15 +15,21 @@ public:
   void addCalleeCallerRelation(ID callee, PrecompiledMethodInfo* caller);
   std::unordered_set<PrecompiledMethodInfo*>* callerList(ID callee);
 
+  void addConstantReferrer(ID constant, PrecompiledMethodInfo* referrer);
+  std::unordered_set<PrecompiledMethodInfo*>* constantReferrerList(ID constant);
+
   void invalidateCompiledCodeByName(ID name);
   void removeMethodInfoFromMethodEntry(mri::MethodEntry me);
+  void invalidateCompiledCodeByConstantRedefinition(ID name);
 
   static RecompilationManager* instance();
-  static VALUE recompile(mri::MethodDefinition::CFunc func, VALUE recv, int argc, const VALUE *argv);
 
 private:
 
+  static void invalidateMethod(PrecompiledMethodInfo* mi);
+
   std::unordered_map<ID, std::unordered_set<PrecompiledMethodInfo*>> calleeCallerMap_;
+  std::unordered_map<ID, std::unordered_set<PrecompiledMethodInfo*>> constantReferrerMap_;
 
 };
 

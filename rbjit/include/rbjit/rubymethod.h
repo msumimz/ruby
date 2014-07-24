@@ -82,6 +82,26 @@ private:
 };
 
 ////////////////////////////////////////////////////////////
+// cref
+// Wrapper for the MRI's cref that is represented by NODE
+
+class CRef {
+public:
+
+  CRef(NODE* cref);
+
+  bool isNull() const { return !cref_; }
+  CRef next() const;
+  mri::Class class_() const;
+  Object findConstant(ID name) const;
+
+private:
+
+  NODE* cref_;
+
+};
+
+////////////////////////////////////////////////////////////
 // MethodDefinition
 // Wrapper for the MRI's rb_method_definition_t
 
@@ -151,12 +171,14 @@ public:
   rb_method_definition_t* ptr() const { return def_; }
 
   bool hasAstNode() const;
-  RNode* astNode() const;
-  int argc() const;
-
   int methodType() const;
 
-  // Update rb_method_cfunc_t
+  // Accessors to rb_iseq_t
+  RNode* astNode() const;
+  int argc() const;
+  CRef cref() const;
+
+  // Accessors to rb_method_cfunc_t
   CFunc cFunc() const;
   void setCFunc(CFunc func);
   void setCFuncInvoker(Invoker invoker);

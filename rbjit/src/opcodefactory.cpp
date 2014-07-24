@@ -281,16 +281,46 @@ OpcodeFactory::addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useRe
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);
-  Variable* env = createTemporary(true);
+  Variable* outEnv = createTemporary(true);
   op->setLhs(lhs);
-  op->setEnv(env);
+  op->setOutEnv(outEnv);
   updateDefSite(lhs);
-  updateDefSite(env);
+  updateDefSite(outEnv);
 
   Variable** v = op->rhsBegin();
   for (Variable*const* arg = argsBegin; arg < argsEnd; ++arg) {
     *v++ = *arg;
   }
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addConstant(ID name, Variable* base, bool useResult)
+{
+  // When useResult is false generate an opcode because constants may cause
+  // autoloading as a side effect.
+  OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, base, name, false, cfg_->entryEnv(), cfg_->entryEnv());
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(useResult);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+  updateDefSite(cfg_->entryEnv());
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addToplevelConstant(ID name, bool useResult)
+{
+  OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, cfg_->undefined(), name, true, cfg_->entryEnv(), cfg_->entryEnv());
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(useResult);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+  updateDefSite(cfg_->entryEnv());
 
   return lhs;
 }
@@ -418,15 +448,15 @@ OpcodeFactory::createEntryExitBlocks()
 {
   // entry block
   cfg_->entry_ = addFreeBlockHeader(0);
-  cfg_->undefined_ = addImmediate(mri::Object::nilObject(), true);
+  cfg_->undefined_ = addImmediate(mri::Object::undefObject(), true);
   Variable* env = addEnv(true);
   cfg_->entryEnv_ = cfg_->exitEnv_ = env;
 
   // exit block
   BlockHeader* exit = createFreeBlockHeader(0);
   Opcode* op = new OpcodeCopy(0, 0, exit, env, env);
+  env->updateDefSite(exit, op);
   op = new OpcodeExit(0, 0, op);
-  env->defInfo()->increaseDefCount();
   exit->setFooter(op);
   cfg_->exit_ = exit;
 }

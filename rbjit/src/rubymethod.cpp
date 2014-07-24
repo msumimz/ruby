@@ -113,6 +113,49 @@ MethodEntry::call(VALUE receiver, int argc, const VALUE* argv)
 }
 
 ////////////////////////////////////////////////////////////
+// CRef
+
+CRef::CRef(NODE* cref)
+  : cref_(cref)
+{}
+
+CRef
+CRef::next() const
+{
+  return cref_->nd_next;
+}
+
+Class
+CRef::class_() const
+{
+  return Class(cref_->nd_clss);
+}
+
+Object
+CRef::findConstant(ID name) const
+{
+  // Find outer classes/modules
+  for (CRef cref = *this; !cref.isNull(); cref = cref.next()) {
+    Class cls = cref.class_();
+    if (!cls.isNull()) {
+      Object value = cref.class_().findConstantInThisClass(name);
+      if (!value.isNull()) {
+        return value;
+      }
+    }
+  }
+
+  if (!class_().isNull()) {
+    Class super = class_().superclass();
+    if (!super.isNull()) {
+      return findConstant(name);
+    }
+  }
+
+  return Object();
+}
+
+////////////////////////////////////////////////////////////
 // MethodDefinition
 
 MethodDefinition::MethodDefinition(ID methodName, void* code, int argc)
@@ -147,6 +190,12 @@ MethodDefinition::hasAstNode() const
   return def_->type == VM_METHOD_TYPE_ISEQ;
 }
 
+int
+MethodDefinition::methodType() const
+{
+  return def_->type;
+}
+
 RNode*
 MethodDefinition::astNode() const
 {
@@ -159,18 +208,21 @@ MethodDefinition::astNode() const
 int
 MethodDefinition::argc() const
 {
+  assert(hasAstNode());
   return def_->body.iseq->argc;
 }
 
-int
-MethodDefinition::methodType() const
+CRef
+MethodDefinition::cref() const
 {
-  return def_->type;
+  assert(hasAstNode());
+  return def_->body.iseq->cref_stack;
 }
 
 MethodDefinition::CFunc
 MethodDefinition::cFunc() const
 {
+  assert(hasAstNode());
   return def_->body.cfunc.func;
 }
 

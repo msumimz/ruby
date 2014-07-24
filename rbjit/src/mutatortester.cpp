@@ -23,6 +23,9 @@ MutatorTester::MutatorTester()
     ID_class_exec,
     ID_module_eval,
     ID_class_eval,
+    ID_load,
+    ID_require,
+    ID_gem,
     ID_NULL
   };
 

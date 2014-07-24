@@ -75,6 +75,9 @@ private:
   Variable* buildReturn(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildCall(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildConstant(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildRelativeConstant(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildToplevelConstant(OpcodeFactory* factory, const RNode* node, bool useResult);
 
   ControlFlowGraph* cfg_;
 

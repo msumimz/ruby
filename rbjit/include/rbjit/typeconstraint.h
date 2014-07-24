@@ -128,13 +128,17 @@ public:
   // Test if the class is determined uniquely to be, or is impossible to be, a
   // specified one.
   // These methods are subsets of resolve(), and are defined to provide more
-  // efficient implementations for specialized purposes.
+  // efficient implementations for specific purposes.
   virtual bool isExactClass(mri::Class cls) = 0;
   virtual bool isImpossibleToBeClass(mri::Class cls) = 0;
 
   // Resolve type constraints into a list of possible classes.
   // Callers are responsible for releasing TypeList*
   virtual TypeList* resolve() = 0;
+
+  // Resolve type constraints into a list of constants.
+  // The second element show a 'determined' state.
+  virtual std::pair<std::vector<mri::Object>, bool> resolveToValues() = 0;
 
   // Visitor
   virtual bool accept(TypeVisitor* visitor) = 0;
@@ -169,6 +173,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -193,6 +198,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -219,6 +225,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -249,6 +256,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -277,6 +285,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -318,6 +327,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -352,6 +362,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -382,6 +393,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -411,6 +423,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -454,6 +467,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 
@@ -490,6 +504,7 @@ public:
   bool isExactClass(mri::Class cls);
   bool isImpossibleToBeClass(mri::Class cls);
   TypeList* resolve();
+  std::pair<std::vector<mri::Object>, bool> resolveToValues();
 
   std::string debugPrint() const;
 

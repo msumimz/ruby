@@ -38,13 +38,17 @@ public:
 
   bool isNull() const { return value_ == 0; }
 
+  // Constant tests
   bool isTrueObject() const { return value_ == trueObject(); }
   bool isFalseObject() const { return value_ == falseObject(); }
   bool isNilObject() const { return value_ == nilObject(); }
   bool isUndefObject() const { return value_ == undefObject(); }
+
+  // Type tests
   // TODO: 64-bit environment
   bool isFixnum() const { return (bool)(value_ & 1); }
   bool isSymbol() const { return (bool)(value_ & 0xf == 0xe); }
+  bool isClassOrModule() const;
 
   // Builtin objects
 
@@ -153,7 +157,18 @@ public:
   MethodEntry findMethod(ID methodName) const;
   MethodEntry findMethod(const char* methodName) const;
 
+  // Find a constant in this class only
+  Object findConstantInThisClass(ID name) const;
+
+  // Find a constant in this class and superclasses.
+  Object findConstant(ID name) const;
+
+  bool isRegisteredAsAutoload(ID name) const;
+
   bool isSubclassOf(mri::Class base) const;
+
+  // Superclass
+  Class superclass() const;
 
   // Subclasses
   SubclassEntry subclassEntry() const;

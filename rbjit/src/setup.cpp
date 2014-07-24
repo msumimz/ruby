@@ -22,22 +22,22 @@ using namespace rbjit;
 static VALUE
 precompile(VALUE self, VALUE cls, VALUE methodName)
 {
-  PrecompiledMethodInfo* mi = PrecompiledMethodInfo::construct(mri::Class(cls), mri::Symbol(methodName).id());
-  if (!mi) {
-    rb_raise(rb_eArgError, "method does not have the source code to be compiled");
-  }
-
   // Preserve the existing method definition by aliasing
   const char* oldName = mri::Symbol(methodName).name();
   std::string newName(oldName);
   newName += "_orig";
   rb_define_alias(cls, newName.c_str(), oldName);
 
+  PrecompiledMethodInfo* mi = PrecompiledMethodInfo::construct(mri::Class(cls), mri::Symbol(methodName).id());
+  if (!mi) {
+    rb_raise(rb_eArgError, "method does not have the source code to be compiled");
+  }
+
   try {
     mi->compile();
   }
   catch (UnsupportedSyntaxException& e) {
-    mi->release();
+    mi->detachMethodEntry();
     rb_raise(rb_eArgError, e.what());
   }
 

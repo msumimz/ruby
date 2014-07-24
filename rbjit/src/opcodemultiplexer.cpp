@@ -84,10 +84,10 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
   // Insert an empty phi node for the env
   if (typeid(*opcode) == typeid(OpcodeCall)) {
     OpcodeCall* call = static_cast<OpcodeCall*>(opcode);
-    envPhi_ = new OpcodePhi(exitBlock->file(), exitBlock->line(), 0, call->env(), count + 1, exitBlock);
+    envPhi_ = new OpcodePhi(exitBlock->file(), exitBlock->line(), 0, call->outEnv(), count + 1, exitBlock);
     memset(envPhi_->rhsBegin(), 0, sizeof(Variable*) * (count + 1));
     envPhi_->insertAfter(last);
-    call->env()->updateDefSite(exitBlock, envPhi_);
+    call->outEnv()->updateDefSite(exitBlock, envPhi_);
   }
 
   return exitBlock;

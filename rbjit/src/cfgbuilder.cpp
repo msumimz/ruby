@@ -204,6 +204,18 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildFuncall(factory, node, useResult);
     break;
 
+  case NODE_CONST:
+    v = buildConstant(factory, node, useResult);
+    break;
+
+  case NODE_COLON2:
+    v = buildRelativeConstant(factory, node, useResult);
+    break;
+
+  case NODE_COLON3:
+    v = buildToplevelConstant(factory, node, useResult);
+    break;
+
   default:
     std::string what = stringFormat("%s:%d: Node type %s is not implemented yet",
       mri::Id(methodInfo_->methodName()).name(), nd_line(node), ruby_node_name(nd_type(node)));
@@ -545,6 +557,31 @@ CfgBuilder::buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResu
   }
 
   return value;
+}
+
+Variable*
+CfgBuilder::buildConstant(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  assert(nd_type(node) == NODE_CONST);
+
+  return factory->addConstant(node->nd_vid, cfg_->undefined(), useResult);
+}
+
+Variable*
+CfgBuilder::buildRelativeConstant(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  assert(nd_type(node) == NODE_COLON2);
+
+  Variable* base = buildNode(factory, node->nd_head, true);
+  return factory->addConstant(node->nd_mid, base, useResult);
+}
+
+Variable*
+CfgBuilder::buildToplevelConstant(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  assert(nd_type(node) == NODE_COLON3);
+
+  return factory->addToplevelConstant(node->nd_mid, useResult);
 }
 
 RBJIT_NAMESPACE_END

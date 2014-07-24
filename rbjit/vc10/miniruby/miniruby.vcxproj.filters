@@ -304,9 +304,6 @@
     <ClCompile Include="..\..\src\rubymethod.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\runtime_methodcall.cpp">
-      <Filter>rbjit\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\cooperdominatorfinder.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
@@ -353,6 +350,9 @@
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\debugtools.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\runtimefunctions.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -413,9 +413,6 @@
     <ClInclude Include="..\..\include\rbjit\rubymethod.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\rbjit\runtime_methodcall.h">
-      <Filter>rbjit\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\rbjit\cooperdominatorfinder.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
@@ -459,6 +456,12 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\mutatortester.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\guardedcaller.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\runtimefunctions.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

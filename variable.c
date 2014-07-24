@@ -23,6 +23,10 @@
 st_table *rb_global_tbl;
 static ID autoload, classpath, tmp_classpath, classid;
 
+#ifdef RBJIT_ENABLED
+void rbjit_invalidateCompiledCodeByConstantRedefinition(ID name);
+#endif
+
 void
 Init_var_tables(void)
 {
@@ -1552,7 +1556,7 @@ static const rb_data_type_t autoload_data_type = {
 #define check_autoload_table(av) \
     (struct st_table *)rb_check_typeddata((av), &autoload_data_type)
 
-static VALUE
+VALUE
 autoload_data(VALUE mod, ID id)
 {
     struct st_table *tbl;
@@ -1645,6 +1649,10 @@ rb_autoload(VALUE mod, ID id, const char *file)
     ele->value = Qundef;
     ad = TypedData_Wrap_Struct(0, &autoload_data_i_type, ele);
     st_insert(tbl, (st_data_t)id, (st_data_t)ad);
+
+#ifdef RBJIT_ENABLED
+    rbjit_invalidateCompiledCodeByConstantRedefinition(id);
+#endif
 }
 
 static void
@@ -2217,6 +2225,10 @@ rb_const_set(VALUE klass, ID id, VALUE val)
     st_insert(RCLASS_CONST_TBL(klass), (st_data_t)id, (st_data_t)ce);
     RB_OBJ_WRITE(klass, &ce->value, val);
     RB_OBJ_WRITE(klass, &ce->file, rb_sourcefilename());
+
+#ifdef RBJIT_ENABLED
+    rbjit_invalidateCompiledCodeByConstantRedefinition(id);
+#endif
 }
 
 void

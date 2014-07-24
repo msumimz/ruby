@@ -232,10 +232,11 @@ PrecompiledMethodInfo::analyzeTypes()
 
   RBJIT_DPRINT(debugPrintBanner("Type analysis"));
 
-  TypeAnalyzer ta(cfg_);
+  TypeAnalyzer ta(cfg_, methodEntry().class_(), methodEntry().methodDefinition().cref());
 
   // Set self's type
   ta.setInputTypeConstraint(0, TypeClassOrSubclass(methodEntry().class_()));
+
   auto result = ta.analyze();
   typeContext_ = std::get<0>(result);
   mutator_ = std::get<1>(result) ? YES : NO;

@@ -33,6 +33,9 @@ public:
   TypeConstraint* typeConstraintOf(Variable* v) const
   { return types_[v->index()]; }
 
+  TypeConstraint* typeConstraintOf(int i) const
+  { return types_[i]; }
+
   bool isSameValueAs(Variable* v1, Variable* v2);
 
   std::string debugPrint() const;

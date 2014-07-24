@@ -5,6 +5,7 @@
 #include <tuple>
 #include "rbjit/opcode.h"
 #include "rbjit/defusechain.h"
+#include "rbjit/rubyobject.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -32,7 +33,7 @@ RBJIT_NAMESPACE_BEGIN
 class TypeAnalyzer : public OpcodeVisitor {
 public:
 
-  TypeAnalyzer(ControlFlowGraph* cfg);
+  TypeAnalyzer(ControlFlowGraph* cfg, mri::Class holderClass, mri::CRef cref);
 
   void setInputTypeConstraint(int index, const TypeConstraint& type);
 
@@ -47,6 +48,7 @@ public:
   bool visitOpcode(OpcodeEnv* opcode);
   bool visitOpcode(OpcodeLookup* opcode);
   bool visitOpcode(OpcodeCall* opcode);
+  bool visitOpcode(OpcodeConstant* opcode);
   bool visitOpcode(OpcodePrimitive* opcode);
   bool visitOpcode(OpcodePhi* opcode);
   bool visitOpcode(OpcodeExit* opcode);
@@ -76,6 +78,8 @@ protected:
   bool mutator_;
   bool jitOnly_;
 
+  mri::Class holderClass_;
+  mri::CRef cref_;
 };
 
 RBJIT_NAMESPACE_END

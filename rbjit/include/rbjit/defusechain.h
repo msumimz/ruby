@@ -24,7 +24,6 @@ public:
   bool isCondition(Variable* v) const;
 
   // visitors
-  bool visitOpcodeVa(OpcodeVa* op);
   bool visitOpcode(BlockHeader* op);
   bool visitOpcode(OpcodeCopy* op);
   bool visitOpcode(OpcodeJump* op);
@@ -33,6 +32,7 @@ public:
   bool visitOpcode(OpcodeEnv* op);
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodeConstant* op);
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
   bool visitOpcode(OpcodeExit* op);
@@ -42,6 +42,8 @@ public:
 private:
 
   void build();
+  bool visitOpcodeVa(OpcodeVa* op);
+  void addDefUseChain(Variable* def, Variable* use);
 
   ControlFlowGraph* cfg_;
   std::vector<std::vector<std::pair<BlockHeader*, Variable*>>> uses_;

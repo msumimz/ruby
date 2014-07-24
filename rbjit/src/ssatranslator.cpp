@@ -282,24 +282,23 @@ SsaTranslator::renameVariablesInLhs(BlockHeader* b, OpcodeL* opl, Variable* lhs)
 void
 SsaTranslator::renameEnvInLhs(BlockHeader* b, Opcode* op)
 {
-  OpcodeCall* call = dynamic_cast<OpcodeCall*>(op);
-  if (!call) {
+  Variable* env = op->outEnv();
+  if (!env) {
     return;
   }
 
-  Variable* env = call->env();
   if (env->defCount() > 1) {
-    Variable* temp = cfg_->copyVariable(b, call, env);
+    Variable* temp = cfg_->copyVariable(b, op, env);
     env->defInfo()->decreaseDefCount();
     renameStack_[env->index()].push_back(temp);
-    call->setEnv(temp);
+    op->setOutEnv(temp);
 
     renameStack_.push_back(std::vector<Variable*>());
   }
   else {
     renameStack_[env->index()].push_back(env);
     env->setDefBlock(b);
-    env->setDefOpcode(call);
+    env->setDefOpcode(op);
   }
 }
 

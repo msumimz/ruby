@@ -51,6 +51,7 @@ public:
   bool visitOpcode(OpcodeEnv* opcode);
   bool visitOpcode(OpcodeLookup* opcode);
   bool visitOpcode(OpcodeCall* opcode);
+  bool visitOpcode(OpcodeConstant* opcode);
   bool visitOpcode(OpcodePrimitive* opcode);
   bool visitOpcode(OpcodePhi* opcode);
   bool visitOpcode(OpcodeExit* opcode);
@@ -116,6 +117,7 @@ private:
   enum {
     RF_lookupMethod,
     RF_callMethod,
+    RF_findConstant,
     RUNTIME_FUNCTION_COUNT
   };
   llvm::Value* runtime_[RUNTIME_FUNCTION_COUNT];

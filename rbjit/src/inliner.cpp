@@ -96,7 +96,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     join->setDebugName("inliner_join");
     BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
     initBlock->setDebugName("inliner_arguments");
-    replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->env());
+    replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->outEnv());
   }
   else {
     OpcodeMultiplexer mul(cfg_, typeContext_);
@@ -219,7 +219,7 @@ Inliner::insertCall(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, 
 
   // OpcodeCall
   Variable* result = factory.addDuplicateCall(op, newLookup, !!op->lhs());
-  Variable* env = static_cast<OpcodeCall*>(factory.lastOpcode())->env();
+  Variable* env = static_cast<OpcodeCall*>(factory.lastOpcode())->outEnv();
   if (result) {
     typeContext_->addNewTypeConstraint(result, TypeAny::create());
   }

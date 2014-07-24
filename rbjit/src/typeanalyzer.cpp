@@ -16,12 +16,14 @@ RBJIT_NAMESPACE_BEGIN
 ////////////////////////////////////////////////////////////
 // TypeAnalyzer
 
-TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg)
+TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg, mri::Class holderClass, mri::CRef cref)
   : cfg_(cfg),
     reachBlocks_(cfg->blocks()->size(), UNKNOWN),
     defUseChain_(cfg),
     typeContext_(new TypeContext(cfg)),
-    mutator_(false), jitOnly_(false)
+    mutator_(false), jitOnly_(false),
+    holderClass_(holderClass),
+    cref_(cref)
 {}
 
 void
@@ -268,11 +270,131 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
   }
 
   if (mutator_) {
-    updateTypeConstraint(op->env(), TypeEnv());
+    updateTypeConstraint(op->outEnv(), TypeEnv());
   }
   else {
-    updateTypeConstraint(op->env(),
+    updateTypeConstraint(op->outEnv(),
       TypeSameAs(typeContext_, op->lookupOpcode()->env()));
+  }
+
+  return true;
+}
+
+bool
+TypeAnalyzer::visitOpcode(OpcodeConstant* op)
+{
+  if (!typeContext_->isSameValueAs(op->inEnv(), cfg_->entryEnv())) {
+    updateTypeConstraint(op->lhs(), TypeAny());
+    updateTypeConstraint(op->outEnv(), TypeEnv());
+    return true;
+  }
+
+  if (op->toplevel()) {
+    // Toplevel constant lookup (:CONST)
+    mri::Object value = mri::Class::objectClass().findConstant(op->name());
+    if (!value.isNull()) {
+      updateTypeConstraint(op->lhs(), TypeConstant(value));
+    }
+    else {
+      if (mri::Class::objectClass().isRegisteredAsAutoload(op->name())) {
+        mutator_ = true;
+        updateTypeConstraint(op->lhs(), TypeAny());
+      }
+      else {
+        updateTypeConstraint(op->lhs(), TypeNone());
+      }
+    }
+    return true;
+  }
+
+  std::vector<mri::Class> baseClasses;
+  std::pair<std::vector<mri::Object>, bool> list = typeContext_->typeConstraintOf(op->base())->resolveToValues();
+  std::vector<mri::Object>& consts = list.first;
+  bool determined = list.second;
+
+  if (determined && consts.size() == 1 && consts[0].isUndefObject()) {
+    // Current class constant lookup (CONST)
+    mri::Object value = cref_.findConstant(op->name());
+    if (!value.isNull()) {
+      updateTypeConstraint(op->lhs(), TypeConstant(value));
+    }
+    else {
+      if (cref_.class_().isRegisteredAsAutoload(op->name())) {
+	mutator_ = true;
+	updateTypeConstraint(op->lhs(), TypeAny());
+      }
+      else {
+	updateTypeConstraint(op->lhs(), TypeNone());
+      }
+    }
+    return true;
+  }
+
+  // Relative constant lookup (base::CONST)
+  for (auto i = consts.cbegin(), end = consts.cend(); i != end; ++i) {
+    mri::Object obj = *i;
+    if (obj.isClassOrModule()) {
+      baseClasses.push_back(mri::Class(obj.value()));
+    }
+    else {
+      // TODO
+      // if a base object is not a class or module, then TypeError will be
+      // raised on runtime. When we implement begin-rescue caluses, don't
+      // forget to add control edges from constants to rescue clauses.
+    }
+  }
+
+  if (baseClasses.empty()) {
+    if (determined) {
+      // This case would cause an exception on runtime, or autoloading
+      updateTypeConstraint(op->lhs(), TypeNone());
+    }
+    else {
+      updateTypeConstraint(op->lhs(), TypeAny());
+      mutator_ = true;
+    }
+  }
+  else {
+    TypeSelection sel;
+    for (auto i = baseClasses.cbegin(), end = baseClasses.cend(); i != end; ++i) {
+      mri::Class base = *i;
+      mri::Object value = base.findConstant(op->name());
+      if (!value.isNull()) {
+        sel.add(TypeConstant(value));
+      }
+      else {
+        determined = false;
+        if (base.isRegisteredAsAutoload(op->name())) {
+          sel.add(TypeAny());
+          mutator_ = true;
+        }
+      }
+    }
+
+    if (!determined) {
+      sel.add(TypeAny());
+    }
+
+    if (op->lhs()) {
+      if (sel.types().empty()) {
+        updateTypeConstraint(op->lhs(), TypeNone());
+      }
+      else {
+        if (sel.types().size() == 1) {
+          updateTypeConstraint(op->lhs(), *sel.types()[0]);
+        }
+        else {
+          updateTypeConstraint(op->lhs(), sel);
+        }
+      }
+    }
+  }
+
+  if (mutator_) {
+    updateTypeConstraint(op->outEnv(), TypeEnv());
+  }
+  else {
+    updateTypeConstraint(op->outEnv(), TypeSameAs(typeContext_, op->inEnv()));
   }
 
   return true;

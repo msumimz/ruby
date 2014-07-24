@@ -52,6 +52,8 @@ public:
   // args includes a receiver as first argument
   Variable* addCall(Variable* me, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
   Variable* addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useResult);
+  Variable* addConstant(ID name, Variable* base, bool useResult);
+  Variable* addToplevelConstant(ID name, bool useResult);
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
   Variable* addPhi(Variable* lhs, int rhsCount, bool useResult);
   Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);

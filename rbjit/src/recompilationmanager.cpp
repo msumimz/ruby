@@ -34,11 +34,48 @@ RecompilationManager::callerList(ID callee)
   return nullptr;
 }
 
+void
+RecompilationManager::addConstantReferrer(ID constant, PrecompiledMethodInfo* referrer)
+{
+  auto i = constantReferrerMap_.find(constant);
+  if (i == constantReferrerMap_.end()) {
+    std::unordered_set<PrecompiledMethodInfo*> s;
+    s.insert(referrer);
+    constantReferrerMap_.insert(std::make_pair(constant, std::move(s)));
+  }
+  else {
+    i->second.insert(referrer);
+  }
+  referrer->addRef();
+}
+
+std::unordered_set<PrecompiledMethodInfo*>*
+RecompilationManager::constantReferrerList(ID constant)
+{
+  auto i = constantReferrerMap_.find(constant);
+  if (i != constantReferrerMap_.end()) {
+    return &(i->second);
+  }
+  return nullptr;
+}
+
 RecompilationManager*
 RecompilationManager::instance()
 {
   static RecompilationManager m;
   return &m;
+}
+
+void
+RecompilationManager::invalidateMethod(PrecompiledMethodInfo* mi)
+{
+  if (mi->isActive()) {
+    mi->restoreISeqDefinition();
+    if (mi->isJitOnly()) {
+      mi->compile();
+    }
+  }
+  mi->release();
 }
 
 void
@@ -50,16 +87,23 @@ RecompilationManager::invalidateCompiledCodeByName(ID name)
   }
 
   for (auto i = callers->cbegin(), end = callers->cend(); i != end; ++i) {
-    PrecompiledMethodInfo* mi = *i;
-    if (mi->isActive()) {
-      mi->restoreISeqDefinition();
-      if (mi->isJitOnly()) {
-        mi->compile();
-      }
-    }
-    mi->release();
+    invalidateMethod(*i);
   }
   callers->clear();
+}
+
+void
+RecompilationManager::invalidateCompiledCodeByConstantRedefinition(ID name)
+{
+  std::unordered_set<PrecompiledMethodInfo*>* referrers = constantReferrerList(name);
+  if (!referrers) {
+    return;
+  }
+
+  for (auto i = referrers->cbegin(), end = referrers->cend(); i != end; ++i) {
+    invalidateMethod(*i);
+  }
+  referrers->clear();
 }
 
 extern "C" {
@@ -78,6 +122,12 @@ rbjit_removeMethodInfoFromMethodEntry(rb_method_entry_t* me)
     mi->detachMethodEntry();
     mri::MethodEntry(me).setMethodInfo(nullptr);
   }
+}
+
+void
+rbjit_invalidateCompiledCodeByConstantRedefinition(ID name)
+{
+  RecompilationManager::instance()->invalidateCompiledCodeByConstantRedefinition(name);
 }
 
 }

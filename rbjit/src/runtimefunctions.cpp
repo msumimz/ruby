@@ -2,6 +2,9 @@
 #include "rbjit/rubymethod.h"
 
 #include "ruby.h"
+extern "C" {
+#include "constant.h" // rb_public_const_get
+}
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -30,6 +33,14 @@ rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
 
   mri::Object result = mri::MethodEntry(me).call(receiver, argc, argv);
   return result;
+}
+
+VALUE
+rbjit_findConstant(VALUE baseClass, ID name)
+{
+  // Call MRI's standard constant lookup function.
+  // This function involves autoloading and exception raising.
+  return rb_public_const_get(baseClass, name);
 }
 
 RBJIT_NAMESPACE_END

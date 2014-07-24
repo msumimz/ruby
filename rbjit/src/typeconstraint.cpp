@@ -56,6 +56,12 @@ TypeNone::resolve()
   return new TypeList(TypeList::NONE);
 }
 
+std::pair<std::vector<mri::Object>, bool>
+TypeNone::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), true);
+}
+
 std::string
 TypeNone::debugPrint() const
 {
@@ -107,6 +113,12 @@ TypeAny::resolve()
   return new TypeList(TypeList::ANY);
 }
 
+std::pair<std::vector<mri::Object>, bool>
+TypeAny::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
+}
+
 std::string
 TypeAny::debugPrint() const
 {
@@ -155,6 +167,12 @@ TypeList*
 TypeInteger::resolve()
 {
   return new TypeList(TypeList::ANY);
+}
+
+std::pair<std::vector<mri::Object>, bool>
+TypeInteger::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
 }
 
 std::string
@@ -214,6 +232,12 @@ TypeConstant::resolve()
   return list;
 }
 
+std::pair<std::vector<mri::Object>, bool>
+TypeConstant::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(1, value_), true);
+}
+
 std::string
 TypeConstant::debugPrint() const
 {
@@ -264,6 +288,12 @@ TypeList*
 TypeEnv::resolve()
 {
   return new TypeList(TypeList::NONE);
+}
+
+std::pair<std::vector<mri::Object>, bool>
+TypeEnv::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
 }
 
 std::string
@@ -324,6 +354,12 @@ TypeList*
 TypeLookup::resolve()
 {
   return new TypeList(TypeList::NONE);
+}
+
+std::pair<std::vector<mri::Object>, bool>
+TypeLookup::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
 }
 
 std::string
@@ -405,6 +441,12 @@ TypeSameAs::resolve()
   return typeContext_->typeConstraintOf(source_)->resolve();
 }
 
+std::pair<std::vector<mri::Object>, bool>
+TypeSameAs::resolveToValues()
+{
+  return typeContext_->typeConstraintOf(source_)->resolveToValues();
+}
+
 std::string
 TypeSameAs::debugPrint() const
 {
@@ -460,6 +502,12 @@ TypeExactClass::resolve()
   auto list = new TypeList(TypeList::DETERMINED);
   list->addType(cls_);
   return list;
+}
+
+std::pair<std::vector<mri::Object>, bool>
+TypeExactClass::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
 }
 
 std::string
@@ -548,6 +596,12 @@ TypeClassOrSubclass::resolveInternal(mri::Class cls, TypeList* list)
     }
   }
   return true;
+}
+
+std::pair<std::vector<mri::Object>, bool>
+TypeClassOrSubclass::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
 }
 
 std::string
@@ -814,6 +868,25 @@ TypeSelection::resolve()
   return type.release();
 }
 
+std::pair<std::vector<mri::Object>, bool>
+TypeSelection::resolveToValues()
+{
+  if (types_.empty()) {
+    return std::make_pair(std::vector<mri::Object>(), true);
+  }
+
+  std::vector<mri::Object> list;
+  bool determined = true;
+  for (auto i = types_.cbegin(), end = types_.cend(); i != end; ++i) {
+    TypeConstraint* t = *i;
+    std::pair<std::vector<mri::Object>, bool> l = t->resolveToValues();
+    list.insert(list.end(), l.first.begin(), l.first.end());
+    determined = determined & l.second;
+  }
+
+  return std::make_pair(std::move(list), determined);
+}
+
 std::string
 TypeSelection::debugPrint() const
 {
@@ -888,6 +961,12 @@ TypeRecursion::resolve()
 {
   // Resolved to an empty type list
   return new TypeList(TypeList::DETERMINED);
+}
+
+std::pair<std::vector<mri::Object>, bool>
+TypeRecursion::resolveToValues()
+{
+  return std::make_pair(std::vector<mri::Object>(), false);
 }
 
 std::string

@@ -18,6 +18,7 @@ class OpcodeImmediate;
 class OpcodeEnv;
 class OpcodeLookup;
 class OpcodeCall;
+class OpcodeConstant;
 class OpcodePrimitive;
 class OpcodePhi;
 class OpcodeExit;
@@ -35,6 +36,7 @@ public:
   virtual bool visitOpcode(OpcodeEnv* op) = 0;
   virtual bool visitOpcode(OpcodeLookup* op) = 0;
   virtual bool visitOpcode(OpcodeCall* op) = 0;
+  virtual bool visitOpcode(OpcodeConstant* op) = 0;
   virtual bool visitOpcode(OpcodePrimitive* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
   virtual bool visitOpcode(OpcodeExit* op) = 0;
@@ -109,6 +111,9 @@ public:
 
   const char* typeName() const;
   const char* shortTypeName() const;
+
+  virtual Variable* outEnv() { return 0; }
+  virtual void setOutEnv(Variable* e) {}
 
 protected:
 
@@ -458,8 +463,8 @@ public:
 
   Variable* receiver() const { return rhs(0); }
 
-  Variable* env() const { return env_; }
-  void setEnv(Variable* env) { env_ = env; }
+  Variable* outEnv() { return env_; }
+  void setOutEnv(Variable* env) { env_ = env; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
@@ -469,6 +474,37 @@ private:
 
   // Should be treated as a left-side hand value
   Variable* env_;
+};
+
+class OpcodeConstant : public OpcodeLR<2> {
+public:
+
+  OpcodeConstant(int file, int line, Opcode* prev, Variable* lhs, Variable* base, ID name, bool toplevel, Variable* inEnv, Variable* outEnv)
+    : OpcodeLR(file, line, prev, lhs), name_(name), toplevel_(toplevel), outEnv_(outEnv)
+  {
+    setRhs(0, base);
+    setRhs(1, inEnv);
+  }
+
+  ID name() const { return name_; }
+  Variable* base() const { return rhs(0); }
+  bool toplevel() const { return toplevel_; }
+
+  Variable* inEnv() const { return rhs(1); }
+  void setInEnv(Variable* e) { setRhs(1, e); }
+
+  Variable* outEnv() { return outEnv_; }
+  void setOutEnv(Variable* e) { outEnv_ = e; }
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+private:
+
+  ID name_;
+  bool toplevel_;
+
+  // Should be treated as a left-side hand value
+  Variable* outEnv_;
 };
 
 class OpcodePrimitive : public OpcodeVa {
