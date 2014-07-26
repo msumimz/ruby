@@ -9,6 +9,7 @@
 #include "rbjit/ltdominatorfinder.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/debugprint.h"
+#include "rbjit/ssachecker.h"
 
 #ifdef _x64
 # define PTRF "% 16Ix"
@@ -638,6 +639,19 @@ ControlFlowGraph::checkSanityAndPrintErrors() const
 
   for (auto i = checker.errors().cbegin(), end = checker.errors().cend(); i != end; ++i) {
     fprintf(stderr, "%s\n", i->c_str());
+  }
+
+  return checker.errors().empty();
+}
+
+bool
+ControlFlowGraph::checkSsaAndPrintErrors()
+{
+  SsaChecker checker(this);
+  checker.check();
+
+  for (auto i = checker.errors().cbegin(), end = checker.errors().cend(); i != end; ++i) {
+    fprintf(stderr, "SSA Checker: %s\n", i->c_str());
   }
 
   return checker.errors().empty();

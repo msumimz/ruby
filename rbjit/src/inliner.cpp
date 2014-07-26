@@ -123,12 +123,19 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
         result = insertCall(methodInfos[i]->methodEntry(), block, join, op);
       }
 
+      int index = -1;
       if (result.first && phi) {
-        phi->setRhs(i, result.first);
+        index = exitBlock->backedgeIndexOf(join);
+        assert(0 <= index && index < size);
+        phi->setRhs(index, result.first);
       }
       if (envPhi) {
         assert(result.second);
-        envPhi->setRhs(i, result.second);
+        if (index == -1) {
+          index = exitBlock->backedgeIndexOf(join);
+          assert(0 <= index && index < size);
+        }
+        envPhi->setRhs(index, result.second);
       }
     }
   }
@@ -141,6 +148,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   RBJIT_DPRINT(typeContext_->debugPrint());
   assert(cfg_->checkSanityAndPrintErrors());
+  assert(cfg_->checkSsaAndPrintErrors());
 
   return true;
 }

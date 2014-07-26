@@ -7,8 +7,8 @@ RBJIT_NAMESPACE_BEGIN
 
 CooperDominatorFinder::CooperDominatorFinder(ControlFlowGraph* cfg)
   : DominatorFinder(cfg),
-    dfnums_(blocks_->size(), 0),
-    idoms_(blocks_->size(), 0)
+    idoms_(blocks_->size(), 0),
+    dfnums_(blocks_->size(), 0)
 {}
 
 std::vector<BlockHeader*>
@@ -27,17 +27,21 @@ CooperDominatorFinder::findDominators()
   BlockHeader* entry = cfg_->entry();
   do {
     changed = false;
-    for (int i = 1; i < blocks_->size(); ++i) {
-      BlockHeader* b = (*blocks_)[i];
+    // loop by reverse postorder
+    for (auto i = postorders_.rbegin(), end = postorders_.rend(); i != end; ++i) {
+      BlockHeader* b = *i;
+      if (b == cfg_->entry()) {
+        continue;
+      }
       BlockHeader::Backedge* e = b->backedge();
       BlockHeader* newIdom = e->block();
-      for (e = e->next(); e; e = e->next()) {
-        if (e->block() == entry || idoms_[e->block()->index()]) {
+      for (; e; e = e->next()) {
+        if (idoms_[e->block()->index()]) {
           newIdom = findIntersect(e->block(), newIdom);
         }
       }
-      if (idoms_[i] != newIdom) {
-        idoms_[i] = newIdom;
+      if (idoms_[b->index()] != newIdom) {
+        idoms_[b->index()] = newIdom;
         changed = true;
       }
     }
@@ -47,29 +51,31 @@ CooperDominatorFinder::findDominators()
 void
 CooperDominatorFinder::computeDfsOrder()
 {
-  std::vector<BlockHeader*> work;
+  postorders_.reserve(cfg_->blocks()->size());
+  computeDfsOrderInternal(cfg_->entry(), 0);
+}
 
-  work.push_back(cfg_->entry());
-  int count = 0;
-  while (!work.empty()) {
-    BlockHeader* b = work.back();
-    work.pop_back();
-
-    if (dfnums_[b->index()] > 0) {
-      continue;
-    }
-
-    dfnums_[b->index()] = count++;
-
-    BlockHeader* n = b->nextAltBlock();
-    if (n) {
-      work.push_back(n);
-    }
-    n = b->nextBlock();
-    if (n) {
-      work.push_back(n);
-    }
+int
+CooperDominatorFinder::computeDfsOrderInternal(BlockHeader* b, int count)
+{
+  if (dfnums_[b->index()] > 0) {
+    return count;
   }
+
+  dfnums_[b->index()] = count++;
+
+  BlockHeader* n = b->nextBlock();
+  if (n) {
+    count = computeDfsOrderInternal(n, count);
+  }
+  n = b->nextAltBlock();
+  if (n) {
+    count = computeDfsOrderInternal(n, count);
+  }
+
+  postorders_.push_back(b);
+
+  return count;
 }
 
 BlockHeader*
@@ -78,20 +84,12 @@ CooperDominatorFinder::findIntersect(BlockHeader* b1, BlockHeader* b2)
   while (b1 != b2) {
     assert(dfnums_[b1->index()] != dfnums_[b2->index()]);
     while (dfnums_[b1->index()] > dfnums_[b2->index()]) {
-      if (idoms_[b1->index()]) {
-        b1 = idoms_[b1->index()];
-      }
-      else {
-        b1 = b2;
-      }
+      assert(idoms_[b1->index()]);
+      b1 = idoms_[b1->index()];
     }
     while (dfnums_[b2->index()] > dfnums_[b1->index()]) {
-      if (idoms_[b2->index()]) {
-        b2 = idoms_[b2->index()];
-      }
-      else {
-        b2 = b1;
-      }
+      assert(idoms_[b2->index()]);
+      b2 = idoms_[b2->index()];
     }
   }
   return b1;

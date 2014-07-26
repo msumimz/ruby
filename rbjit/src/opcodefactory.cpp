@@ -298,6 +298,10 @@ OpcodeFactory::addDuplicateCall(OpcodeCall* source, Variable* lookup, bool useRe
 Variable*
 OpcodeFactory::addConstant(ID name, Variable* base, bool useResult)
 {
+  if (!base) {
+    base = addImmediate(mri::Object::undefObject(), true);
+  }
+
   // When useResult is false generate an opcode because constants may cause
   // autoloading as a side effect.
   OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, base, name, false, cfg_->entryEnv(), cfg_->entryEnv());
@@ -314,7 +318,8 @@ OpcodeFactory::addConstant(ID name, Variable* base, bool useResult)
 Variable*
 OpcodeFactory::addToplevelConstant(ID name, bool useResult)
 {
-  OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, cfg_->undefined(), name, true, cfg_->entryEnv(), cfg_->entryEnv());
+  Variable* undef = addImmediate(mri::Object::undefObject(), true);
+  OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, undef, name, true, cfg_->entryEnv(), cfg_->entryEnv());
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);
@@ -448,7 +453,7 @@ OpcodeFactory::createEntryExitBlocks()
 {
   // entry block
   cfg_->entry_ = addFreeBlockHeader(0);
-  cfg_->undefined_ = addImmediate(mri::Object::undefObject(), true);
+  cfg_->undefined_ = addImmediate(mri::Object::nilObject(), true);
   Variable* env = addEnv(true);
   cfg_->entryEnv_ = cfg_->exitEnv_ = env;
 

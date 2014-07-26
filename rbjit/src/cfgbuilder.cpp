@@ -564,7 +564,7 @@ CfgBuilder::buildConstant(OpcodeFactory* factory, const RNode* node, bool useRes
 {
   assert(nd_type(node) == NODE_CONST);
 
-  return factory->addConstant(node->nd_vid, cfg_->undefined(), useResult);
+  return factory->addConstant(node->nd_vid, nullptr, useResult);
 }
 
 Variable*

@@ -81,8 +81,8 @@ BlockHeader::updateJumpDestination(BlockHeader* dest)
 
   if (footer_ && nextBlock()) {
     nextBlock()->removeBackedge(this);
-    dest->addBackedge(this);
   }
+  dest->addBackedge(this);
 
   static_cast<OpcodeJump*>(footer_)->setNextBlock(dest);
 }
@@ -94,8 +94,8 @@ BlockHeader::updateJumpAltDestination(BlockHeader* dest)
 
   if (footer_ && nextAltBlock()) {
     nextAltBlock()->removeBackedge(this);
-    dest->addBackedge(this);
   }
+  dest->addBackedge(this);
 
   static_cast<OpcodeJumpIf*>(footer_)->setNextAltBlock(dest);
 }
@@ -177,8 +177,20 @@ BlockHeader::containsBackedge(BlockHeader* block)
       return true;
     }
   }
-
   return false;
+}
+
+int
+BlockHeader::backedgeIndexOf(BlockHeader* block)
+{
+  int count = 0;
+  for (Backedge* e = &backedge_; e; e = e->next_, ++count) {
+    if (e->block_ == block) {
+      return count;
+    }
+  }
+
+  return -1;
 }
 
 int

@@ -275,6 +275,7 @@ public:
   bool hasBackedge() const { return backedge_.block_ != 0; }
   bool hasMultipleBackedges() const { return backedge_.next_ != 0; }
   bool containsBackedge(BlockHeader* block);
+  int backedgeIndexOf(BlockHeader* block);
   int backedgeSize() const;
   const Backedge* backedgeAt(int n) const;
 

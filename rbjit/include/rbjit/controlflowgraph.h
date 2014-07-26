@@ -90,6 +90,7 @@ public:
 
   bool checkSanity() const;
   bool checkSanityAndPrintErrors() const;
+  bool checkSsaAndPrintErrors();
 
   // debug print
 

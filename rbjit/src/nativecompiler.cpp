@@ -220,7 +220,12 @@ NativeCompiler::translateToBitcode()
   size_t blockCount = cfg_->blocks()->size();
   llvmBlocks_.assign(blockCount, 0);
   for (size_t i = 0; i < blockCount; ++i) {
+#ifdef RBJIT_DEBUG
+    std::string name = stringFormat("block%d", i);
+    llvmBlocks_[i] = llvm::BasicBlock::Create(*ctx_, name.c_str(), func_);
+#else
     llvmBlocks_[i] = llvm::BasicBlock::Create(*ctx_, "", func_);
+#endif
   }
 
   // Set up a phi list
@@ -231,7 +236,7 @@ NativeCompiler::translateToBitcode()
 
 #ifdef RBJIT_DEBUG
   // Add debugtrap
-  if (IsDebuggerPresent()) {
+  if (false) { // IsDebuggerPresent()) {
     // declare void @llvm.debugtrap() nounwind
     llvm::Function* debugtrapFunc = llvm::Intrinsic::getDeclaration(module_, llvm::Intrinsic::debugtrap, llvm::None);
     llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
@@ -260,6 +265,7 @@ NativeCompiler::translateToBitcode()
   };
 
 #ifdef RBJIT_DEBUG
+  RBJIT_DPRINT(debugPrint());
   llvm::verifyFunction(*func_);
 #endif
 

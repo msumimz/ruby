@@ -77,8 +77,14 @@ LTDominatorFinder::debugVerify(std::vector<BlockHeader*>& doms)
       continue;
     }
     if (doms[i] != cooperDoms[i]) {
-      fprintf(stderr, "error block %Ix's idom is wrong\n", (*blocks_)[i]);
+      fprintf(stderr, "error block %Ix's idom is wrong: cooper %Ix, lt %Ix\n", (*blocks_)[i], cooperDoms[i], doms[i]);
       error = true;
+    }
+  }
+
+  if (error) {
+    for (int i = 0; i < blocks_->size(); ++i) {
+      fprintf(stderr, "%2d: %Ix %Ix %Ix\n", i, (*cfg_->blocks())[i], cooperDoms[i], doms[i]);
     }
   }
 

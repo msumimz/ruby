@@ -213,6 +213,7 @@ PrecompiledMethodInfo::buildCfg()
   RBJIT_DPRINT(cfg_->debugPrintAsDot());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
+  assert(cfg_->checkSsaAndPrintErrors());
 }
 
 void
@@ -276,8 +277,6 @@ PrecompiledMethodInfo::generateCode()
   RBJIT_DPRINT(debugPrintBanner("LLVM Compilation"));
 
   void* code = NativeCompiler::instance()->compileMethod(this);
-
-  RBJIT_DPRINT(NativeCompiler::instance()->debugPrint());
 
   return code;
 }
