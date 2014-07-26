@@ -169,6 +169,18 @@ BlockHeader::updateBackedge(BlockHeader* oldBlock, BlockHeader* newBlock)
   RBJIT_UNREACHABLE;
 }
 
+bool
+BlockHeader::containsBackedge(BlockHeader* block)
+{
+  for (Backedge* e = &backedge_; e; e = e->next_) {
+    if (e->block_ == block) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 int
 BlockHeader::backedgeSize() const
 {
