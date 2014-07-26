@@ -27,6 +27,7 @@ public:
   };
 
   DomTree(ControlFlowGraph* cfg);
+  DomTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms);
   ~DomTree();
 
   Node* nodeOf(BlockHeader* block) const;
@@ -38,6 +39,7 @@ private:
 
   void addChild(BlockHeader* parent, BlockHeader* child);
   void buildTree(ControlFlowGraph* cfg);
+  void buildTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms);
 
   size_t size_;
   Node* nodes_;

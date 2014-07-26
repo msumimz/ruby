@@ -11,6 +11,12 @@ DomTree::DomTree(ControlFlowGraph* cfg)
   buildTree(cfg);
 }
 
+DomTree::DomTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms)
+  : size_(cfg->blocks()->size()), nodes_((Node*)calloc(size_, sizeof(Node)))
+{
+  buildTree(cfg, doms);
+}
+
 DomTree::~DomTree()
 {
   free(nodes_);
@@ -47,6 +53,19 @@ DomTree::buildTree(ControlFlowGraph* cfg)
       continue;
     }
     addChild(b->idom(), b);
+  }
+}
+
+void
+DomTree::buildTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms)
+{
+  for (unsigned i = 0; i < size_; ++i) {
+    BlockHeader* b = (*cfg->blocks())[i];
+    if (!doms[i]) {
+      assert(b == cfg->entry());
+      continue;
+    }
+    addChild(doms[i], b);
   }
 }
 
