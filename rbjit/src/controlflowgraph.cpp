@@ -431,6 +431,10 @@ SanityChecker::visitOpcode(OpcodeJumpIf* op)
   else if (!cfg_->containsBlock(op->nextBlock())) {
     addError(op, "true block does not belong to the cfg");
   }
+  else if (!op->nextBlock()->containsBackedge(current_)) {
+    addError(op, "block %Ix has not backedge to %Ix", op->nextBlock(), current_);
+    addBlock(op->nextBlock());
+  }
   else {
     addBlock(op->nextBlock());
   }
@@ -440,6 +444,10 @@ SanityChecker::visitOpcode(OpcodeJumpIf* op)
   }
   else if (!cfg_->containsBlock(op->nextAltBlock())) {
     addError(op, "false block does not belong to the cfg");
+  }
+  else if (!op->nextAltBlock()->containsBackedge(current_)) {
+    addError(op, "block %Ix has not backedge to %Ix", op->nextAltBlock(), current_);
+    addBlock(op->nextAltBlock());
   }
   else {
     addBlock(op->nextAltBlock());
