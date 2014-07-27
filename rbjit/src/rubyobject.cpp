@@ -134,6 +134,7 @@ Class::findConstantInThisClass(ID name) const
   st_data_t data;
   if (RCLASS_CONST_TBL(value_) &&
       st_lookup(RCLASS_CONST_TBL(value_), name, &data)) {
+    // Return undef for an autoloaded constant
     return Object(((rb_const_entry_t*)data)->value);
   }
 

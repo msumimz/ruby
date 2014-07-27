@@ -299,7 +299,8 @@ Variable*
 OpcodeFactory::addConstant(ID name, Variable* base, bool useResult)
 {
   if (!base) {
-    base = addImmediate(mri::Object::undefObject(), true);
+    // Free constant lookup (CONST) is equivalent to nil::CONST in the ruby script
+    base = cfg_->undefined();
   }
 
   // When useResult is false generate an opcode because constants may cause
@@ -318,8 +319,7 @@ OpcodeFactory::addConstant(ID name, Variable* base, bool useResult)
 Variable*
 OpcodeFactory::addToplevelConstant(ID name, bool useResult)
 {
-  Variable* undef = addImmediate(mri::Object::undefObject(), true);
-  OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, undef, name, true, cfg_->entryEnv(), cfg_->entryEnv());
+  OpcodeConstant* op = new OpcodeConstant(file_, line_, lastOpcode_, 0, cfg_->undefined(), name, true, cfg_->entryEnv(), cfg_->entryEnv());
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(useResult);

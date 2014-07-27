@@ -3,7 +3,13 @@
 
 #include "ruby.h"
 extern "C" {
+#include "vm_core.h" // GET_THREAD
 #include "constant.h" // rb_public_const_get
+
+// Defined in vm_insnhelper.c (originally defined as static inline)
+VALUE
+vm_get_ev_const(rb_thread_t *th, const rb_iseq_t *iseq,
+                VALUE orig_klass, ID id, int is_defined);
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -36,11 +42,11 @@ rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
 }
 
 VALUE
-rbjit_findConstant(VALUE baseClass, ID name)
+rbjit_findConstant(VALUE baseClass, ID name, void* iseq)
 {
   // Call MRI's standard constant lookup function.
   // This function involves autoloading and exception raising.
-  return rb_public_const_get(baseClass, name);
+  return vm_get_ev_const(GET_THREAD(), (const rb_iseq_t*)iseq, baseClass, name, 0);
 }
 
 RBJIT_NAMESPACE_END

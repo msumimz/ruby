@@ -296,7 +296,7 @@ NativeCompiler::declareRuntimeFunctions()
     getInt((size_t)rbjit_callMethod), ft->getPointerTo(0), "");
 
   // VALUE rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
-  paramTypes.assign(2, valueType_);
+  paramTypes.assign(3, valueType_);
   ft = llvm::FunctionType::get(valueType_, paramTypes, true);
   runtime_[RF_findConstant] = builder_->CreateIntToPtr(
     getInt((size_t)rbjit_findConstant), ft->getPointerTo(0), "");
@@ -525,9 +525,10 @@ NativeCompiler::visitOpcode(OpcodeConstant* op)
     }
   }
 
-  std::vector<llvm::Value*> args(2);
+  std::vector<llvm::Value*> args(3);
   args[0] = getValue(op->base());
   args[1] = getInt(op->name());
+  args[2] = getInt(reinterpret_cast<size_t>(mi_->methodEntry().methodDefinition().iseq()));
   llvm::CallInst* value = builder_->CreateCall(runtime_[RF_findConstant], args, "");
   value->setCallingConv(llvm::CallingConv::C);
 

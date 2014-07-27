@@ -25,7 +25,6 @@ public:
   mri::Class class_() const { return me_.class_(); }
   ID methodName() const { return me_.methodName(); }
 
-
   virtual TypeConstraint* returnType() = 0;
   virtual RNode* astNode() const = 0;
 

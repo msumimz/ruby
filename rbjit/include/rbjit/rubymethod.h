@@ -175,6 +175,7 @@ public:
 
   // Accessors to rb_iseq_t
   RNode* astNode() const;
+  void* iseq() const; // returns iseq as opaque pointer
   int argc() const;
   CRef cref() const;
 

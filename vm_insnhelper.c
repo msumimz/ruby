@@ -357,7 +357,7 @@ vm_get_iclass(rb_control_frame_t *cfp, VALUE klass)
     }
 }
 
-static inline VALUE
+VALUE
 vm_get_ev_const(rb_thread_t *th, const rb_iseq_t *iseq,
 		VALUE orig_klass, ID id, int is_defined)
 {

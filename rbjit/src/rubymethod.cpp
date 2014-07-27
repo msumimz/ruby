@@ -205,6 +205,13 @@ MethodDefinition::astNode() const
   return nullptr;
 }
 
+void*
+MethodDefinition::iseq() const
+{
+  assert(hasAstNode());
+  return def_->body.iseq;
+}
+
 int
 MethodDefinition::argc() const
 {

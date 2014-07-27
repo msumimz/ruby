@@ -312,20 +312,21 @@ TypeAnalyzer::visitOpcode(OpcodeConstant* op)
   std::vector<mri::Object>& consts = list.first;
   bool determined = list.second;
 
-  if (determined && consts.size() == 1 && consts[0].isUndefObject()) {
-    // Current class constant lookup (CONST)
+  if (determined && consts.size() == 1 && consts[0].isNilObject()) {
+    // Free constant lookup (CONST)
     mri::Object value = cref_.findConstant(op->name());
-    if (!value.isNull()) {
-      updateTypeConstraint(op->lhs(), TypeConstant(value));
+    if (value.isUndefObject()) {
+      // Registered as an autoloaded constant
+      mutator_ = true;
+      updateTypeConstraint(op->lhs(), TypeAny());
+    }
+    else if (value.isNull()) {
+      // The constant was not found
+      updateTypeConstraint(op->lhs(), TypeNone());
     }
     else {
-      if (cref_.class_().isRegisteredAsAutoload(op->name())) {
-	mutator_ = true;
-	updateTypeConstraint(op->lhs(), TypeAny());
-      }
-      else {
-	updateTypeConstraint(op->lhs(), TypeNone());
-      }
+      // Found
+      updateTypeConstraint(op->lhs(), TypeConstant(value));
     }
     return true;
   }
