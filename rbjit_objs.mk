@@ -10,6 +10,7 @@ RBJIT_OBJS = \
 	$(rbjit_objdir)/cooperdominatorfinder.$(OBJEXT) \
 	$(rbjit_objdir)/definfo.$(OBJEXT) \
 	$(rbjit_objdir)/defusechain.$(OBJEXT) \
+	$(rbjit_objdir)/debugtools.$(OBJEXT) \
 	$(rbjit_objdir)/dominatorfinder.$(OBJEXT) \
 	$(rbjit_objdir)/domtree.$(OBJEXT) \
 	$(rbjit_objdir)/idstore.$(OBJEXT) \
@@ -25,8 +26,9 @@ RBJIT_OBJS = \
 	$(rbjit_objdir)/recompilationmanager.$(OBJEXT) \
 	$(rbjit_objdir)/rubymethod.$(OBJEXT) \
 	$(rbjit_objdir)/rubyobject.$(OBJEXT) \
-	$(rbjit_objdir)/runtime_methodcall.$(OBJEXT) \
+	$(rbjit_objdir)/runtimefunctions.$(OBJEXT) \
 	$(rbjit_objdir)/setup.$(OBJEXT) \
+	$(rbjit_objdir)/ssachecker.$(OBJEXT) \
 	$(rbjit_objdir)/ssatranslator.$(OBJEXT) \
 	$(rbjit_objdir)/typeanalyzer.$(OBJEXT) \
 	$(rbjit_objdir)/typeconstraint.$(OBJEXT) \
