@@ -1,5 +1,10 @@
 load File.expand_path("assertions.rb", File.dirname(__FILE__))
 
+if Object.constants(false).include?(:X)
+  class Object
+    remove_const :X
+  end
+end
 X = 999
 
 class C
