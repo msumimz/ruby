@@ -22,6 +22,10 @@ class OpcodeConstant;
 class OpcodePrimitive;
 class OpcodePhi;
 class OpcodeExit;
+class OpcodeArray;
+class OpcodeRange;
+class OpcodeString;
+class OpcodeHash;
 
 ////////////////////////////////////////////////////////////
 // Visitor interface
@@ -40,6 +44,10 @@ public:
   virtual bool visitOpcode(OpcodePrimitive* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
   virtual bool visitOpcode(OpcodeExit* op) = 0;
+  virtual bool visitOpcode(OpcodeArray* op) = 0;
+  virtual bool visitOpcode(OpcodeRange* op) = 0;
+  virtual bool visitOpcode(OpcodeString* op) = 0;
+  virtual bool visitOpcode(OpcodeHash* op) = 0;
 };
 
 ////////////////////////////////////////////////////////////
@@ -397,7 +405,7 @@ public:
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
-private:
+protected:
 
   VALUE value_;
 };
@@ -551,6 +559,58 @@ public:
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
   bool isTerminator() const { return true; }
+
+};
+
+class OpcodeArray : public OpcodeVa {
+public:
+
+  OpcodeArray(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
+    : OpcodeVa(file, line, prev, lhs, rhsSize)
+  {}
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+};
+
+class OpcodeRange : public OpcodeLR<2> {
+public:
+
+  OpcodeRange(int file, int line, Opcode* prev, Variable* lhs, Variable* low, Variable* high, bool exclusive)
+    : OpcodeLR(file, line, prev, lhs), exclusive_(exclusive)
+  {
+    setRhs(0, low);
+    setRhs(1, high);
+  }
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+  bool exclusive() const { return exclusive_; }
+
+private:
+
+  bool exclusive_;
+};
+
+class OpcodeString : public OpcodeImmediate {
+public:
+
+  OpcodeString(int file, int line, Opcode* prev, Variable* lhs, VALUE value)
+    : OpcodeImmediate(file, line, prev, lhs, value)
+  {}
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+};
+
+class OpcodeHash : public OpcodeVa {
+public:
+
+  OpcodeHash(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
+    : OpcodeVa(file, line, prev, lhs, rhsSize)
+  { assert(rhsSize % 2 == 0); }
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 };
 
