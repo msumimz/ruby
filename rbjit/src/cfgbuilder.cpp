@@ -178,6 +178,23 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildNil(factory, node, useResult);
     break;
 
+  case NODE_ARRAY:
+  case NODE_ZARRAY:
+    v = buildArray(factory, node, useResult);
+    break;
+
+  case NODE_DOT2:
+    v = buildRange(factory, node, useResult);
+    break;
+
+  case NODE_STR:
+    v = buildString(factory, node, useResult);
+    break;
+
+  case NODE_HASH:
+    v = buildHash(factory, node, useResult);
+    break;
+
   case NODE_AND:
   case NODE_OR:
     v = buildAndOr(factory, node, useResult);
@@ -283,6 +300,55 @@ Variable*
 CfgBuilder::buildNil(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
   return factory->addImmediate(Qnil, useResult);
+}
+
+Variable*
+CfgBuilder::buildArray(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  if (nd_type(node) == NODE_ZARRAY) {
+    return factory->addArray(nullptr, nullptr, useResult);
+  }
+
+  int count = node->nd_alen;
+  Variable** elems = (Variable**)_alloca(count * sizeof(Variable*));
+  Variable** e = elems;
+  for (const RNode* n = node; n; n = n->nd_next) {
+    *e++ = buildNode(factory, n->nd_head, useResult);
+  }
+
+  return factory->addArray(elems, elems + count, useResult);
+}
+
+Variable*
+CfgBuilder::buildRange(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  Variable* low = buildNode(factory, node->nd_beg, useResult);
+  Variable* high = buildNode(factory, node->nd_end, useResult);
+  return factory->addRange(low, high, nd_type(node) == NODE_DOT3, useResult);
+}
+
+Variable*
+CfgBuilder::buildString(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  return factory->addString(node->nd_lit, useResult);
+}
+
+Variable*
+CfgBuilder::buildHash(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  const RNode* n = node->nd_head;
+  if (!n) {
+    return factory->addHash(nullptr, nullptr, useResult);
+  }
+
+  int count = n->nd_alen;
+  Variable** elems = (Variable**)_alloca(count * sizeof(Variable*));
+  Variable** e = elems;
+  for (; n; n = n->nd_next) {
+    *e++ = buildNode(factory, n->nd_head, useResult);
+  }
+
+  return factory->addHash(elems, elems + count, useResult);
 }
 
 Variable*

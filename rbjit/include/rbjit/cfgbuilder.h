@@ -69,6 +69,10 @@ private:
   Variable* buildTrue(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNil(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildArray(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildRange(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildString(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildHash(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildIf(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult);
