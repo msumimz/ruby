@@ -64,6 +64,11 @@ public:
 
   Variable* addCallClone(OpcodeCall* source, Variable* methodEntry);
 
+  Variable* addArray(Variable*const*elemsBegin, Variable*const* elemsEnd, bool useResult);
+  Variable* addRange(Variable* low, Variable* high, bool exclusive, bool useResult);
+  Variable* addString(VALUE s, bool useResult);
+  Variable* addHash(Variable*const*elemsBegin, Variable*const* elemsEnd, bool useResult);
+
   void halt() { halted_ = true; }
   bool continues() const { return !halted_; }
 

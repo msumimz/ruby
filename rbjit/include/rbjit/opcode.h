@@ -592,14 +592,20 @@ private:
   bool exclusive_;
 };
 
-class OpcodeString : public OpcodeImmediate {
+class OpcodeString : public OpcodeL {
 public:
 
-  OpcodeString(int file, int line, Opcode* prev, Variable* lhs, VALUE value)
-    : OpcodeImmediate(file, line, prev, lhs, value)
+  OpcodeString(int file, int line, Opcode* prev, Variable* lhs, VALUE string)
+    : OpcodeL(file, line, prev, lhs), string_(string)
   {}
 
+  VALUE string() const { return string_;  }
+
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+private:
+
+  VALUE string_;
 
 };
 

@@ -448,6 +448,89 @@ OpcodeFactory::addCallClone(OpcodeCall* source, Variable* methodEntry)
   return lhs;
 }
 
+Variable*
+OpcodeFactory::addArray(Variable*const*elemsBegin, Variable*const* elemsEnd, bool useResult)
+{
+  if (!useResult) {
+    return 0;
+  }
+
+  int n = elemsEnd - elemsBegin;
+
+  OpcodeArray* op = new OpcodeArray(file_, line_, lastOpcode_, 0, n);
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  Variable** v = op->rhsBegin();
+  for (Variable*const* elem = elemsBegin; elem < elemsEnd; ++elem) {
+    *v++ = *elem;
+  }
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addRange(Variable* low, Variable* high, bool exclusive, bool useResult)
+{
+  if (!useResult) {
+    return 0;
+  }
+
+  OpcodeRange* op = new OpcodeRange(file_, line_, lastOpcode_, 0, low, high, exclusive);
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addString(VALUE s, bool useResult)
+{
+  if (!useResult) {
+    return 0;
+  }
+
+  OpcodeString* op = new OpcodeString(file_, line_, lastOpcode_, 0, s);
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addHash(Variable*const*elemsBegin, Variable*const* elemsEnd, bool useResult)
+{
+  if (!useResult) {
+    return 0;
+  }
+
+  int n = elemsEnd - elemsBegin;
+  assert(n % 2 == 0);
+
+  OpcodeHash* op = new OpcodeHash(file_, line_, lastOpcode_, 0, n);
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(true);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  Variable** v = op->rhsBegin();
+  for (Variable*const* elem = elemsBegin; elem < elemsEnd; ++elem) {
+    *v++ = *elem;
+  }
+
+  return lhs;
+}
+
 void
 OpcodeFactory::createEntryExitBlocks()
 {
