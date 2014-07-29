@@ -146,6 +146,35 @@ DefUseChain::visitOpcode(OpcodeExit* op)
   return true;
 }
 
+bool
+DefUseChain::visitOpcode(OpcodeArray* op)
+{
+  return visitOpcodeVa(op);
+}
+
+bool
+DefUseChain::visitOpcode(OpcodeRange* op)
+{
+  if (!op->lhs()) {
+    return true;
+  }
+  addDefUseChain(op->lhs(), op->low());
+  addDefUseChain(op->lhs(), op->high());
+  return true;
+}
+
+bool
+DefUseChain::visitOpcode(OpcodeString* op)
+{
+  return true;
+}
+
+bool
+DefUseChain::visitOpcode(OpcodeHash* op)
+{
+  return visitOpcodeVa(op);
+}
+
 std::string
 DefUseChain::debugPrint() const
 {

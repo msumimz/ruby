@@ -482,4 +482,32 @@ TypeAnalyzer::visitOpcode(OpcodeExit* op)
   return true;
 }
 
+bool
+TypeAnalyzer::visitOpcode(OpcodeArray* op)
+{
+  updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::arrayClass()));
+  return true;
+}
+
+bool
+TypeAnalyzer::visitOpcode(OpcodeRange* op)
+{
+  updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::rangeClass()));
+  return true;
+}
+
+bool
+TypeAnalyzer::visitOpcode(OpcodeString* op)
+{
+  updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::stringClass()));
+  return true;
+}
+
+bool
+TypeAnalyzer::visitOpcode(OpcodeHash* op)
+{
+  updateTypeConstraint(op->lhs(), TypeExactClass(mri::Class::hashClass()));
+  return true;
+}
+
 RBJIT_NAMESPACE_END

@@ -199,6 +199,10 @@ Class Class::falseClass() { return rb_cFalseClass; }
 Class Class::nilClass() { return rb_cNilClass; }
 Class Class::fixnumClass() { return rb_cFixnum; }
 Class Class::bignumClass() { return rb_cBignum; }
+Class Class::arrayClass() { return rb_cArray; }
+Class Class::rangeClass() { return rb_cRange; }
+Class Class::stringClass() { return rb_cString; }
+Class Class::hashClass() { return rb_cHash; }
 
 std::string
 Class::debugClassName() const

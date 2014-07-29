@@ -40,18 +40,22 @@ public:
   std::tuple<TypeContext*, bool, bool> analyze();
 
   // Evaluate expressions
-  bool visitOpcode(BlockHeader* opcode);
-  bool visitOpcode(OpcodeCopy* opcode);
-  bool visitOpcode(OpcodeJump* opcode);
-  bool visitOpcode(OpcodeJumpIf* opcode);
-  bool visitOpcode(OpcodeImmediate* opcode);
-  bool visitOpcode(OpcodeEnv* opcode);
-  bool visitOpcode(OpcodeLookup* opcode);
-  bool visitOpcode(OpcodeCall* opcode);
-  bool visitOpcode(OpcodeConstant* opcode);
-  bool visitOpcode(OpcodePrimitive* opcode);
-  bool visitOpcode(OpcodePhi* opcode);
-  bool visitOpcode(OpcodeExit* opcode);
+  bool visitOpcode(BlockHeader* op);
+  bool visitOpcode(OpcodeCopy* op);
+  bool visitOpcode(OpcodeJump* op);
+  bool visitOpcode(OpcodeJumpIf* op);
+  bool visitOpcode(OpcodeImmediate* op);
+  bool visitOpcode(OpcodeEnv* op);
+  bool visitOpcode(OpcodeLookup* op);
+  bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodeConstant* op);
+  bool visitOpcode(OpcodePrimitive* op);
+  bool visitOpcode(OpcodePhi* op);
+  bool visitOpcode(OpcodeExit* op);
+  bool visitOpcode(OpcodeArray* op);
+  bool visitOpcode(OpcodeRange* op);
+  bool visitOpcode(OpcodeString* op);
+  bool visitOpcode(OpcodeHash* op);
 
 protected:
 

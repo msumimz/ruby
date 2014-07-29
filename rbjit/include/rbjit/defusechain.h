@@ -36,6 +36,10 @@ public:
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
   bool visitOpcode(OpcodeExit* op);
+  bool visitOpcode(OpcodeArray* op);
+  bool visitOpcode(OpcodeRange* op);
+  bool visitOpcode(OpcodeString* op);
+  bool visitOpcode(OpcodeHash* op);
 
   std::string debugPrint() const;
 

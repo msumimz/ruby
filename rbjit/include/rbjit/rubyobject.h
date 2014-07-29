@@ -193,6 +193,10 @@ public:
   static Class nilClass();
   static Class fixnumClass();
   static Class bignumClass();
+  static Class arrayClass();
+  static Class rangeClass();
+  static Class stringClass();
+  static Class hashClass();
 
   std::string debugClassName() const;
 

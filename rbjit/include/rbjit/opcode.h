@@ -583,6 +583,9 @@ public:
     setRhs(1, high);
   }
 
+  Variable* low() const { return rhs(0); }
+  Variable* high() const { return rhs(1); }
+
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
   bool exclusive() const { return exclusive_; }
