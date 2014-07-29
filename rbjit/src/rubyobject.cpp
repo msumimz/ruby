@@ -87,7 +87,7 @@ String::String(const char* str)
 {}
 
 const char*
-String::ToCStr() const
+String::toCStr() const
 {
   return rb_string_value_cstr(const_cast<volatile VALUE*>(&value_));
 }

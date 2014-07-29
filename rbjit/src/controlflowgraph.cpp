@@ -226,6 +226,10 @@ public:
   bool visitOpcode(OpcodeConstant* op);
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
+  bool visitOpcode(OpcodeArray* op);
+  bool visitOpcode(OpcodeRange* op);
+  bool visitOpcode(OpcodeString* op);
+  bool visitOpcode(OpcodeHash* op);
   bool visitOpcode(OpcodeExit* op);
 
   void check();
@@ -516,6 +520,37 @@ SanityChecker::visitOpcode(OpcodeExit* op)
   return true;
 }
 
+bool
+SanityChecker::visitOpcode(OpcodeArray* op)
+{
+  checkLhs(op, true);
+  checkRhs(op, false);
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeRange* op)
+{
+  checkLhs(op, true);
+  checkRhs(op, false);
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeString* op)
+{
+  checkLhs(op, false);
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeHash* op)
+{
+  checkLhs(op, true);
+  checkRhs(op, false);
+  return true;
+}
+
 void
 SanityChecker::check()
 {
@@ -681,6 +716,10 @@ public:
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
   bool visitOpcode(OpcodeExit* op);
+  bool visitOpcode(OpcodeArray* op);
+  bool visitOpcode(OpcodeRange* op);
+  bool visitOpcode(OpcodeString* op);
+  bool visitOpcode(OpcodeHash* op);
 
   void dumpCfgInfo(const ControlFlowGraph* cfg);
   void dumpBlockHeader(BlockHeader* b);
@@ -819,6 +858,41 @@ Dumper::visitOpcode(OpcodePhi* op)
 bool
 Dumper::visitOpcode(OpcodeExit* op)
 {
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeArray* op)
+{
+  put("(%d)", op->rhsCount());
+  for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd(); ++i) {
+    put(" %Ix", *i);
+  }
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeRange* op)
+{
+  put("%Ix %Ix %s",
+    op->low(), op->high(), op->exclusive() ? "excl" : "incl");
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeString* op)
+{
+  put("'%s'", mri::String(op->string()).toCStr());
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeHash* op)
+{
+  put("(%d)", op->rhsCount());
+  for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd() - 1; i += 2) {
+    put(" %Ix => %Ix", *i, *(i + 1));
+  }
   return true;
 }
 

@@ -111,7 +111,7 @@ public:
   String(VALUE str) : Object(str) {}
   String(const char* str);
 
-  const char* ToCStr() const;
+  const char* toCStr() const;
   std::string toString() const;
 
 };
