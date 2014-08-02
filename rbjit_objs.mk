@@ -22,6 +22,7 @@ RBJIT_OBJS = \
 	$(rbjit_objdir)/opcode.$(OBJEXT) \
 	$(rbjit_objdir)/opcodefactory.$(OBJEXT) \
 	$(rbjit_objdir)/opcodemultiplexer.$(OBJEXT) \
+	$(rbjit_objdir)/primitive.$(OBJEXT) \
 	$(rbjit_objdir)/primitivestore.$(OBJEXT) \
 	$(rbjit_objdir)/recompilationmanager.$(OBJEXT) \
 	$(rbjit_objdir)/rubymethod.$(OBJEXT) \
