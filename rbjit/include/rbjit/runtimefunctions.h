@@ -4,8 +4,10 @@
 
 RBJIT_NAMESPACE_BEGIN
 
+extern "C" {
+
 // All argumments and return values should have the same size as the platform's
-// natural integer, because NativeCompiler doesn't respect their types and
+// natural word size, because NativeCompiler doesn't respect their types and
 // treats them as integers.
 
 rb_method_entry_t* rbjit_lookupMethod(VALUE receiver, ID methodName);
@@ -24,5 +26,7 @@ VALUE rbjit_convertToString(VALUE obj);
 VALUE rbjit_concatenateString(size_t count, ...);
 
 VALUE rbjit_createHash(size_t count, ...);
+
+}
 
 RBJIT_NAMESPACE_END

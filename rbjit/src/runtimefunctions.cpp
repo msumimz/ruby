@@ -14,6 +14,8 @@ vm_get_ev_const(rb_thread_t *th, const rb_iseq_t *iseq,
 
 RBJIT_NAMESPACE_BEGIN
 
+extern "C" {
+
 ////////////////////////////////////////////////////////////
 // Method call
 
@@ -151,6 +153,8 @@ rbjit_createHash(int count, ...)
   }
 
   return result;
+}
+
 }
 
 RBJIT_NAMESPACE_END
