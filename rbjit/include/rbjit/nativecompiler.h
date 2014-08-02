@@ -77,7 +77,7 @@ private:
   void translateToBitcode();
   void translateBlocks();
 
-  void declareRuntimeFunction(int index, size_t func, int argCount);
+  void declareRuntimeFunction(int index, size_t func, int argCount, bool isVarArg);
   void declareRuntimeFunctions();
 
   bool prepareArguments(std::vector<llvm::Value*>& args, OpcodeVa* op);

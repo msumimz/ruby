@@ -281,23 +281,23 @@ NativeCompiler::translateToBitcode()
 }
 
 void
-NativeCompiler::declareRuntimeFunction(int index, size_t func, int argCount)
+NativeCompiler::declareRuntimeFunction(int index, size_t func, int argCount, bool isVarArg)
 {
   std::vector<llvm::Type*> paramTypes(argCount, valueType_);
-  llvm::FunctionType* ft = llvm::FunctionType::get(valueType_, paramTypes, false);
+  llvm::FunctionType* ft = llvm::FunctionType::get(valueType_, paramTypes, isVarArg);
   runtime_[index] = builder_->CreateIntToPtr(getInt(func), ft->getPointerTo(0), "");
 }
 
 void
 NativeCompiler::declareRuntimeFunctions()
 {
-  declareRuntimeFunction(RF_lookupMethod, (size_t)rbjit_lookupMethod, 2);
-  declareRuntimeFunction(RF_callMethod, (size_t)rbjit_callMethod, 3);
-  declareRuntimeFunction(RF_findConstant, (size_t)rbjit_findConstant, 3);
-  declareRuntimeFunction(RF_createArray, (size_t)rbjit_createArray, 1);
-  declareRuntimeFunction(RF_createRange, (size_t)rbjit_createRange, 3);
-  declareRuntimeFunction(RF_duplicateString, (size_t)rbjit_duplicateString, 1);
-  declareRuntimeFunction(RF_createHash, (size_t)rbjit_createHash, 1);
+  declareRuntimeFunction(RF_lookupMethod, (size_t)rbjit_lookupMethod, 2, false);
+  declareRuntimeFunction(RF_callMethod, (size_t)rbjit_callMethod, 3, true);
+  declareRuntimeFunction(RF_findConstant, (size_t)rbjit_findConstant, 3, false);
+  declareRuntimeFunction(RF_createArray, (size_t)rbjit_createArray, 1, true);
+  declareRuntimeFunction(RF_createRange, (size_t)rbjit_createRange, 3, false);
+  declareRuntimeFunction(RF_duplicateString, (size_t)rbjit_duplicateString, 1, false);
+  declareRuntimeFunction(RF_createHash, (size_t)rbjit_createHash, 1, true);
 }
 
 void
