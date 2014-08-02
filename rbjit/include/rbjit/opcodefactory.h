@@ -57,7 +57,8 @@ public:
   Variable* addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool useResult);
   Variable* addPhi(Variable* lhs, int rhsCount, bool useResult);
   Variable* addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult);
-  Variable* addPrimitive(const char* name, int argCount, ...);
+  Variable* addPrimitive(ID name, const std::vector<Variable*>& args, bool useResult);
+  Variable* addPrimitive(ID name, int argCount, ...);
   Variable* addPrimitive(Variable* lhs, const char* name, int argCount, ...);
 
   void addJumpToReturnBlock(Variable* returnValue);

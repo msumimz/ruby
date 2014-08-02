@@ -81,7 +81,7 @@ rbjit_convertToArray(VALUE obj)
 }
 
 VALUE
-rbjit_concatenateArrays(VALUE a1, VALUE a2)
+rbjit_concatArrays(VALUE a1, VALUE a2)
 {
   VALUE a = rb_check_convert_type(a2, T_ARRAY, "Array", "to_a");
   if (!NIL_P(a)) {
@@ -123,7 +123,7 @@ rbjit_convertToString(VALUE obj)
 }
 
 VALUE
-rbjit_concatenateStrings(int count, ...)
+rbjit_concatStrings(size_t count, ...)
 {
   va_list list;
   va_start(list, count);

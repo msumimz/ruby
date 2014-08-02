@@ -48,6 +48,9 @@ const char* ID_NAMES[] = {
   "rbjit__concat_arrays",
   "rbjit__push_to_array",
 
+  "rbjit__convert_to_string",
+  "rbjit__concat_strings",
+
   "rbjit__typecast_fixnum",
   "rbjit__typecast_fixnum_bignum",
 

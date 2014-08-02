@@ -52,6 +52,10 @@ enum PredefinedId {
   ID_rbjit__concat_arrays,
   ID_rbjit__push_to_array,
 
+  // String literal helpers
+  ID_rbjit__convert_to_string,
+  ID_rbjit__concat_strings,
+
   ID_rbjit__typecast_fixnum,
   ID_rbjit__typecast_fixnum_bignum,
 

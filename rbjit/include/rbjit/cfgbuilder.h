@@ -75,6 +75,7 @@ private:
   Variable* buildArraySplat(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildRange(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildString(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildStringInterpolation(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildHash(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildIf(OpcodeFactory* factory, const RNode* node, bool useResult);

@@ -357,16 +357,11 @@ OpcodeFactory::addPhi(Variable*const* rhsBegin, Variable*const* rhsEnd, bool use
 Variable*
 OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* argsEnd, bool useResult)
 {
-  if (!useResult) {
-    // Currently primitives have no side effects.
-    return 0;
-  }
-
   int n = argsEnd - argsBegin;
   OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, name, n);
   lastOpcode_ = op;
 
-  Variable* lhs = createTemporary(true);
+  Variable* lhs = createTemporary(useResult);
   op->setLhs(lhs);
   updateDefSite(lhs);
 
@@ -379,9 +374,27 @@ OpcodeFactory::addPrimitive(ID name, Variable*const* argsBegin, Variable*const* 
 }
 
 Variable*
-OpcodeFactory::addPrimitive(const char* name, int argCount, ...)
+OpcodeFactory::addPrimitive(ID name, const std::vector<Variable*>& args, bool useResult)
 {
-  OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, mri::Id(name).id(), argCount);
+  OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, name, args.size());
+  lastOpcode_ = op;
+
+  Variable* lhs = createTemporary(useResult);
+  op->setLhs(lhs);
+  updateDefSite(lhs);
+
+  Variable** v = op->rhsBegin();
+  for (auto i = args.cbegin(), end = args.cend(); i != end; ++i) {
+    *v++ = *i;
+  }
+
+  return lhs;
+}
+
+Variable*
+OpcodeFactory::addPrimitive(ID name, int argCount, ...)
+{
+  OpcodePrimitive* op = new OpcodePrimitive(file_, line_, lastOpcode_, 0, name, argCount);
   lastOpcode_ = op;
 
   Variable* lhs = createTemporary(true);

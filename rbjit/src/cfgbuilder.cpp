@@ -204,6 +204,10 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildString(factory, node, useResult);
     break;
 
+  case NODE_DSTR:
+    v = buildStringInterpolation(factory, node, useResult);
+    break;
+
   case NODE_HASH:
     v = buildHash(factory, node, useResult);
     break;
@@ -338,9 +342,9 @@ CfgBuilder::buildArrayPush(OpcodeFactory* factory, const RNode* node, bool useRe
   Variable* array = buildNode(factory, node->nd_head, useResult);
   Variable* obj = buildNode(factory, node->nd_body, useResult);
 
-  Variable* result = 0;
+  Variable* result = nullptr;
   if (useResult) {
-    result = factory->addPrimitive("rbjit__push_to_array", 2, array, obj);
+    result = factory->addPrimitive(IdStore::get(ID_rbjit__push_to_array), 2, array, obj);
   }
 
   return result;
@@ -352,9 +356,9 @@ CfgBuilder::buildArrayConcat(OpcodeFactory* factory, const RNode* node, bool use
   Variable* a1 = buildNode(factory, node->nd_head, useResult);
   Variable* a2 = buildNode(factory, node->nd_body, useResult);
 
-  Variable* result = 0;
+  Variable* result = nullptr;
   if (useResult) {
-    result = factory->addPrimitive("rbjit__concat_arrays", 2, a1, a2);
+    result = factory->addPrimitive(IdStore::get(ID_rbjit__concat_arrays), 2, a1, a2);
   }
 
   return result;
@@ -365,9 +369,9 @@ CfgBuilder::buildArraySplat(OpcodeFactory* factory, const RNode* node, bool useR
 {
   Variable* obj = buildNode(factory, node->nd_head, useResult);
 
-  Variable* result = 0;
+  Variable* result = nullptr;
   if (useResult) {
-    result = factory->addPrimitive("rbjit__convert_to_array", 1, obj);
+    result = factory->addPrimitive(IdStore::get(ID_rbjit__convert_to_array), 1, obj);
   }
 
   return result;
@@ -385,6 +389,48 @@ Variable*
 CfgBuilder::buildString(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
   return factory->addString(node->nd_lit, useResult);
+}
+
+Variable*
+CfgBuilder::buildStringInterpolation(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  std::vector<Variable*> elems(1, nullptr);
+
+  Variable* v;
+  if (useResult && !NIL_P(node->nd_lit)) {
+    v = factory->addString(node->nd_lit, true);
+    elems.push_back(v);
+  }
+
+  for (node = node->nd_next; node; node = node->nd_next) {
+    const RNode* n = node->nd_head;
+    switch (nd_type(n)) {
+    case NODE_STR:
+      if (useResult) {
+        v = factory->addString(n->nd_lit, true);
+        elems.push_back(v);
+      }
+      break;
+
+    case NODE_EVSTR:
+      v = buildNode(factory, n->nd_body, useResult);
+      v = factory->addPrimitive(IdStore::get(ID_rbjit__convert_to_string), 1, v);
+      if (useResult) {
+        elems.push_back(v);
+      }
+      break;
+
+    default:
+      RBJIT_UNREACHABLE;
+    }
+  }
+
+  if (useResult) {
+    Variable* count = factory->addImmediate(elems.size() - 1, true);
+    elems[0] = count;
+    return factory->addPrimitive(IdStore::get(ID_rbjit__concat_strings), elems, true);
+  }
+  return nullptr;
 }
 
 Variable*

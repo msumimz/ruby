@@ -62,7 +62,8 @@ Primitive::getFunction(IRBuilder* builder, void* func, int argCount, bool isVarA
 void
 Primitive::checkArgCount(int count)
 {
-  if (argCount() != count) {
+  int c = argCount();
+  if (c != -1 && c != count) {
     throw std::runtime_error("wrong number of arguments");
   }
 }
@@ -245,7 +246,7 @@ public:
 
   llvm::Value* emitInternal(IRBuilder* builder, const std::vector<llvm::Value*>& args)
   {
-    llvm::Value* f = getFunction(builder, (void*)rbjit_concatenateArrays, 2, false);
+    llvm::Value* f = getFunction(builder, (void*)rbjit_concatArrays, 2, false);
     return builder->CreateCall(f, args);
   }
 
@@ -275,6 +276,48 @@ public:
   TypeConstraint* returnType() const
   {
     return TypeExactClass::create(mri::Class::arrayClass());
+  }
+
+};
+
+////////////////////////////////////////////////////////////
+// PrimitiveConvertToString : rbjit__convert_to_string
+
+class PrimitiveConvertToString : public Primitive {
+public:
+
+  llvm::Value* emitInternal(IRBuilder* builder, const std::vector<llvm::Value*>& args)
+  {
+    llvm::Value* f = getFunction(builder, (void*)rbjit_convertToString, 1, false);
+    return builder->CreateCall(f, args);
+  }
+
+  int argCount() const { return 1; }
+
+  TypeConstraint* returnType() const
+  {
+    return TypeExactClass::create(mri::Class::stringClass());
+  }
+
+};
+
+////////////////////////////////////////////////////////////
+// PrimitiveConcatStrings : rbjit__concat_strings
+
+class PrimitiveConcatStrings : public Primitive {
+public:
+
+  llvm::Value* emitInternal(IRBuilder* builder, const std::vector<llvm::Value*>& args)
+  {
+    llvm::Value* f = getFunction(builder, (void*)rbjit_concatStrings, 1, true);
+    return builder->CreateCall(f, args);
+  }
+
+  int argCount() const { return -1; }
+
+  TypeConstraint* returnType() const
+  {
+    return TypeExactClass::create(mri::Class::stringClass());
   }
 
 };
@@ -310,6 +353,9 @@ Primitive::setup()
   prims_[IdStore::get(ID_rbjit__convert_to_array)] = new PrimitiveConvertToArray;
   prims_[IdStore::get(ID_rbjit__concat_arrays)] = new PrimitiveConcatArrays;
   prims_[IdStore::get(ID_rbjit__push_to_array)] = new PrimitivePushToArray;
+
+  prims_[IdStore::get(ID_rbjit__convert_to_string)] = new PrimitiveConvertToString;
+  prims_[IdStore::get(ID_rbjit__concat_strings)] = new PrimitiveConcatStrings;
 }
 
 Primitive*
