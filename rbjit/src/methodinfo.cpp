@@ -263,7 +263,7 @@ PrecompiledMethodInfo::generateCode()
     CodeDuplicator dup;
     origCfg_ = dup.duplicate(cfg_);
     RBJIT_DPRINT(origCfg_->debugPrint());
-    assert(origCfg_->checkSanity());
+    assert(origCfg_->checkSanityAndPrintErrors());
   }
 
   analyzeTypes();

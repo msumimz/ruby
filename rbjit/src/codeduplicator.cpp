@@ -326,7 +326,7 @@ bool
 CodeDuplicator::visitOpcode(OpcodeRange* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  OpcodeRange* newOp = new OpcodeRange(op->file(), op->line(), lastOpcode_, lhs, op->low(), op->high(), op->exclusive());
+  OpcodeRange* newOp = new OpcodeRange(op->file(), op->line(), lastOpcode_, lhs, variableOf(op->low()), variableOf(op->high()), op->exclusive());
   lastOpcode_ = newOp;
   setDefSite(lhs);
 

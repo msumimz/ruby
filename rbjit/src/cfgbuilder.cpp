@@ -184,6 +184,7 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     break;
 
   case NODE_DOT2:
+  case NODE_DOT3:
     v = buildRange(factory, node, useResult);
     break;
 
