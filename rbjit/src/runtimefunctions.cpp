@@ -73,11 +73,11 @@ rbjit_createArray(int count, ...)
 VALUE
 rbjit_convertToArray(VALUE obj)
 {
-  VALUE result = rb_check_convert_type(obj, T_ARRAY, "Array", "to_a");
-  if (NIL_P(obj)) {
-    result = rb_ary_new3(1, obj);
+  VALUE array = rb_check_convert_type(obj, T_ARRAY, "Array", "to_a");
+  if (NIL_P(array)) {
+    return rb_ary_new3(1, obj);
   }
-  return obj;
+  return rb_ary_dup(array);
 }
 
 VALUE
@@ -88,8 +88,11 @@ rbjit_concatenateArrays(int count, ...)
   VALUE result = rb_ary_dup(va_arg(list, VALUE));
 
   for (int i = 1; i < count; ++i) {
-    VALUE a = va_arg(list, VALUE);
-    rb_ary_concat(result, a);
+    VALUE obj = va_arg(list, VALUE);
+    VALUE a = rb_check_convert_type(obj, T_ARRAY, "Array", "to_a");
+    if (!NIL_P(a)) {
+      rb_ary_concat(result, a);
+    }
   }
 
   return result;

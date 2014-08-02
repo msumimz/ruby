@@ -5,6 +5,7 @@
 #include "rbjit/methodinfo.h"
 #include "rbjit/nativecompiler.h"
 #include "rbjit/primitivestore.h"
+#include "rbjit/primitive.h"
 #include "rbjit/idstore.h"
 #include "rbjit/rubymethod.h"
 #include "rbjit/typeconstraint.h"
@@ -54,6 +55,7 @@ Init_rbjitSetup()
   try {
     IdStore::setup();
     PrimitiveStore::setup();
+    Primitive::setup();
     NativeCompiler::setup();
   }
   catch (std::exception& e) {

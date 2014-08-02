@@ -29,6 +29,7 @@
 #include "rbjit/runtimefunctions.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/primitivestore.h"
+#include "rbjit/primitive.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/rubyobject.h"
 #include "rbjit/recompilationmanager.h"
@@ -554,10 +555,18 @@ NativeCompiler::visitOpcode(OpcodePrimitive* op)
     return false;
   }
 
-  llvm::Function* f = module_->getFunction(mri::Id(op->name()).name());
-  assert(f);
-  llvm::CallInst* value = builder_->CreateCall(f, args);
-  value->setCallingConv(llvm::CallingConv::C);
+  Primitive* prim = Primitive::find(op->name());
+  llvm::Value* value;
+  if (prim) {
+    value = prim->emit(builder_, args);
+  }
+  else {
+    llvm::Function* f = module_->getFunction(mri::Id(op->name()).name());
+    assert(f);
+    llvm::CallInst* call = builder_->CreateCall(f, args);
+    call->setCallingConv(llvm::CallingConv::C);
+    value = call;
+  }
   updateValue(op, value);
 
   return true;

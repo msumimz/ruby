@@ -334,6 +334,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\opcodemultiplexer.cpp" />
+    <ClCompile Include="..\..\src\primitive.cpp" />
     <ClCompile Include="..\..\src\primitivestore.cpp" />
     <ClCompile Include="..\..\src\recompilationmanager.cpp" />
     <ClCompile Include="..\..\src\rubymethod.cpp" />
@@ -363,6 +364,7 @@
     <ClInclude Include="..\..\include\rbjit\inliner.h" />
     <ClInclude Include="..\..\include\rbjit\mutatortester.h" />
     <ClInclude Include="..\..\include\rbjit\opcodemultiplexer.h" />
+    <ClInclude Include="..\..\include\rbjit\primitive.h" />
     <ClInclude Include="..\..\include\rbjit\primitivestore.h" />
     <ClInclude Include="..\..\include\rbjit\runtimefunctions.h" />
     <ClInclude Include="..\..\include\rbjit\ssachecker.h" />
