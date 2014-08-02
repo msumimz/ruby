@@ -43,18 +43,22 @@ public:
   std::string debugPrint();
 
   // Compile opcode
-  bool visitOpcode(BlockHeader* opcode);
-  bool visitOpcode(OpcodeCopy* opcode);
-  bool visitOpcode(OpcodeJump* opcode);
-  bool visitOpcode(OpcodeJumpIf* opcode);
-  bool visitOpcode(OpcodeImmediate* opcode);
-  bool visitOpcode(OpcodeEnv* opcode);
-  bool visitOpcode(OpcodeLookup* opcode);
-  bool visitOpcode(OpcodeCall* opcode);
-  bool visitOpcode(OpcodeConstant* opcode);
-  bool visitOpcode(OpcodePrimitive* opcode);
-  bool visitOpcode(OpcodePhi* opcode);
-  bool visitOpcode(OpcodeExit* opcode);
+  bool visitOpcode(BlockHeader* op);
+  bool visitOpcode(OpcodeCopy* op);
+  bool visitOpcode(OpcodeJump* op);
+  bool visitOpcode(OpcodeJumpIf* op);
+  bool visitOpcode(OpcodeImmediate* op);
+  bool visitOpcode(OpcodeEnv* op);
+  bool visitOpcode(OpcodeLookup* op);
+  bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodeConstant* op);
+  bool visitOpcode(OpcodePrimitive* op);
+  bool visitOpcode(OpcodePhi* op);
+  bool visitOpcode(OpcodeExit* op);
+  bool visitOpcode(OpcodeArray* op);
+  bool visitOpcode(OpcodeRange* op);
+  bool visitOpcode(OpcodeString* op);
+  bool visitOpcode(OpcodeHash* op);
 
 private:
 
@@ -73,7 +77,11 @@ private:
   void translateToBitcode();
   void translateBlocks();
 
+  void declareRuntimeFunction(int index, size_t func, int argCount);
   void declareRuntimeFunctions();
+
+  bool prepareArguments(std::vector<llvm::Value*>& args, OpcodeVa* op);
+  llvm::Value* emitCall(llvm::Value* f, const std::vector<llvm::Value*>& args);
 
   llvm::Module* loadBitcode();
 
@@ -118,6 +126,10 @@ private:
     RF_lookupMethod,
     RF_callMethod,
     RF_findConstant,
+    RF_createArray,
+    RF_createRange,
+    RF_duplicateString,
+    RF_createHash,
     RUNTIME_FUNCTION_COUNT
   };
   llvm::Value* runtime_[RUNTIME_FUNCTION_COUNT];

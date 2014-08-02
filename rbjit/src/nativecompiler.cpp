@@ -281,25 +281,23 @@ NativeCompiler::translateToBitcode()
 }
 
 void
+NativeCompiler::declareRuntimeFunction(int index, size_t func, int argCount)
+{
+  std::vector<llvm::Type*> paramTypes(argCount, valueType_);
+  llvm::FunctionType* ft = llvm::FunctionType::get(valueType_, paramTypes, false);
+  runtime_[index] = builder_->CreateIntToPtr(getInt(func), ft->getPointerTo(0), "");
+}
+
+void
 NativeCompiler::declareRuntimeFunctions()
 {
-  // rb_method_entry_t* rbjit_lookupMethod(VALUE receiver, ID methodName)
-  std::vector<llvm::Type*> paramTypes(2, valueType_);
-  llvm::FunctionType* ft = llvm::FunctionType::get(valueType_, paramTypes, false);
-  runtime_[RF_lookupMethod] = builder_->CreateIntToPtr(
-    getInt((size_t)rbjit_lookupMethod), ft->getPointerTo(0), "");
-
-  // VALUE rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
-  paramTypes.assign(3, valueType_);
-  ft = llvm::FunctionType::get(valueType_, paramTypes, true);
-  runtime_[RF_callMethod] = builder_->CreateIntToPtr(
-    getInt((size_t)rbjit_callMethod), ft->getPointerTo(0), "");
-
-  // VALUE rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
-  paramTypes.assign(3, valueType_);
-  ft = llvm::FunctionType::get(valueType_, paramTypes, true);
-  runtime_[RF_findConstant] = builder_->CreateIntToPtr(
-    getInt((size_t)rbjit_findConstant), ft->getPointerTo(0), "");
+  declareRuntimeFunction(RF_lookupMethod, (size_t)rbjit_lookupMethod, 2);
+  declareRuntimeFunction(RF_callMethod, (size_t)rbjit_callMethod, 3);
+  declareRuntimeFunction(RF_findConstant, (size_t)rbjit_findConstant, 3);
+  declareRuntimeFunction(RF_createArray, (size_t)rbjit_createArray, 1);
+  declareRuntimeFunction(RF_createRange, (size_t)rbjit_createRange, 3);
+  declareRuntimeFunction(RF_duplicateString, (size_t)rbjit_duplicateString, 1);
+  declareRuntimeFunction(RF_createHash, (size_t)rbjit_createHash, 1);
 }
 
 void
@@ -576,7 +574,8 @@ NativeCompiler::visitOpcode(OpcodePhi* op)
   llvm::PHINode* phi = builder_->CreatePHI(valueType_, op->rhsCount());
   updateValue(op, phi);
 
-  // Left-hand side arguments will be filled later, saving the phi node information here
+  // Because the values of left-hand side arguments will be filled later, we
+  // should save the phi node information here
   phis_.push_back(Phi(op, phi));
 
   return true;
@@ -593,6 +592,91 @@ NativeCompiler::visitOpcode(OpcodeExit* op)
   builder_->CreateRet(output);
   return true;
 }
+
+bool
+NativeCompiler::prepareArguments(std::vector<llvm::Value*>& args, OpcodeVa* op)
+{
+  int argCount = op->rhsCount();
+  bool complete = true;
+  for (int i = 0; i < op->rhsCount(); ++i) {
+    llvm::Value* arg = getValue(op->rhs(i));
+    args.push_back(arg);
+    if (!arg) {
+      complete = false;
+    }
+  }
+  return complete;
+}
+
+llvm::Value*
+NativeCompiler::emitCall(llvm::Value* f, const std::vector<llvm::Value*>& args)
+{
+  llvm::CallInst* value = builder_->CreateCall(f, args);
+  value->setCallingConv(llvm::CallingConv::C);
+  return value;
+}
+
+bool
+NativeCompiler::visitOpcode(OpcodeArray* op)
+{
+  std::vector<llvm::Value*> args(1, getInt(op->rhsCount()));
+  bool complete = prepareArguments(args, op);
+  if (!complete) {
+    return false;
+  }
+
+  llvm::Value* value = emitCall(runtime_[RF_createArray], args);
+  updateValue(op, value);
+
+  return true;
+}
+
+bool
+NativeCompiler::visitOpcode(OpcodeRange* op)
+{
+  std::vector<llvm::Value*> args(3);
+  args[0] = getValue(op->low());
+  args[1] = getValue(op->high());
+  if (!args[0] || !args[1]) {
+    return false;
+  }
+  args[2] = getInt(op->exclusive());
+
+  llvm::Value* value = emitCall(runtime_[RF_createRange], args);
+  updateValue(op, value);
+
+  return true;
+}
+
+bool
+NativeCompiler::visitOpcode(OpcodeString* op)
+{
+  std::vector<llvm::Value*> args(1);
+  args[0] = getInt(op->string());
+
+  llvm::Value* value = emitCall(runtime_[RF_duplicateString], args);
+  updateValue(op, value);
+
+  return true;
+}
+
+bool
+NativeCompiler::visitOpcode(OpcodeHash* op)
+{
+  std::vector<llvm::Value*> args(1, getInt(op->rhsCount()));
+  bool complete = prepareArguments(args, op);
+  if (!complete) {
+    return false;
+  }
+
+  llvm::Value* value = emitCall(runtime_[RF_createHash], args);
+  updateValue(op, value);
+
+  return true;
+}
+
+////////////////////////////////////////////////////////////
+// Bitcode loader
 
 llvm::Module*
 NativeCompiler::loadBitcode()
