@@ -309,4 +309,53 @@ CodeDuplicator::visitOpcode(OpcodeExit* op)
   return true;
 }
 
+bool
+CodeDuplicator::visitOpcode(OpcodeArray* op)
+{
+  Variable* lhs = variableOf(op->lhs());
+  OpcodeArray* newOp = new OpcodeArray(op->file(), op->line(), lastOpcode_, lhs, op->rhsSize());
+  lastOpcode_ = newOp;
+  setDefSite(lhs);
+
+  copyRhs(newOp, op);
+
+  return true;
+}
+
+bool
+CodeDuplicator::visitOpcode(OpcodeRange* op)
+{
+  Variable* lhs = variableOf(op->lhs());
+  OpcodeRange* newOp = new OpcodeRange(op->file(), op->line(), lastOpcode_, lhs, op->low(), op->high(), op->exclusive());
+  lastOpcode_ = newOp;
+  setDefSite(lhs);
+
+  return true;
+}
+
+bool
+CodeDuplicator::visitOpcode(OpcodeString* op)
+{
+  Variable* lhs = variableOf(op->lhs());
+  OpcodeString* newOp = new OpcodeString(op->file(), op->line(), lastOpcode_, lhs, op->string());
+  lastOpcode_ = newOp;
+  setDefSite(lhs);
+
+  return true;
+}
+
+bool
+CodeDuplicator::visitOpcode(OpcodeHash* op)
+{
+  Variable* lhs = variableOf(op->lhs());
+  OpcodeHash* newOp = new OpcodeHash(op->file(), op->line(), lastOpcode_, lhs, op->rhsSize());
+  lastOpcode_ = newOp;
+  setDefSite(lhs);
+
+  copyRhs(newOp, op);
+
+  return true;
+}
+
+
 RBJIT_NAMESPACE_END
