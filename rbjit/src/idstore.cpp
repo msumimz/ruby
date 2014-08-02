@@ -44,6 +44,10 @@ const char* ID_NAMES[] = {
   "rbjit__bitwise_compare_slt",
   "rbjit__bitwise_compare_sle",
 
+  "rbjit__convert_to_array",
+  "rbjit__concat_arrays",
+  "rbjit__push_to_array",
+
   "rbjit__typecast_fixnum",
   "rbjit__typecast_fixnum_bignum",
 

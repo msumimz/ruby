@@ -70,6 +70,9 @@ private:
   Variable* buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildNil(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildArray(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildArrayPush(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildArrayConcat(OpcodeFactory* factory, const RNode* node, bool useResult);
+  Variable* buildArraySplat(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildRange(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildString(OpcodeFactory* factory, const RNode* node, bool useResult);
   Variable* buildHash(OpcodeFactory* factory, const RNode* node, bool useResult);

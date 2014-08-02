@@ -81,21 +81,21 @@ rbjit_convertToArray(VALUE obj)
 }
 
 VALUE
-rbjit_concatenateArrays(int count, ...)
+rbjit_concatenateArrays(VALUE a1, VALUE a2)
 {
-  va_list list;
-  va_start(list, count);
-  VALUE result = rb_ary_dup(va_arg(list, VALUE));
-
-  for (int i = 1; i < count; ++i) {
-    VALUE obj = va_arg(list, VALUE);
-    VALUE a = rb_check_convert_type(obj, T_ARRAY, "Array", "to_a");
-    if (!NIL_P(a)) {
-      rb_ary_concat(result, a);
-    }
+  VALUE a = rb_check_convert_type(a2, T_ARRAY, "Array", "to_a");
+  if (!NIL_P(a)) {
+    rb_ary_concat(a1, a);
   }
 
-  return result;
+  return a1;
+}
+
+VALUE
+rbjit_pushToArray(VALUE array, VALUE obj)
+{
+  rb_ary_push(array, obj);
+  return array;
 }
 
 ////////////////////////////////////////////////////////////
@@ -123,7 +123,7 @@ rbjit_convertToString(VALUE obj)
 }
 
 VALUE
-rbjit_concatenateString(int count, ...)
+rbjit_concatenateStrings(int count, ...)
 {
   va_list list;
   va_start(list, count);

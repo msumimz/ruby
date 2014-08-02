@@ -9,6 +9,7 @@
 #include "rbjit/primitive.h"
 #include "rbjit/typeconstraint.h"
 #include "rbjit/idstore.h"
+#include "rbjit/runtimefunctions.h"
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -49,6 +50,15 @@ Primitive::getTrueOrFalseObject(IRBuilder* builder, llvm::Value* i1)
     getValue(builder, mri::Object::falseObject()));
 }
 
+llvm::Value*
+Primitive::getFunction(IRBuilder* builder, void* func, int argCount, bool isVarArg)
+{
+  llvm::Type* type = llvm::Type::getIntNTy(builder->getContext(), sizeof(VALUE) * CHAR_BIT);
+  std::vector<llvm::Type*> paramTypes(argCount, type);
+  llvm::FunctionType* ft = llvm::FunctionType::get(type, paramTypes, isVarArg);
+  return builder->CreateIntToPtr(getValue(builder, func), ft->getPointerTo(0));
+}
+
 void
 Primitive::checkArgCount(int count)
 {
@@ -70,9 +80,9 @@ Primitive::emit(IRBuilder* builder, const std::vector<llvm::Value*>& args)
 class PrimitiveTester : public Primitive {
 public:
 
-  int argCount() { return 1; }
+  int argCount() const { return 1; }
 
-  TypeConstraint* returnType()
+  TypeConstraint* returnType() const
   {
     static TypeConstraint* type = TypeSelection::create(
       TypeConstant::create(mri::Object::trueObject()),
@@ -85,9 +95,9 @@ public:
 class PrimitiveComparer : public Primitive {
 public:
 
-  int argCount() { return 2; }
+  int argCount() const { return 2; }
 
-  TypeConstraint* returnType()
+  TypeConstraint* returnType() const
   {
     static TypeConstraint* type = TypeSelection::create(
       TypeConstant::create(mri::Object::trueObject()),
@@ -100,9 +110,9 @@ public:
 class PrimitiveBitwiseBinaryOperator : public Primitive {
 public:
 
-  int argCount() { return 2; }
+  int argCount() const { return 2; }
 
-  TypeConstraint* returnType()
+  TypeConstraint* returnType() const
   {
     static TypeConstraint* type = TypeAny::create();
     return type;
@@ -209,6 +219,67 @@ private:
 };
 
 ////////////////////////////////////////////////////////////
+// PrimitiveConvertToArray : rbjit__convert_to_array
+
+class PrimitiveConvertToArray : public Primitive {
+public:
+
+  llvm::Value* emitInternal(IRBuilder* builder, const std::vector<llvm::Value*>& args)
+  {
+    llvm::Value* f = getFunction(builder, (void*)rbjit_convertToArray, 1, false);
+    return builder->CreateCall(f, args);
+  }
+
+  int argCount() const { return 1; }
+
+  TypeConstraint* returnType() const
+  { return TypeExactClass::create(mri::Class::arrayClass()); }
+
+};
+
+////////////////////////////////////////////////////////////
+// PrimitiveConcatArrays : rbjit__concat_arrays
+
+class PrimitiveConcatArrays : public Primitive {
+public:
+
+  llvm::Value* emitInternal(IRBuilder* builder, const std::vector<llvm::Value*>& args)
+  {
+    llvm::Value* f = getFunction(builder, (void*)rbjit_concatenateArrays, 2, false);
+    return builder->CreateCall(f, args);
+  }
+
+  int argCount() const { return 2; }
+
+  TypeConstraint* returnType() const
+  {
+    return TypeExactClass::create(mri::Class::arrayClass());
+  }
+
+};
+
+////////////////////////////////////////////////////////////
+// PrimitivePushToArray : rbjit__push_to_array
+
+class PrimitivePushToArray : public Primitive {
+public:
+
+  llvm::Value* emitInternal(IRBuilder* builder, const std::vector<llvm::Value*>& args)
+  {
+    llvm::Value* f = getFunction(builder, (void*)rbjit_pushToArray, 2, false);
+    return builder->CreateCall(f, args);
+  }
+
+  int argCount() const { return 2; }
+
+  TypeConstraint* returnType() const
+  {
+    return TypeExactClass::create(mri::Class::arrayClass());
+  }
+
+};
+
+////////////////////////////////////////////////////////////
 // Static methods
 
 std::unordered_map<ID, Primitive*> Primitive::prims_;
@@ -235,6 +306,10 @@ Primitive::setup()
   prims_[IdStore::get(ID_rbjit__bitwise_compare_sge)] = new PrimitiveCmp(llvm::CmpInst::ICMP_SGE);
   prims_[IdStore::get(ID_rbjit__bitwise_compare_slt)] = new PrimitiveCmp(llvm::CmpInst::ICMP_SLT);
   prims_[IdStore::get(ID_rbjit__bitwise_compare_sle)] = new PrimitiveCmp(llvm::CmpInst::ICMP_SLE);
+
+  prims_[IdStore::get(ID_rbjit__convert_to_array)] = new PrimitiveConvertToArray;
+  prims_[IdStore::get(ID_rbjit__concat_arrays)] = new PrimitiveConcatArrays;
+  prims_[IdStore::get(ID_rbjit__push_to_array)] = new PrimitivePushToArray;
 }
 
 Primitive*

@@ -47,6 +47,11 @@ enum PredefinedId {
   ID_rbjit__bitwise_compare_slt,
   ID_rbjit__bitwise_compare_sle,
 
+  // Array literal helpers
+  ID_rbjit__convert_to_array,
+  ID_rbjit__concat_arrays,
+  ID_rbjit__push_to_array,
+
   ID_rbjit__typecast_fixnum,
   ID_rbjit__typecast_fixnum_bignum,
 

@@ -183,6 +183,18 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
     v = buildArray(factory, node, useResult);
     break;
 
+  case NODE_ARGSPUSH:
+    v = buildArrayPush(factory, node, useResult);
+    break;
+
+  case NODE_ARGSCAT:
+    v = buildArrayConcat(factory, node, useResult);
+    break;
+
+  case NODE_SPLAT:
+    v = buildArraySplat(factory, node, useResult);
+    break;
+
   case NODE_DOT2:
   case NODE_DOT3:
     v = buildRange(factory, node, useResult);
@@ -318,6 +330,47 @@ CfgBuilder::buildArray(OpcodeFactory* factory, const RNode* node, bool useResult
   }
 
   return factory->addArray(elems, elems + count, useResult);
+}
+
+Variable*
+CfgBuilder::buildArrayPush(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  Variable* array = buildNode(factory, node->nd_head, useResult);
+  Variable* obj = buildNode(factory, node->nd_body, useResult);
+
+  Variable* result = 0;
+  if (useResult) {
+    result = factory->addPrimitive("rbjit__push_to_array", 2, array, obj);
+  }
+
+  return result;
+}
+
+Variable*
+CfgBuilder::buildArrayConcat(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  Variable* a1 = buildNode(factory, node->nd_head, useResult);
+  Variable* a2 = buildNode(factory, node->nd_body, useResult);
+
+  Variable* result = 0;
+  if (useResult) {
+    result = factory->addPrimitive("rbjit__concat_arrays", 2, a1, a2);
+  }
+
+  return result;
+}
+
+Variable*
+CfgBuilder::buildArraySplat(OpcodeFactory* factory, const RNode* node, bool useResult)
+{
+  Variable* obj = buildNode(factory, node->nd_head, useResult);
+
+  Variable* result = 0;
+  if (useResult) {
+    result = factory->addPrimitive("rbjit__convert_to_array", 1, obj);
+  }
+
+  return result;
 }
 
 Variable*

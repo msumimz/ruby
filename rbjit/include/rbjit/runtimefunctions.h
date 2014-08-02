@@ -17,13 +17,14 @@ VALUE rbjit_findConstant(VALUE baseClass, ID name, void* iseq);
 
 VALUE rbjit_createArray(size_t count, ...);
 VALUE rbjit_convertToArray(VALUE obj);
-VALUE rbjit_concatenateArrays(size_t count, ...);
+VALUE rbjit_concatenateArrays(VALUE a1, VALUE a2);
+VALUE rbjit_pushToArray(VALUE array, VALUE obj);
 
 VALUE rbjit_createRange(VALUE low, VALUE high, size_t exclusive);
 
 VALUE rbjit_duplicateString(VALUE s);
 VALUE rbjit_convertToString(VALUE obj);
-VALUE rbjit_concatenateString(size_t count, ...);
+VALUE rbjit_concatenateStrings(size_t count, ...);
 
 VALUE rbjit_createHash(size_t count, ...);
 

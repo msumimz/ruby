@@ -20,8 +20,8 @@ public:
 
   llvm::Value* emit(IRBuilder*, const std::vector<llvm::Value*>& args);
 
-  virtual int argCount() = 0;
-  virtual TypeConstraint* returnType() = 0;
+  virtual int argCount() const = 0;
+  virtual TypeConstraint* returnType() const = 0;
 
   static void setup();
   static Primitive* find(ID name);
@@ -31,6 +31,7 @@ protected:
   llvm::Value* getValue(IRBuilder* builder, size_t value);
   llvm::Value* getValue(IRBuilder* builder, mri::Object value);
   llvm::Value* getTrueOrFalseObject(IRBuilder* builder, llvm::Value* i1);
+  llvm::Value* getFunction(IRBuilder* builder, void* func, int argCount, bool isVarArg);
   void checkArgCount(int count);
 
   virtual llvm::Value* emitInternal(IRBuilder*, const std::vector<llvm::Value*>& args) = 0;
