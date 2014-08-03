@@ -1,7 +1,7 @@
 Rbjit
 ===
 
-Rbjit is a LLVM-based JIT-complication engine for the Ruby programming
+Rbjit is a LLVM-based JIT-compiler for the Ruby programming
 language.
 
 Overview
