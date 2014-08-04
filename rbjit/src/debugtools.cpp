@@ -74,7 +74,7 @@ fprintfOverloaded(FILE* out, const char* format, ...)
 }
 
 static VALUE
-rbjit_log_object_stack_mri()
+rbjit_log_activation_records_mri()
 {
   dumpOutput.clear();
   rb_vmdebug_stack_dump_raw(GET_THREAD(), GET_THREAD()->cfp);
@@ -280,10 +280,10 @@ debugPrintCurrentControlFrames()
 }
 
 ////////////////////////////////////////////////////////////
-// Print current interpreter stack frames
+// Print activation records
 
 static std::string
-debugPrintStackFrames()
+debugPrintActivationRecords()
 {
   rb_thread_t* th = GET_THREAD();
   rb_control_frame_t* cfp = th->cfp;
@@ -362,7 +362,7 @@ debugPrintProc(rb_proc_t* proc)
       env->block
       );
 
-    // Object stack
+    // Activation records
     out += stringFormat("  ----------\n");
     for (int i = 0; i < env->env_size; ++i) {
       VALUE value = env->env[i];
@@ -424,12 +424,12 @@ rbjit_log_control_frames()
 }
 
 static VALUE
-rbjit_log_object_stack()
+rbjit_log_activation_records()
 {
   RBJIT_DPRINT_BAR();
-  RBJIT_DPRINT("Object stack\n");
+  RBJIT_DPRINT("Activation records\n");
   RBJIT_DPRINT_BAR();
-  RBJIT_DPRINT(debugPrintStackFrames());
+  RBJIT_DPRINT(debugPrintActivationRecords());
   return Qnil;
 }
 
@@ -450,14 +450,14 @@ extern "C" void
 Init_rbjitDebug()
 {
   // MRI debugging methods
-  rb_define_method(rb_cObject, "rbjit_log_object_stack_mri", (VALUE (*)(...))rbjit_log_object_stack_mri, 0);
+  rb_define_method(rb_cObject, "rbjit_log_activation_records_mri", (VALUE (*)(...))rbjit_log_activation_records_mri, 0);
   rb_define_method(rb_cObject, "rbjit_log_proc_mri", (VALUE (*)(...))rbjit_log_proc_mri, 1);
 
   rb_define_method(rb_cObject, "rbjit_debug_break", (VALUE (*)(...))rbjit_debug_break, 0);
   rb_define_method(rb_cObject, "rbjit_dump_tree", (VALUE (*)(...))rbjit_dump_tree, 2);
 
   rb_define_method(rb_cObject, "rbjit_log_control_frames", (VALUE (*)(...))rbjit_log_control_frames, 0);
-  rb_define_method(rb_cObject, "rbjit_log_object_stack", (VALUE (*)(...))rbjit_log_object_stack, 0);
+  rb_define_method(rb_cObject, "rbjit_log_activation_records", (VALUE (*)(...))rbjit_log_activation_records, 0);
   rb_define_method(rb_cObject, "rbjit_log_proc", (VALUE (*)(...))rbjit_log_proc, 1);
 }
 
