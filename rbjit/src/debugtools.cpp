@@ -296,7 +296,7 @@ debugPrintStackFrames()
 
     t = (VALUE *)*p;
     if (th->stack <= t && t < sp) {
-      out += stringFormat(" (= %ld)", (long)((VALUE *)GC_GUARDED_PTR_REF(t) - th->stack));
+      out += stringFormat(" (=offset %ld)", (long)((VALUE *)GC_GUARDED_PTR_REF(t) - th->stack));
     }
 
     out += " (";
