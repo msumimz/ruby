@@ -16,6 +16,9 @@
 #include "probes.h"
 #include "probes_helper.h"
 
+// rbjit
+VALUE rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci);
+
 /* control stack frame */
 
 #ifndef INLINE
@@ -1847,6 +1850,10 @@ vm_call_method(rb_thread_t *th, rb_control_frame_t *cfp, rb_call_info_t *ci)
 		    goto zsuper_method_dispatch;
 		}
 	      }
+              case VM_METHOD_TYPE_RBJIT_COMPILED: { // Added by rbjit
+		CI_SET_FASTPATH(ci, rbjit_callCompiledCodeWithControlFrame, enable_fastpath);
+		return rbjit_callCompiledCodeWithControlFrame(th, cfp, ci);
+              }
 	    }
 	    rb_bug("vm_call_method: unsupported method type (%d)", ci->me->def->type);
 	}

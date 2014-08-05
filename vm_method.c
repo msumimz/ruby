@@ -1195,6 +1195,7 @@ rb_method_definition_eq(const rb_method_definition_t *d1, const rb_method_defini
     }
     switch (d1->type) {
       case VM_METHOD_TYPE_ISEQ:
+      case VM_METHOD_TYPE_RBJIT_COMPILED: // Added by rbjit
 	return d1->body.iseq == d2->body.iseq;
       case VM_METHOD_TYPE_CFUNC:
 	return
@@ -1226,6 +1227,7 @@ rb_hash_method_definition(st_index_t hash, const rb_method_definition_t *def)
     hash = rb_hash_uint(hash, def->type);
     switch (def->type) {
       case VM_METHOD_TYPE_ISEQ:
+      case VM_METHOD_TYPE_RBJIT_COMPILED: // Added by rbjit
 	return rb_hash_uint(hash, (st_index_t)def->body.iseq);
       case VM_METHOD_TYPE_CFUNC:
 	hash = rb_hash_uint(hash, (st_index_t)def->body.cfunc.func);

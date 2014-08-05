@@ -46,6 +46,18 @@ rbjit_callMethod(rb_method_entry_t* me, int argc, VALUE receiver, ...)
   return result;
 }
 
+VALUE
+rbjit_callCompiledCode(rb_thread_t* th, rb_call_info_t* ci, const VALUE* argv)
+{
+  return Qnil;
+}
+
+VALUE
+rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
+{
+  return Qnil;
+}
+
 ////////////////////////////////////////////////////////////
 // Constant lookup
 

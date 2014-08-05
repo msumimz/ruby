@@ -56,6 +56,7 @@ typedef enum {
     VM_METHOD_TYPE_OPTIMIZED, /* Kernel#send, Proc#call, etc */
     VM_METHOD_TYPE_MISSING,   /* wrapper for method_missing(id) */
     VM_METHOD_TYPE_REFINED,
+    VM_METHOD_TYPE_RBJIT_COMPILED,
 
     END_OF_ENUMERATION(VM_METHOD_TYPE)
 } rb_method_type_t;

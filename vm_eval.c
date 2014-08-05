@@ -20,6 +20,9 @@ static VALUE vm_exec(rb_thread_t *th);
 static void vm_set_eval_stack(rb_thread_t * th, VALUE iseqval, const NODE *cref, rb_block_t *base_block);
 static int vm_collect_local_variables_in_heap(rb_thread_t *th, VALUE *dfp, VALUE ary);
 
+// rbjit
+VALUE rbjit_callCompiledCode(rb_thread_t* th, rb_call_info_t* ci, const VALUE* argv);
+
 /* vm_backtrace.c */
 VALUE rb_vm_backtrace_str_ary(rb_thread_t *th, int lev, int n);
 
@@ -231,6 +234,8 @@ vm_call0_body(rb_thread_t* th, rb_call_info_t *ci, const VALUE *argv)
 	break;
       case VM_METHOD_TYPE_UNDEF:
 	break;
+      case VM_METHOD_TYPE_RBJIT_COMPILED: // Added by rbjit
+        return rbjit_callCompiledCode(th, ci, argv);
     }
     rb_bug("vm_call0: unsupported method type (%d)", ci->me->def->type);
     return Qundef;
