@@ -55,6 +55,46 @@ rbjit_callCompiledCode(rb_thread_t* th, rb_call_info_t* ci, const VALUE* argv)
 VALUE
 rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
 {
+#if 0
+  // ref. vm_insnhelper.c:vm_call_iseq_setup_normal
+  //      vm_call_cfunc_with_frame
+
+  int i, local_size;
+  VALUE *argv = cfp->sp - ci->argc;
+  rb_iseq_t *iseq = ci->me->def->body.iseq;
+  VALUE *sp = argv + iseq->arg_size;
+
+  /* clear local variables (arg_size...local_size) */
+  for (i = iseq->arg_size, local_size = iseq->local_size; i < local_size; i++) {
+    *sp++ = Qnil;
+  }
+
+  // static inline rb_control_frame_t *
+  // vm_push_frame(rb_thread_t *th,
+  //               const rb_iseq_t *iseq,
+  //               VALUE type,
+  //               VALUE self,
+  //               VALUE klass,
+  //               VALUE specval,
+  //               const VALUE *pc,
+  //               VALUE *sp,
+  //               int local_size,
+  //               const rb_method_entry_t *me,
+  //               size_t stack_max)
+  vm_push_frame(
+      th,                                  // th
+      iseq,                                // iseq
+      VM_FRAME_MAGIC_METHOD,               // type
+      ci->recv,                            // self
+      ci->defined_class,                   // klass
+      VM_ENVVAL_BLOCK_PTR(ci->blockptr),   // specval
+      iseq->iseq_encoded + ci->aux.opt_pc, // pc
+      sp,                                  // sp
+      0,                                   // local_size
+      ci->me,                              // me
+      iseq->stack_max);                    // stack_max
+
+#endif
   return Qnil;
 }
 

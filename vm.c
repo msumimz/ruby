@@ -1185,6 +1185,7 @@ vm_frametype_name(const rb_control_frame_t *cfp)
       case VM_FRAME_MAGIC_IFUNC:  return "ifunc";
       case VM_FRAME_MAGIC_EVAL:   return "eval";
       case VM_FRAME_MAGIC_LAMBDA: return "lambda";
+      case VM_FRAME_MAGIC_RBJIT_COMPILED: return "rbjit_compiled"; // Added by rbjit
       default:
 	rb_bug("unknown frame");
     }

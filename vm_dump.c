@@ -78,6 +78,9 @@ control_frame_dump(rb_thread_t *th, rb_control_frame_t *cfp)
       case VM_FRAME_MAGIC_EVAL:
 	magic = "EVAL";
 	break;
+      case VM_FRAME_MAGIC_RBJIT_COMPILED:
+	magic = "RBJIT_COMPILED";
+	break;
       case 0:
 	magic = "------";
 	break;

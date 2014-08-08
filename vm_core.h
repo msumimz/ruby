@@ -765,6 +765,7 @@ enum vm_special_object_type {
 #define VM_FRAME_MAGIC_IFUNC  0x81
 #define VM_FRAME_MAGIC_EVAL   0x91
 #define VM_FRAME_MAGIC_LAMBDA 0xa1
+#define VM_FRAME_MAGIC_RBJIT_COMPILED 0xb1 // Added by rbjit
 #define VM_FRAME_MAGIC_MASK_BITS   8
 #define VM_FRAME_MAGIC_MASK   (~(~0<<VM_FRAME_MAGIC_MASK_BITS))
 
