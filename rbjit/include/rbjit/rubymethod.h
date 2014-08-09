@@ -5,6 +5,9 @@
 extern "C" {
 typedef struct rb_method_entry_struct rb_method_entry_t;
 typedef struct rb_method_definition_struct rb_method_definition_t;
+typedef struct rb_thread_struct rb_thread_t;
+typedef struct rb_control_frame_struct rb_control_frame_t;
+typedef struct rb_call_info_struct rb_call_info_t;
 }
 
 RBJIT_NAMESPACE_BEGIN

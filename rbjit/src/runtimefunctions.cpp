@@ -10,6 +10,19 @@ extern "C" {
 VALUE
 vm_get_ev_const(rb_thread_t *th, const rb_iseq_t *iseq,
                 VALUE orig_klass, ID id, int is_defined);
+
+rb_control_frame_t *
+vm_push_frame(rb_thread_t *th,
+              const rb_iseq_t *iseq,
+              VALUE type,
+              VALUE self,
+              VALUE klass,
+              VALUE specval,
+              const VALUE *pc,
+              VALUE *sp,
+              int local_size,
+              const rb_method_entry_t *me,
+              size_t stack_max);
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -55,7 +68,12 @@ rbjit_callCompiledCode(rb_thread_t* th, rb_call_info_t* ci, const VALUE* argv)
 VALUE
 rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
 {
-#if 0
+  return Qnil;
+}
+
+void
+rbjit_enterMethod(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
+{
   // ref. vm_insnhelper.c:vm_call_iseq_setup_normal
   //      vm_call_cfunc_with_frame
 
@@ -84,18 +102,20 @@ rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp,
   vm_push_frame(
       th,                                  // th
       iseq,                                // iseq
-      VM_FRAME_MAGIC_METHOD,               // type
+      VM_FRAME_MAGIC_RBJIT_COMPILED,       // type
       ci->recv,                            // self
       ci->defined_class,                   // klass
-      VM_ENVVAL_BLOCK_PTR(ci->blockptr),   // specval
-      iseq->iseq_encoded + ci->aux.opt_pc, // pc
+      0, //VM_ENVVAL_BLOCK_PTR(ci->blockptr),   // specval
+      0,                                   // pc
       sp,                                  // sp
       0,                                   // local_size
       ci->me,                              // me
       iseq->stack_max);                    // stack_max
+}
 
-#endif
-  return Qnil;
+void
+rbjit_leaveMethod()
+{
 }
 
 ////////////////////////////////////////////////////////////

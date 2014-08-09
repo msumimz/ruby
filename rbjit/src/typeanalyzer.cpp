@@ -510,4 +510,22 @@ TypeAnalyzer::visitOpcode(OpcodeHash* op)
   return true;
 }
 
+bool
+TypeAnalyzer::visitOpcode(OpcodeEnter* op)
+{
+  return true;
+}
+
+bool
+TypeAnalyzer::visitOpcode(OpcodeLeave* op)
+{
+  return true;
+}
+
+bool
+TypeAnalyzer::visitOpcode(OpcodeCheckArg* op)
+{
+  return true;
+}
+
 RBJIT_NAMESPACE_END

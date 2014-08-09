@@ -357,5 +357,35 @@ CodeDuplicator::visitOpcode(OpcodeHash* op)
   return true;
 }
 
+bool
+CodeDuplicator::visitOpcode(OpcodeEnter* op)
+{
+  OpcodeEnter* newOp = new OpcodeEnter(op->file(), op->line(), lastOpcode_, op->thread(), op->controlFramePointer(), op->callInfo());
+  lastOpcode_ = newOp;
+
+  return true;
+}
+
+bool
+CodeDuplicator::visitOpcode(OpcodeLeave* op)
+{
+  OpcodeLeave* newOp = new OpcodeLeave(op->file(), op->line(), lastOpcode_);
+  lastOpcode_ = newOp;
+
+  return true;
+}
+
+bool
+CodeDuplicator::visitOpcode(OpcodeCheckArg* op)
+{
+  OpcodeCheckArg* newOp = new OpcodeCheckArg(op->file(), op->line(), lastOpcode_);
+  lastOpcode_ = newOp;
+
+  // TODO
+//  copyRhs(newOp, op);
+
+  return true;
+}
+
 
 RBJIT_NAMESPACE_END

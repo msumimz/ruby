@@ -26,6 +26,9 @@ class OpcodeArray;
 class OpcodeRange;
 class OpcodeString;
 class OpcodeHash;
+class OpcodeEnter;
+class OpcodeLeave;
+class OpcodeCheckArg;
 
 ////////////////////////////////////////////////////////////
 // Visitor interface
@@ -48,6 +51,9 @@ public:
   virtual bool visitOpcode(OpcodeRange* op) = 0;
   virtual bool visitOpcode(OpcodeString* op) = 0;
   virtual bool visitOpcode(OpcodeHash* op) = 0;
+  virtual bool visitOpcode(OpcodeEnter* op) = 0;
+  virtual bool visitOpcode(OpcodeLeave* op) = 0;
+  virtual bool visitOpcode(OpcodeCheckArg* op) = 0;
 };
 
 ////////////////////////////////////////////////////////////
@@ -621,6 +627,46 @@ public:
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
+};
+
+class OpcodeEnter : public Opcode {
+public:
+
+  OpcodeEnter(int file, int line, Opcode* prev, rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
+    : Opcode(file, line, prev), thread_(th), cfp_(cfp), ci_(ci)
+  {}
+
+  rb_thread_t* thread() const { return thread_; }
+  rb_control_frame_t* controlFramePointer() const { return cfp_; }
+  rb_call_info_t* callInfo() const { return ci_; }
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+private:
+
+  rb_thread_t* thread_;
+  rb_control_frame_t* cfp_;
+  rb_call_info_t* ci_;
+};
+
+class OpcodeLeave : public Opcode {
+public:
+
+  OpcodeLeave(int file, int line, Opcode* prev)
+    : Opcode(file, line, prev)
+  {}
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+};
+
+class OpcodeCheckArg : public Opcode {
+public:
+
+  OpcodeCheckArg(int file, int line, Opcode* prev)
+    : Opcode(file, line, prev)
+  {}
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 };
 
 RBJIT_NAMESPACE_END

@@ -8,10 +8,14 @@ extern "C" {
 
 // All argumments and return values should have the same size as the platform's
 // natural word size, because NativeCompiler doesn't respect their types and
-// treats them as integers.
+// treats all of them as intptr_t.
 
 rb_method_entry_t* rbjit_lookupMethod(VALUE receiver, ID methodName);
 VALUE rbjit_callMethod(rb_method_entry_t* me, size_t argc, VALUE receiver, ...);
+VALUE rbjit_callCompiledCode(rb_thread_t* th, rb_call_info_t* ci, const VALUE* argv);
+VALUE rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci);
+void rbjit_enterMethod();
+void rbjit_leaveMethod();
 
 VALUE rbjit_findConstant(VALUE baseClass, ID name, void* iseq);
 

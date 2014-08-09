@@ -175,6 +175,27 @@ DefUseChain::visitOpcode(OpcodeHash* op)
   return visitOpcodeVa(op);
 }
 
+bool
+DefUseChain::visitOpcode(OpcodeEnter* op)
+{
+  return true;
+}
+
+bool
+DefUseChain::visitOpcode(OpcodeLeave* op)
+{
+  return true;
+}
+
+bool
+DefUseChain::visitOpcode(OpcodeCheckArg* op)
+{
+  return true;
+}
+
+////////////////////////////////////////////////////////////
+// Debug print
+
 std::string
 DefUseChain::debugPrint() const
 {

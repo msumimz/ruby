@@ -226,11 +226,14 @@ public:
   bool visitOpcode(OpcodeConstant* op);
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);
+  bool visitOpcode(OpcodeExit* op);
   bool visitOpcode(OpcodeArray* op);
   bool visitOpcode(OpcodeRange* op);
   bool visitOpcode(OpcodeString* op);
   bool visitOpcode(OpcodeHash* op);
-  bool visitOpcode(OpcodeExit* op);
+  bool visitOpcode(OpcodeEnter* op);
+  bool visitOpcode(OpcodeLeave* op);
+  bool visitOpcode(OpcodeCheckArg* op);
 
   void check();
 
@@ -551,6 +554,34 @@ SanityChecker::visitOpcode(OpcodeHash* op)
   return true;
 }
 
+bool
+SanityChecker::visitOpcode(OpcodeEnter* op)
+{
+  if (!op->thread()) {
+    addError(op, "rb_thread_t* is null");
+  }
+  if (!op->controlFramePointer()) {
+    addError(op, "rb_control_frame_t* is null");
+  }
+  if (!op->callInfo()) {
+    addError(op, "rb_call_info_t* is null");
+  }
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeLeave* op)
+{
+  return true;
+}
+
+bool
+SanityChecker::visitOpcode(OpcodeCheckArg* op)
+{
+  // TODO
+  return true;
+}
+
 void
 SanityChecker::check()
 {
@@ -720,6 +751,9 @@ public:
   bool visitOpcode(OpcodeRange* op);
   bool visitOpcode(OpcodeString* op);
   bool visitOpcode(OpcodeHash* op);
+  bool visitOpcode(OpcodeEnter* op);
+  bool visitOpcode(OpcodeLeave* op);
+  bool visitOpcode(OpcodeCheckArg* op);
 
   void dumpCfgInfo(const ControlFlowGraph* cfg);
   void dumpBlockHeader(BlockHeader* b);
@@ -893,6 +927,27 @@ Dumper::visitOpcode(OpcodeHash* op)
   for (Variable*const* i = op->rhsBegin(); i < op->rhsEnd() - 1; i += 2) {
     put(" %Ix => %Ix", *i, *(i + 1));
   }
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeEnter* op)
+{
+  put("th %Ix cfp %Ix ci %Ix",
+      op->thread(), op->controlFramePointer(), op->callInfo());
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeLeave* op)
+{
+  return true;
+}
+
+bool
+Dumper::visitOpcode(OpcodeCheckArg* op)
+{
+  // TODO
   return true;
 }
 

@@ -43,6 +43,9 @@ public:
   bool visitOpcode(OpcodeRange* op);
   bool visitOpcode(OpcodeString* op);
   bool visitOpcode(OpcodeHash* op);
+  bool visitOpcode(OpcodeEnter* op);
+  bool visitOpcode(OpcodeLeave* op);
+  bool visitOpcode(OpcodeCheckArg* op);
 
 private:
 

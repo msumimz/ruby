@@ -59,6 +59,9 @@ public:
   bool visitOpcode(OpcodeRange* op);
   bool visitOpcode(OpcodeString* op);
   bool visitOpcode(OpcodeHash* op);
+  bool visitOpcode(OpcodeEnter* op);
+  bool visitOpcode(OpcodeLeave* op);
+  bool visitOpcode(OpcodeCheckArg* op);
 
 private:
 
@@ -130,6 +133,8 @@ private:
     RF_createRange,
     RF_duplicateString,
     RF_createHash,
+    RF_enterMethod,
+    RF_leaveMethod,
     RUNTIME_FUNCTION_COUNT
   };
   llvm::Value* runtime_[RUNTIME_FUNCTION_COUNT];

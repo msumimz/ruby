@@ -33,7 +33,7 @@ vm_stackoverflow(void)
     rb_exc_raise(sysstack_error);
 }
 
-static inline rb_control_frame_t *
+inline rb_control_frame_t *
 vm_push_frame(rb_thread_t *th,
 	      const rb_iseq_t *iseq,
 	      VALUE type,
