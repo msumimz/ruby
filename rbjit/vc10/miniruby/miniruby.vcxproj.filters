@@ -458,9 +458,6 @@
     <ClInclude Include="..\..\include\rbjit\idstore.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\recompilationmanager.h">
-      <Filter>rbjit\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\rbjit\mutatortester.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
@@ -474,6 +471,9 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\primitive.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\recompilationmanager.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
