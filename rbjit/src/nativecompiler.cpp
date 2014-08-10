@@ -34,6 +34,7 @@
 #include "rbjit/rubyobject.h"
 #include "rbjit/recompilationmanager.h"
 #include "rbjit/methodinfo.h"
+#include "rbjit/compilationinstance.h"
 
 #define NOMINMAX
 #include <windows.h>
@@ -184,8 +185,8 @@ void*
 NativeCompiler::compileMethod(PrecompiledMethodInfo* mi)
 {
   mi_ = mi;
-  cfg_ = mi->cfg();
-  typeContext_ = mi->typeContext();
+  cfg_ = mi->compilationInstance()->cfg();
+  typeContext_ = mi->compilationInstance()->typeContext();
   translateToBitcode();
 
   RecompilationManager::instance()->addCalleeCallerRelation(mi->methodName(), mi);

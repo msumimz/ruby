@@ -902,18 +902,18 @@ TypeSelection::debugPrint() const
 ////////////////////////////////////////////////////////////
 // TypeRecursion
 
-std::unordered_map<MethodInfo*, TypeRecursion*> TypeRecursion::cache_;
+std::unordered_map<CompilationInstance*, TypeRecursion*> TypeRecursion::cache_;
 
 TypeRecursion*
-TypeRecursion::create(MethodInfo* mi)
+TypeRecursion::create(CompilationInstance* ci)
 {
-  TypeRecursion* t = cache_[mi];
+  TypeRecursion* t = cache_[ci];
   if (t) {
     return t;
   }
 
-  t = new TypeRecursion(mi);
-  cache_[mi] = t;
+  t = new TypeRecursion(ci);
+  cache_[ci] = t;
 
   return t;
 }
@@ -922,7 +922,7 @@ bool
 TypeRecursion::equals(const TypeConstraint* other) const
 {
   return typeid(other) == typeid(TypeRecursion) &&
-    static_cast<const TypeRecursion*>(other)->mi_ == mi_;
+    static_cast<const TypeRecursion*>(other)->ci_ == ci_;
 }
 
 bool
@@ -972,7 +972,7 @@ TypeRecursion::resolveToValues()
 std::string
 TypeRecursion::debugPrint() const
 {
-  return stringFormat("TypeRecursion(%Ix)", mi_);
+  return stringFormat("TypeRecursion(%Ix)", ci_);
 }
 
 RBJIT_NAMESPACE_END

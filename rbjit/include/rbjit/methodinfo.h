@@ -8,6 +8,7 @@ RBJIT_NAMESPACE_BEGIN
 class TypeConstraint;
 class ControlFlowGraph;
 class TypeContext;
+class CompilationInstance;
 
 class MethodInfo {
 public:
@@ -42,9 +43,9 @@ protected:
 
 private:
 
-  // reference count: a MethodInfo is referred to by RecompliationManager's
-  // callee-caller map in multiple times Thus, to avoid dangling pointers keep
-  // a reference count.
+  // Reference count: a MethodInfo is referred to by RecompliationManager's
+  // callee-caller map in multiple times Thus, to avoid dangling pointers a
+  // reference count should be kept.
   int refCount_;
 
   // True when a MethodInfo has a rb_method_entry_t instance associated with it.
@@ -64,7 +65,7 @@ public:
     bool mutator, TypeConstraint* returnType);
 
   TypeConstraint* returnType() { return returnType_; }
-  RNode* astNode() const { return 0; }
+  RNode* astNode() const { return nullptr; }
 
   bool isMutator() { return mutator_; }
   bool isJitOnly() { return false; }
@@ -93,45 +94,23 @@ public:
 
   TypeConstraint* returnType();
   RNode* astNode() const;
+
   bool isMutator();
   bool isJitOnly();
 
-  ControlFlowGraph* cfg() { return cfg_; }
-  TypeContext* typeContext() { return typeContext_; }
+  CompilationInstance* compilationInstance() const
+  { return compilationInstance_; }
 
   void compile();
   void restoreISeqDefinition();
 
-  // Debugging methods
-  std::string debugPrintBanner(const char* stage) const;
-  std::string debugPrintAst() const;
-
 private:
 
-  PrecompiledMethodInfo(mri::MethodEntry me)
-    : MethodInfo(me), cfg_(0), typeContext_(0), returnType_(0),
-      mutator_(UNKNOWN), jitOnly_(UNKNOWN), origDef_(), origCfg_(0),
-      lock_(false)
-  {}
-
+  PrecompiledMethodInfo(mri::MethodEntry me);
   ~PrecompiledMethodInfo();
 
-  enum State { UNKNOWN, YES, NO };
-
-  void buildCfg();
-  void analyzeTypes();
-  void* generateCode();
-
-  ControlFlowGraph* cfg_;
-  TypeContext* typeContext_;
-  TypeConstraint* returnType_;
-  State mutator_;
-  State jitOnly_;
-
+  CompilationInstance* compilationInstance_;
   mri::MethodDefinition origDef_;
-  ControlFlowGraph* origCfg_;
-
-  bool lock_;
 };
 
 RBJIT_NAMESPACE_END

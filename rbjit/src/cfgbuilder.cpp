@@ -49,11 +49,10 @@ CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name)
 }
 
 ControlFlowGraph*
-CfgBuilder::buildMethod(const RNode* rootNode, MethodInfo* methodInfo)
+CfgBuilder::buildMethod(const RNode* rootNode, ID name)
 {
   cfg_ = new ControlFlowGraph;
-
-  methodInfo_ = methodInfo;
+  name_ = name;
 
   OpcodeFactory factory(cfg_);
   factory.createEntryExitBlocks();
@@ -114,7 +113,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
     }
   }
   else {
-    std::string what = stringFormat("Method %s uses vardiac arguments, which is not implemented yet", mri::Id(methodInfo_->methodName()).name());
+    std::string what = stringFormat("Method %s uses vardiac arguments, which is not implemented yet", mri::Id(name_).name());
     throw UnsupportedSyntaxException(what);
 #if 0
     // Vardiac arguments
@@ -252,7 +251,7 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
 
   default:
     std::string what = stringFormat("%s:%d: Node type %s is not implemented yet",
-      mri::Id(methodInfo_->methodName()).name(), nd_line(node), ruby_node_name(nd_type(node)));
+      mri::Id(name_).name(), nd_line(node), ruby_node_name(nd_type(node)));
     throw UnsupportedSyntaxException(what);
   }
 

@@ -51,9 +51,9 @@ public:
 class CfgBuilder {
 public:
 
-  CfgBuilder() : cfg_(0), methodInfo_(0) {}
+  CfgBuilder() : cfg_(0) {}
 
-  ControlFlowGraph* buildMethod(const RNode* rootNode, MethodInfo* methodInfo);
+  ControlFlowGraph* buildMethod(const RNode* rootNode, ID name);
 
 private:
 
@@ -112,7 +112,8 @@ private:
 
   std::vector<ExitPoint> exits_;
 
-  MethodInfo* methodInfo_;
+  // For diagnostic messages
+  ID name_;
 
   /*
   std::vector<OpcodeFactory*> rescueBlocks_;

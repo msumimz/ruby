@@ -13,7 +13,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class Variable;
 class TypeConstraint;
-class MethodInfo;
+class CompilationInstance;
 class TypeContext;
 
 ////////////////////////////////////////////////////////////
@@ -488,15 +488,15 @@ private:
 class TypeRecursion : public TypeConstraint {
 public:
 
-  TypeRecursion(MethodInfo* mi) : mi_(mi) {}
-  static TypeRecursion* create(MethodInfo* mi);
-  TypeRecursion* clone() const { return create(mi_); }
+  TypeRecursion(CompilationInstance* ci) : ci_(ci) {}
+  static TypeRecursion* create(CompilationInstance* ci);
+  TypeRecursion* clone() const { return create(ci_); }
   TypeRecursion* independantClone() const { return clone(); }
   void destroy() {}
 
   bool equals(const TypeConstraint* other) const;
 
-  MethodInfo* methodInfo() const { return mi_; }
+  CompilationInstance* compilationInstance() const { return ci_; }
 
   bool isSameValueAs(TypeContext* typeContext, Variable* v);
   Boolean evaluatesToBoolean();
@@ -512,9 +512,9 @@ public:
 
 private:
 
-  static std::unordered_map<MethodInfo*, TypeRecursion*> cache_;
+  static std::unordered_map<CompilationInstance*, TypeRecursion*> cache_;
 
-  MethodInfo* mi_;
+  CompilationInstance* ci_;
 
 };
 

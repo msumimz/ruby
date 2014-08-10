@@ -9,12 +9,14 @@
 #include "rbjit/debugprint.h"
 #include "rbjit/opcodemultiplexer.h"
 #include "rbjit/recompilationmanager.h"
+#include "rbjit/compilationinstance.h"
 
 RBJIT_NAMESPACE_BEGIN
 
 Inliner::Inliner(PrecompiledMethodInfo* mi)
-  : mi_(mi), cfg_(mi->cfg()), typeContext_(mi->typeContext()),
-  visited_(cfg_->blocks()->size(), false)
+  : mi_(mi), cfg_(mi->compilationInstance()->cfg()),
+    typeContext_(mi->compilationInstance()->typeContext()),
+    visited_(cfg_->blocks()->size(), false)
 {}
 
 void
@@ -161,16 +163,18 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
 
   assert(typeid(*methodInfo) == typeid(PrecompiledMethodInfo));
   PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(methodInfo);
+  ControlFlowGraph* inlinedCfg = mi->compilationInstance()->cfg();
+  TypeContext* inlinedTypeContext = mi->compilationInstance()->typeContext();
 
   CodeDuplicator dup;
-  dup.incorporate(mi->cfg(), mi->typeContext(), cfg_, typeContext_);
+  dup.incorporate(inlinedCfg, inlinedTypeContext, cfg_, typeContext_);
 
   // Duplicate the arguments
   OpcodeFactory entryFactory(cfg_, entry, entry->footer());
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
-  auto arg = mi->cfg()->inputs()->cbegin();
-  auto argEnd = mi->cfg()->inputs()->cend();
+  auto arg = inlinedCfg->inputs()->cbegin();
+  auto argEnd = inlinedCfg->inputs()->cend();
   for (; arg != argEnd; ++arg, ++i) {
     Variable* newArg = dup.duplicatedVariableOf(*arg);
     entryFactory.addCopy(newArg, *i, true);
@@ -178,7 +182,7 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
 
   // Set the inlined method's entry env
   Variable* curEnv = op->lookupOpcode()->env();
-  Variable* entryEnv = dup.duplicatedVariableOf(mi->cfg()->entryEnv());
+  Variable* entryEnv = dup.duplicatedVariableOf(inlinedCfg->entryEnv());
   typeContext_->updateTypeConstraint(entryEnv, TypeSameAs(typeContext_, curEnv));
 
   // Jump to the duplicated method's entry block
@@ -189,7 +193,7 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
 
   // Set the output variable
   if (op->lhs()) {
-    exitFactory.addCopy(result, dup.duplicatedVariableOf(mi->cfg()->output()), true);
+    exitFactory.addCopy(result, dup.duplicatedVariableOf(inlinedCfg->output()), true);
     if (!result) {
       result = cfg_->copyVariable(exitFactory.lastBlock(), exitFactory.lastOpcode(), op->lhs());
       typeContext_->addNewTypeConstraint(result, typeContext_->typeConstraintOf(op->lhs())->clone());
@@ -198,7 +202,7 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   }
 
   // Set the env variable
-  Variable* env = dup.duplicatedVariableOf(mi->cfg()->exitEnv());
+  Variable* env = dup.duplicatedVariableOf(inlinedCfg->exitEnv());
   if (exitEnv) {
     exitFactory.addCopy(exitEnv, env, true);
     env = exitEnv;
