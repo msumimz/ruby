@@ -12,14 +12,16 @@ RBJIT_NAMESPACE_BEGIN
 class Opcode;
 class BlockHeader;
 class TypeConstraint;
+class NamedVariable;
 
 class Variable {
 public:
 
   // constructor indirectly called by factory methods
-  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo);
+  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, NamedVariable* nameRef, int index, DefInfo* defInfo);
 
   // factory methods
+//  static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name, NamedVariable* nameRef);
   static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name);
   static Variable* createUnnamed(BlockHeader* defBlock, Opcode* defOpcode, int index);
   static Variable* createUnnamedSsa(BlockHeader* defBlock, Opcode* defOpcode, int index);
@@ -29,13 +31,20 @@ public:
 
   BlockHeader* defBlock() const { return defBlock_; }
   void setDefBlock(BlockHeader* block) { defBlock_ = block; }
+
   Opcode* defOpcode() const { return defOpcode_; }
   void setDefOpcode(Opcode* opcode) { defOpcode_ = opcode; }
+
   ID name() const { return name_; }
   void setName(ID name) { name_ = name; }
+
   Variable* original() const { return original_; }
+
+  NamedVariable* nameRef() const { return nameRef_; }
+
   bool local() const { return defInfo_->isLocal(); }
   void setLocal(bool local) { defInfo_->setLocal(local); }
+
   int index() const { return index_; }
   void setIndex(int i) { index_ = i; }
 
@@ -61,6 +70,9 @@ private:
 
   // original variable when this variable is created by renaming the existing one
   Variable* original_;
+
+  // Reference to a named variable in the scope
+  NamedVariable* nameRef_;
 
   int index_;
 

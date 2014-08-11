@@ -6,34 +6,35 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, int index, DefInfo* defInfo)
+Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, NamedVariable* nameRef, int index, DefInfo* defInfo)
   : defBlock_(defBlock), defOpcode_(defOpcode), name_(name),
     original_(original == 0 ? this : original),
+    nameRef_(nameRef),
     index_(index), defInfo_(defInfo)
 {}
 
 Variable*
 Variable::createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name)
 {
-  return new Variable(defBlock, defOpcode, name, 0, index, new DefInfo());
+  return new Variable(defBlock, defOpcode, name, 0, 0, index, new DefInfo());
 }
 
 Variable*
 Variable::createUnnamed(BlockHeader* defBlock, Opcode* defOpcode, int index)
 {
-  return new Variable(defBlock, defOpcode, 0, 0, index, 0);
+  return new Variable(defBlock, defOpcode, 0, 0, 0, index, 0);
 }
 
 Variable*
 Variable::createUnnamedSsa(BlockHeader* defBlock, Opcode* defOpcode, int index)
 {
-  return new Variable(defBlock, defOpcode, 0, 0, index, new DefInfo());
+  return new Variable(defBlock, defOpcode, 0, 0, 0, index, new DefInfo());
 }
 
 Variable*
 Variable::copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v)
 {
-  return new Variable(defBlock, defOpcode, v->name(), 0, index, 0);
+  return new Variable(defBlock, defOpcode, v->name(), 0, v->nameRef(), index, 0);
 }
 
 void

@@ -8,6 +8,7 @@
 RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
+class Scope;
 class Opcode;
 class OpcodeCall;
 class BlockHeader;
