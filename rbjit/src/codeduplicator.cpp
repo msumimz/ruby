@@ -125,7 +125,7 @@ CodeDuplicator::duplicateOpcodes()
   for (auto i = src_->variables()->cbegin(), end = src_->variables()->cend(); i != end; ++i) {
     Variable* v = *i;
     BlockHeader* defBlock = blockOf(v->defBlock());
-    Variable* newVar = Variable::copy(defBlock, 0, v->index() + variableIndexOffset_, v);
+    Variable* newVar = v->copy(defBlock, 0, v->index() + variableIndexOffset_);
     (*variables)[v->index() + variableIndexOffset_] = newVar;
   }
 

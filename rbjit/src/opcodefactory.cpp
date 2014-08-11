@@ -39,8 +39,7 @@ OpcodeFactory::createFreeBlockHeader(BlockHeader* idom)
 Variable*
 OpcodeFactory::createNamedVariable(ID name)
 {
-  Variable* v = Variable::createNamed(lastBlock_, lastOpcode_, cfg_->variables_.size(), name);
-  cfg_->variables_.push_back(v);
+  Variable* v = cfg_->createVariableSsa(name, lastBlock_, lastOpcode_);
   return v;
 }
 
@@ -51,8 +50,7 @@ OpcodeFactory::createTemporary(bool useResult)
     return 0;
   }
 
-  Variable* v = Variable::createUnnamedSsa(lastBlock_, lastOpcode_, cfg_->variables_.size());
-  cfg_->variables_.push_back(v);
+  Variable* v =cfg_->createVariableSsa(0, lastBlock_, lastOpcode_);
   return v;
 }
 
@@ -454,8 +452,7 @@ OpcodeFactory::addCallClone(OpcodeCall* source, Variable* methodEntry)
 
   Variable* lhs = 0;
   if (source->lhs()) {
-    lhs = Variable::copy(lastBlock_, op, cfg_->variables()->size(), source->lhs());
-    cfg_->variables()->push_back(lhs);
+    lhs = cfg_->copyVariable(lastBlock_, op, source->lhs());
   }
 
   return lhs;

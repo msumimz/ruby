@@ -88,7 +88,7 @@ ControlFlowGraph::createVariableSsa(ID name, BlockHeader* defBlock, Opcode* defO
 Variable*
 ControlFlowGraph::copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source)
 {
-  Variable* v = Variable::copy(defBlock, defOpcode, variables_.size(), source);
+  Variable* v = source->copy(defBlock, defOpcode, variables_.size());
   variables_.push_back(v);
   return v;
 }

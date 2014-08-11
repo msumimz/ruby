@@ -17,16 +17,6 @@ class NamedVariable;
 class Variable {
 public:
 
-  // constructor indirectly called by factory methods
-  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, NamedVariable* nameRef, int index, DefInfo* defInfo);
-
-  // factory methods
-//  static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name, NamedVariable* nameRef);
-  static Variable* createNamed(BlockHeader* defBlock, Opcode* defOpcode, int index, ID name);
-  static Variable* createUnnamed(BlockHeader* defBlock, Opcode* defOpcode, int index);
-  static Variable* createUnnamedSsa(BlockHeader* defBlock, Opcode* defOpcode, int index);
-  static Variable* copy(BlockHeader* defBlock, Opcode* defOpcode, int index, Variable* v);
-
   ~Variable() { delete defInfo_; }
 
   BlockHeader* defBlock() const { return defBlock_; }
@@ -60,6 +50,13 @@ public:
   std::string debugPrint() const;
 
 private:
+
+  friend class ControlFlowGraph;
+  friend class CodeDuplicator;
+
+  // constructor indirectly called by factory methods in ControlFlowGraph
+  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, NamedVariable* nameRef, int index, DefInfo* defInfo);
+  Variable* copy(BlockHeader* defBlock, Opcode* defOpcode, int index);
 
   // location where this variable is defined
   BlockHeader* defBlock_;
