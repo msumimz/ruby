@@ -56,7 +56,7 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
     factory.addJumpIf(cond, 0, 0);
 
     // Create an empty block for each class
-    OpcodeFactory trueFactory(factory, 0);
+    OpcodeFactory trueFactory(factory);
     BlockHeader* trueBlock = trueFactory.lastBlock();
     trueBlock->setDebugName("mul_segment");
     segments_.push_back(trueBlock);

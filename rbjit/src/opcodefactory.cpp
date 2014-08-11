@@ -19,7 +19,7 @@ OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg, BlockHeader* block, Opcode* 
     halted_(false)
 {}
 
-OpcodeFactory::OpcodeFactory(OpcodeFactory& factory, int)
+OpcodeFactory::OpcodeFactory(OpcodeFactory& factory)
   : cfg_(factory.cfg_), file_(factory.file_), line_(factory.line_),
     depth_(factory.depth_), halted_(false)
 {

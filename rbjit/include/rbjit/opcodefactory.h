@@ -21,8 +21,7 @@ public:
   OpcodeFactory(ControlFlowGraph* cfg, BlockHeader* block, Opcode* opcode);
 
   // Inherits the internal state of the factory and initiates a basic block
-  // (the second parameter is meaningless)
-  OpcodeFactory(OpcodeFactory& factory, int);
+  explicit OpcodeFactory(OpcodeFactory& factory);
 
   BlockHeader* lastBlock() const { return lastBlock_; }
   Opcode* lastOpcode() const { return lastOpcode_; }

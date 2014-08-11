@@ -462,7 +462,7 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   Variable* cond = buildNode(factory, node->nd_cond, true);
 
   // true block
-  OpcodeFactory trueFactory(*factory, 0);
+  OpcodeFactory trueFactory(*factory);
   BlockHeader* trueBlock = trueFactory.lastBlock();
   Variable* trueValue;
   if (node->nd_body) {
@@ -473,7 +473,7 @@ CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
   }
 
   // false block
-  OpcodeFactory falseFactory(*factory, 0);
+  OpcodeFactory falseFactory(*factory);
   BlockHeader* falseBlock = falseFactory.lastBlock();
   Variable* falseValue;
   if (node->nd_else) {
@@ -528,16 +528,16 @@ CfgBuilder::buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult
   }
 
   // join block
-  OpcodeFactory joinFactory(*factory, 0);
+  OpcodeFactory joinFactory(*factory);
   BlockHeader* joinBlock = joinFactory.lastBlock();
 
   // cushion block to avoid a critical edge
-  OpcodeFactory cushionFactory(*factory, 0);
+  OpcodeFactory cushionFactory(*factory);
   BlockHeader* cushionBlock = cushionFactory.lastBlock();
   cushionFactory.addJump(joinBlock);
 
   // right-side hand value
-  OpcodeFactory secondFactory(*factory, 0);
+  OpcodeFactory secondFactory(*factory);
   BlockHeader* secondBlock = secondFactory.lastBlock();
   Variable* second = buildNode(&secondFactory, node->nd_2nd, useResult);
   if (useResult) {
@@ -599,15 +599,15 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
   Variable* value = factory->createTemporary(useResult);
 
   // Create blocks
-  OpcodeFactory preheaderFactory(*factory, 0);
+  OpcodeFactory preheaderFactory(*factory);
   preheaderFactory.lastBlock()->setDebugName("while_preheader");
-  OpcodeFactory condFactory(*factory, 0);
+  OpcodeFactory condFactory(*factory);
   condFactory.lastBlock()->setDebugName("while_cond");
-  OpcodeFactory bodyFactory(*factory, 0);
+  OpcodeFactory bodyFactory(*factory);
   bodyFactory.lastBlock()->setDebugName("while_body");
-  OpcodeFactory preexitFactory(*factory, 0);
+  OpcodeFactory preexitFactory(*factory);
   preexitFactory.lastBlock()->setDebugName("while_preexit");
-  OpcodeFactory exitFactory(*factory, 0);
+  OpcodeFactory exitFactory(*factory);
   exitFactory.lastBlock()->setDebugName("while_exit");
 
   // Preheader block
