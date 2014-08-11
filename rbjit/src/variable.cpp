@@ -45,8 +45,8 @@ extern "C" {
 std::string
 Variable::debugPrint() const
 {
-  std::string result = stringFormat("%d:%Ix: '%s' (%Ix %Ix) ",
-    index_, this, mri::Id(name_).name(), defBlock_, defOpcode_);
+  std::string result = stringFormat("%d:%Ix: '%s' (%Ix %Ix) orig=%Ix nameRef=%Ix ",
+    index_, this, mri::Id(name_).name(), defBlock_, defOpcode_, original_, nameRef_);
 
   if (defInfo_) {
     result += stringFormat("defCount=%d local=%d defSites=", defInfo_->defCount(), defInfo_->isLocal());

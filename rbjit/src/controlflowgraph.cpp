@@ -514,6 +514,22 @@ SanityChecker::visitOpcode(OpcodePhi* op)
 {
   checkLhs(op, false);
   checkRhs(op, false);
+
+  if (op->rhsCount() <= 1) {
+    addError(op, "the number of nodes %d is too small for a phi node", op->rhsCount());
+    return true;
+  }
+
+  for (auto i = op->rhsBegin(), end = op->rhsEnd() - 1; i < end; ++i) {
+    auto j = i + 1;
+    if ((*i)->original() != *i && (*j)->original() != *j && (*i)->original() != (*j)->original()) {
+      addError(op, "The original variable of operand %Ix and %Ix does not match", *i, *j);
+    }
+    if ((*i)->nameRef() != (*j)->nameRef()) {
+      addError(op, "The name reference of operand %Ix and %Ix does not match", *i, *j);
+    }
+  }
+
   return true;
 }
 
