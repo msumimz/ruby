@@ -15,6 +15,7 @@ RBJIT_NAMESPACE_BEGIN
 
 Inliner::Inliner(PrecompiledMethodInfo* mi)
   : mi_(mi), cfg_(mi->compilationInstance()->cfg()),
+    scope_(mi->compilationInstance()->scope()),
     typeContext_(mi->compilationInstance()->typeContext()),
     visited_(cfg_->blocks()->size(), false)
 {}
@@ -101,7 +102,7 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->outEnv());
   }
   else {
-    OpcodeMultiplexer mul(cfg_, typeContext_);
+    OpcodeMultiplexer mul(cfg_, scope_, typeContext_);
     BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
 
     OpcodePhi* phi = mul.phi();
@@ -170,7 +171,7 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   dup.incorporate(inlinedCfg, inlinedTypeContext, cfg_, typeContext_);
 
   // Duplicate the arguments
-  OpcodeFactory entryFactory(cfg_, entry, entry->footer());
+  OpcodeFactory entryFactory(cfg_, scope_, entry, entry->footer());
   auto i = op->rhsBegin();
   auto end = op->rhsEnd();
   auto arg = inlinedCfg->inputs()->cbegin();
@@ -189,7 +190,7 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   entryFactory.addJump(dup.entry());
 
   // Begin at the duplicated method's exit block
-  OpcodeFactory exitFactory(cfg_, dup.exit(), dup.exit()->footer());
+  OpcodeFactory exitFactory(cfg_, scope_, dup.exit(), dup.exit()->footer());
 
   // Set the output variable
   if (op->lhs()) {
@@ -220,7 +221,7 @@ Inliner::insertCall(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, 
 {
   // OpcodeLookup
   OpcodeLookup* lookup = op->lookupOpcode();
-  OpcodeFactory factory(cfg_, entry, entry->footer());
+  OpcodeFactory factory(cfg_, scope_, entry, entry->footer());
   Variable* newLookup = factory.addLookup(lookup->receiver(), lookup->methodName(), me);
   if (!me.isNull()) {
     typeContext_->addNewTypeConstraint(newLookup, TypeConstant::create(reinterpret_cast<VALUE>(me.ptr())));

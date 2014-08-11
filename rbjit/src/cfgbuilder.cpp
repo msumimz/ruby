@@ -33,7 +33,7 @@ UnsupportedSyntaxException::UnsupportedSyntaxException(std::string what)
 // CfgBuilder
 
 Variable*
-CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name)
+CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name, bool belongsToScope)
 {
   std::unordered_map<ID, Variable*>::const_iterator i = namedVariables_.find(name);
   if (i != namedVariables_.end()) {
@@ -44,7 +44,7 @@ CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name)
     return v;
   }
 
-  Variable* v = factory->createNamedVariable(name);
+  Variable* v = factory->createNamedVariable(name, belongsToScope);
   namedVariables_[name] = v;
 
   return v;
@@ -57,7 +57,7 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
   scope_ = new Scope(rootNode->nd_tbl, nullptr);
   name_ = name;
 
-  OpcodeFactory factory(cfg_);
+  OpcodeFactory factory(cfg_, scope_);
   factory.createEntryExitBlocks();
   cfg_->entry()->setDebugName("entry");
   cfg_->exit()->setDebugName("exit");
@@ -91,7 +91,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
   assert(nd_type(node) == NODE_SCOPE);
 
   // self
-  Variable* self = buildNamedVariable(factory, IdStore::get(ID_self));
+  Variable* self = buildNamedVariable(factory, IdStore::get(ID_self), false);
   self->setDefOpcode(0);
   self->defInfo()->addDefSite(factory->lastBlock()); // entry block
   cfg_->inputs()->push_back(self);
@@ -109,7 +109,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
     // Method has the fixed number of arguments
     mri::IdTable idTable(node->nd_tbl);
     for (int i = 0; i < requiredArgCount; ++i) {
-      Variable* v = buildNamedVariable(factory, idTable.idAt(i));
+      Variable* v = buildNamedVariable(factory, idTable.idAt(i), true);
       v->setDefOpcode(0);
       v->defInfo()->addDefSite(factory->lastBlock()); // entry block
       cfg_->inputs()->push_back(v);
@@ -267,7 +267,7 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
   assert(nd_type(node) == NODE_DASGN_CURR || nd_type(node) == NODE_LASGN);
 
   Variable* rhs = buildNode(factory, node->nd_value, true);
-  Variable* lhs = buildNamedVariable(factory, node->nd_vid);
+  Variable* lhs = buildNamedVariable(factory, node->nd_vid, true);
 
   Variable* value = factory->addCopy(lhs, rhs, useResult);
 
@@ -283,7 +283,7 @@ Variable*
 CfgBuilder::buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_LVAR);
-  return buildNamedVariable(factory, node->nd_vid);
+  return buildNamedVariable(factory, node->nd_vid, true);
 }
 
 Variable*
@@ -300,7 +300,7 @@ CfgBuilder::buildSelf(OpcodeFactory* factory, const RNode* node, bool useResult)
     return nullptr;
   }
 
-  return buildNamedVariable(factory, mri::Id("<self>"));
+  return buildNamedVariable(factory, IdStore::get(ID_self), false);
 }
 
 Variable*

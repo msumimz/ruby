@@ -72,15 +72,15 @@ ControlFlowGraph::domTree()
 Variable*
 ControlFlowGraph::createVariable(ID name, BlockHeader* defBlock, Opcode* defOpcode)
 {
-  Variable* v = new Variable(defBlock, defOpcode, name, 0,  0, variables_.size(), 0);
+  Variable* v = new Variable(defBlock, defOpcode, name, nullptr, nullptr, variables_.size(), nullptr);
   variables_.push_back(v);
   return v;
 }
 
 Variable*
-ControlFlowGraph::createVariableSsa(ID name, BlockHeader* defBlock, Opcode* defOpcode)
+ControlFlowGraph::createVariableSsa(ID name, NamedVariable* nameRef, BlockHeader* defBlock, Opcode* defOpcode)
 {
-  Variable* v = new Variable(defBlock, defOpcode, name, 0, 0, variables_.size(), new DefInfo());
+  Variable* v = new Variable(defBlock, defOpcode, name, nullptr, nameRef, variables_.size(), new DefInfo());
   variables_.push_back(v);
   return v;
 }

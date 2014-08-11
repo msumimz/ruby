@@ -17,8 +17,8 @@ class Variable;
 class OpcodeFactory {
 public:
 
-  OpcodeFactory(ControlFlowGraph* cfg);
-  OpcodeFactory(ControlFlowGraph* cfg, BlockHeader* block, Opcode* opcode);
+  OpcodeFactory(ControlFlowGraph* cfg, Scope* scope);
+  OpcodeFactory(ControlFlowGraph* cfg, Scope* scope, BlockHeader* block, Opcode* opcode);
 
   // Inherits the internal state of the factory and initiates a basic block
   explicit OpcodeFactory(OpcodeFactory& factory);
@@ -75,7 +75,7 @@ public:
 
   void createEntryExitBlocks();
 
-  Variable* createNamedVariable(ID name);
+  Variable* createNamedVariable(ID name, bool belongsToScope);
   Variable* createTemporary(bool useResult);
   BlockHeader* createFreeBlockHeader(BlockHeader* idom);
 
@@ -84,6 +84,7 @@ private:
   void updateDefSite(Variable* v);
 
   ControlFlowGraph* cfg_;
+  Scope* scope_;
 
   BlockHeader* lastBlock_;
   Opcode* lastOpcode_;

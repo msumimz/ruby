@@ -14,6 +14,7 @@ class BlockHeader;
 class Opcode;
 class OpcodeCall;
 class Variable;
+class Scope;
 
 class Inliner {
 public:
@@ -31,6 +32,7 @@ private:
 
   PrecompiledMethodInfo* mi_;
   ControlFlowGraph* cfg_;
+  Scope* scope_;
   TypeContext* typeContext_;
 
   std::vector<BlockHeader*> work_;

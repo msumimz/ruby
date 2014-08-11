@@ -12,7 +12,7 @@ class NamedVariable {
 public:
 
   NamedVariable(ID name, Scope* scope)
-    : name_(name), scope_(scope), index_(0)
+    : name_(name), scope_(scope), index_(-1)
   {}
 
   ID name() const { return name_; }
@@ -21,8 +21,8 @@ public:
   int index() const { return index_; }
   void setIndex(int index) { index_ = index; }
 
-  void addUseFromInnerScope(Scope* scope);
-  bool hasUses() const { return !uses_.empty(); }
+  void addUseInInnerScope(Scope* scope);
+  bool isUsedInInnerScope() const { return !uses_.empty(); }
 
 private:
 

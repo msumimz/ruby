@@ -11,8 +11,6 @@
 #include "rbjit/typeconstraint.h"
 #include "rbjit/debugprint.h"
 #include "rbjit/typecontext.h"
-#include "rbjit/inliner.h"
-#include "rbjit/codeduplicator.h"
 #include "rbjit/recompilationmanager.h"
 #include "rbjit/compilationinstance.h"
 

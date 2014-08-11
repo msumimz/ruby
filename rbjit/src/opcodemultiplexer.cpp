@@ -6,30 +6,32 @@
 #include "rbjit/variable.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/typeconstraint.h"
+#include "rbjit/idstore.h"
+#include "rbjit/scope.h"
 
 RBJIT_NAMESPACE_BEGIN
 
 Variable*
 OpcodeMultiplexer::generateTypeTestOpcode(OpcodeFactory* factory, Variable* selector, mri::Class cls)
 {
-  Variable* cond = cfg_->createVariable();
+  Variable* cond;
 
   if (cls == mri::Class::trueClass()) {
-    factory->addPrimitive(cond, "rbjit__is_true", 1, selector);
+    cond = factory->addPrimitive(IdStore::get(ID_rbjit__is_true), 1, selector);
   }
   else if (cls == mri::Class::falseClass()) {
-    factory->addPrimitive(cond, "rbjit__is_false", 1, selector);
+    cond = factory->addPrimitive(IdStore::get(ID_rbjit__is_false), 1, selector);
   }
   else if (cls == mri::Class::nilClass()) {
-    factory->addPrimitive(cond, "rbjit__is_nil", 1, selector);
+    cond = factory->addPrimitive(IdStore::get(ID_rbjit__is_nil), 1, selector);
   }
   else if (cls == mri::Class::fixnumClass()) {
-    factory->addPrimitive(cond, "rbjit__is_fixnum", 1, selector);
+    cond = factory->addPrimitive(IdStore::get(ID_rbjit__is_fixnum), 1, selector);
   }
   else {
-    Variable* c = factory->addImmediate(cfg_->createVariable(), cls, true);
-    Variable* selc = factory->addPrimitive(cfg_->createVariable(), "rbjit__class_of", 1, selector);
-    factory->addPrimitive(cond, "rbjit__bitwise_compare_eq", 2, c, selc);
+    Variable* c = factory->addImmediate(cls, true);
+    Variable* selc = factory->addPrimitive(IdStore::get(ID_rbjit__class_of), 1, selector);
+    cond = factory->addPrimitive(IdStore::get(ID_rbjit__bitwise_compare_eq), 2, c, selc);
   }
 
   typeContext_->addNewTypeConstraint(cond,
@@ -48,7 +50,7 @@ OpcodeMultiplexer::multiplex(BlockHeader* block, Opcode* opcode, Variable* selec
   BlockHeader* entryBlock = cfg_->insertEmptyBlockAfter(block);
   entryBlock->setDebugName("mul_entry");
 
-  OpcodeFactory factory(cfg_, entryBlock, entryBlock);
+  OpcodeFactory factory(cfg_, scope_, entryBlock, entryBlock);
 
   int count = cases.size() - 1 + otherwise;
   for (int i = 0; i < count; ++i) {

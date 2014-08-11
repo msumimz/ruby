@@ -13,6 +13,7 @@ class BlockHeader;
 class Variable;
 class BlockVisitor;
 class DomTree;
+class NamedVariable;
 
 // Single-entry and single-exit control flow graph
 class ControlFlowGraph {
@@ -51,8 +52,8 @@ public:
   std::vector<Variable*>* variables() { return &variables_; }
 
   // Factory methods
-  Variable* createVariable(ID name = 0, BlockHeader* defBlock = 0, Opcode* defOpcode = 0);
-  Variable* createVariableSsa(ID name = 0, BlockHeader* defBlock = 0, Opcode* defOpcode = 0);
+  Variable* createVariable(ID name, BlockHeader* defBlock, Opcode* defOpcode);
+  Variable* createVariableSsa(ID name, NamedVariable* nameRef, BlockHeader* defBlock, Opcode* defOpcode);
   Variable* copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source);
 
   // Mutators

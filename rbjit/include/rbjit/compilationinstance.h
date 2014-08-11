@@ -24,6 +24,7 @@ public:
   void* generateCode(PrecompiledMethodInfo* mi);
 
   ControlFlowGraph* cfg();
+  Scope* scope();
   TypeContext* typeContext();
   TypeConstraint* returnType();
   bool isMutator();
@@ -47,9 +48,10 @@ private:
 
   ControlFlowGraph* cfg_;
   ControlFlowGraph* origCfg_;
+  Scope* scope_;
+  Scope* origScope_;
   TypeContext* typeContext_;
   TypeConstraint* returnType_;
-  Scope* scope_;
 
   State mutator_;
   State jitOnly_;

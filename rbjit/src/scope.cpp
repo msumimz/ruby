@@ -7,7 +7,7 @@ RBJIT_NAMESPACE_BEGIN
 // NamedVariable
 
 void
-NamedVariable::addUseFromInnerScope(Scope* scope)
+NamedVariable::addUseInInnerScope(Scope* scope)
 {
   if (std::find(uses_.cbegin(), uses_.cend(), scope) == uses_.cend()) {
     uses_.push_back(scope);
@@ -45,7 +45,7 @@ Scope::activeVariableList() const
     auto pv = variables_.find(name);
     const NamedVariable* v = pv->second;
     assert(v);
-    if (v->hasUses()) {
+    if (v->isUsedInInnerScope()) {
       result.push_back(name);
     }
   }
@@ -60,7 +60,7 @@ Scope::setIndexes()
     ID name = idTable_.idAt(i);
     NamedVariable* v = variables_[name];
     assert(v);
-    if (v->hasUses()) {
+    if (v->isUsedInInnerScope()) {
       v->setIndex(index++);
     }
   }

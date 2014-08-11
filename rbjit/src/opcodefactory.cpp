@@ -5,22 +5,24 @@
 #include "rbjit/variable.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/rubyobject.h"
+#include "rbjit/scope.h"
 
 RBJIT_NAMESPACE_BEGIN
 
-OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg)
-  : cfg_(cfg), lastBlock_(0), lastOpcode_(0),
+OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg, Scope* scope)
+  : cfg_(cfg), scope_(scope), lastBlock_(0), lastOpcode_(0),
     file_(0), line_(0), depth_(0), halted_(false)
 {}
 
-OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg, BlockHeader* block, Opcode* opcode)
-  : cfg_(cfg), lastBlock_(block), lastOpcode_(opcode),
+OpcodeFactory::OpcodeFactory(ControlFlowGraph* cfg, Scope* scope, BlockHeader* block, Opcode* opcode)
+  : cfg_(cfg), scope_(scope), lastBlock_(block), lastOpcode_(opcode),
     file_(opcode->file()), line_(opcode->line()), depth_(block->depth()),
     halted_(false)
 {}
 
 OpcodeFactory::OpcodeFactory(OpcodeFactory& factory)
-  : cfg_(factory.cfg_), file_(factory.file_), line_(factory.line_),
+  : cfg_(factory.cfg_), scope_(factory.scope_),
+    file_(factory.file_), line_(factory.line_),
     depth_(factory.depth_), halted_(false)
 {
   lastBlock_ = createFreeBlockHeader(0);
@@ -37,10 +39,14 @@ OpcodeFactory::createFreeBlockHeader(BlockHeader* idom)
 }
 
 Variable*
-OpcodeFactory::createNamedVariable(ID name)
+OpcodeFactory::createNamedVariable(ID name, bool belongsToScope)
 {
-  Variable* v = cfg_->createVariableSsa(name, lastBlock_, lastOpcode_);
-  return v;
+  NamedVariable* nameRef = nullptr;
+  if (belongsToScope) {
+    nameRef = scope_->find(name);
+    assert(nameRef);
+  }
+  return cfg_->createVariableSsa(name, nameRef, lastBlock_, lastOpcode_);
 }
 
 Variable*
@@ -50,8 +56,7 @@ OpcodeFactory::createTemporary(bool useResult)
     return 0;
   }
 
-  Variable* v =cfg_->createVariableSsa(0, lastBlock_, lastOpcode_);
-  return v;
+  return cfg_->createVariableSsa(0, 0, lastBlock_, lastOpcode_);
 }
 
 void
@@ -202,7 +207,7 @@ OpcodeFactory::addEnv(bool useResult)
   OpcodeEnv* op = new OpcodeEnv(file_, line_, lastOpcode_, 0);
   lastOpcode_ = op;
 
-  Variable* lhs = createNamedVariable(OpcodeEnv::envName());
+  Variable* lhs = createNamedVariable(OpcodeEnv::envName(), false);
   op->setLhs(lhs);
   updateDefSite(lhs);
 

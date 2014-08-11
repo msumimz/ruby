@@ -67,6 +67,13 @@ CompilationInstance::cfg()
   return cfg_;
 }
 
+Scope*
+CompilationInstance::scope()
+{
+  buildCfg();
+  return scope_;
+}
+
 TypeContext*
 CompilationInstance::typeContext()
 {

@@ -37,7 +37,7 @@ public:
 
 private:
 
-  Variable* buildNamedVariable(OpcodeFactory* factory, ID name);
+  Variable* buildNamedVariable(OpcodeFactory* factory, ID name, bool belongsToScope);
 
   void buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool useResult);
   void buildArguments(OpcodeFactory* factory, const RNode* node);
