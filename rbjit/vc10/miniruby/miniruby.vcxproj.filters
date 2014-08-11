@@ -482,6 +482,9 @@
     <ClInclude Include="..\..\include\rbjit\compilationinstance.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\rubyidtable.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\primitives\primitives.rc">

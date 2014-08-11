@@ -10,6 +10,7 @@
 #include "rbjit/opcode.h"
 #include "rbjit/idstore.h"
 #include "rbjit/rubytypes.h"
+#include "rbjit/rubyidtable.h"
 
 #include "ruby.h"
 #include "node.h"
@@ -104,7 +105,7 @@ CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
 
   if (!hasOptionalArg && !hasRestArg) {
     // Method has the fixed number of arguments
-    IdTable idTable(node->nd_tbl);
+    mri::IdTable idTable(node->nd_tbl);
     for (int i = 0; i < requiredArgCount; ++i) {
       Variable* v = buildNamedVariable(factory, idTable.idAt(i));
       v->setDefOpcode(0);

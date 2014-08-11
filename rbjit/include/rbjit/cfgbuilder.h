@@ -15,27 +15,6 @@ class OpcodeFactory;
 class MethodInfo;
 
 ////////////////////////////////////////////////////////////
-// IdTable
-//
-// Helper class to treat the node nd_tbl
-
-class IdTable {
-public:
-
-  IdTable(ID* tbl)
-    : size_(tbl ? (size_t)*tbl++ : 0), table_(tbl)
-    {}
-
-  size_t size() const { return size_; }
-  ID idAt(size_t i) const { return table_[i]; }
-
-private:
-
-  size_t size_;
-  ID* table_;
-};
-
-////////////////////////////////////////////////////////////
 // UnsupportedSyntaxException
 
 class UnsupportedSyntaxException : public std::runtime_error {
