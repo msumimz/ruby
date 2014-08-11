@@ -200,7 +200,8 @@ SsaTranslator::renameVariablesForSingleBlock(BlockHeader* b)
         Variable* lhs = op->lhs();
         OpcodeCopy* copy;
         if (doCopyFolding_ && (copy = dynamic_cast<OpcodeCopy*>(op)) &&
-            lhs != cfg_->output() && !OpcodeEnv::isEnv(lhs)) {
+            lhs != cfg_->output() && !OpcodeEnv::isEnv(lhs) &&
+            lhs->nameRef() == copy->rhs()->nameRef()) {
           // Copy propagation
           renameStack_[lhs->index()].push_back(copy->rhs());
           if (lhs->defCount() == 1) {

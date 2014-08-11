@@ -271,11 +271,6 @@ CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useR
 
   Variable* value = factory->addCopy(lhs, rhs, useResult);
 
-  // By copy propagation optimization during SSA translation, the copy opcode
-  // will be possibly removed and the variable name will be lost. To keep the
-  // variable name, set the name to the temporary.
-  rhs->setName(lhs->name());
-
   return value;
 }
 

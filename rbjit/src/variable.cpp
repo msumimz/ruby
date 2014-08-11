@@ -16,7 +16,7 @@ Variable::Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* 
 Variable*
 Variable::copy(BlockHeader* defBlock, Opcode* defOpcode, int index)
 {
-  return new Variable(defBlock, defOpcode, name(), 0, nameRef(), index, 0);
+  return new Variable(defBlock, defOpcode, name(), original(), nameRef(), index, 0);
 }
 
 void

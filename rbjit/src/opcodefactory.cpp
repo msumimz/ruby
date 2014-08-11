@@ -111,7 +111,7 @@ OpcodeFactory::addCopy(Variable* rhs, bool useResult)
   OpcodeCopy* op = new OpcodeCopy(file_, line_, lastOpcode_, 0, rhs);
   lastOpcode_ = op;
 
-  Variable* lhs = createTemporary(true);
+  Variable* lhs = cfg_->createVariableSsa(rhs->name(), rhs->nameRef(), lastBlock_, lastOpcode_);
   op->setLhs(lhs);
   updateDefSite(lhs);
 

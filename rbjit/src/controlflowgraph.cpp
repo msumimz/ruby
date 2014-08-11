@@ -307,7 +307,7 @@ SanityChecker::addError(Opcode* op, const char* format, ...)
   char buf[256];
 
   // header
-  std::string error = stringFormat("Block %d(%Ix):%s: ", current_->index(), current_, op->typeName());
+  std::string error = stringFormat("Block %d(%Ix):%s(%Ix): ", current_->index(), current_, op->typeName(), op);
 
   va_list args;
   va_start(args, format);
@@ -525,7 +525,7 @@ SanityChecker::visitOpcode(OpcodePhi* op)
     if ((*i)->original() != *i && (*j)->original() != *j && (*i)->original() != (*j)->original()) {
       addError(op, "The original variable of operand %Ix and %Ix does not match", *i, *j);
     }
-    if ((*i)->nameRef() != (*j)->nameRef()) {
+    if (*i != cfg_->undefined() && *j != cfg_->undefined() &&(*i)->nameRef() != (*j)->nameRef()) {
       addError(op, "The name reference of operand %Ix and %Ix does not match", *i, *j);
     }
   }
