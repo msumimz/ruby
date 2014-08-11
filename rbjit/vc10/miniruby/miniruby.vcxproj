@@ -341,6 +341,7 @@
     <ClCompile Include="..\..\src\rubymethod.cpp" />
     <ClCompile Include="..\..\src\rubyobject.cpp" />
     <ClCompile Include="..\..\src\runtimefunctions.cpp" />
+    <ClCompile Include="..\..\src\scope.cpp" />
     <ClCompile Include="..\..\src\setup.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
@@ -371,6 +372,7 @@
     <ClInclude Include="..\..\include\rbjit\recompilationmanager.h" />
     <ClInclude Include="..\..\include\rbjit\rubyidtable.h" />
     <ClInclude Include="..\..\include\rbjit\runtimefunctions.h" />
+    <ClInclude Include="..\..\include\rbjit\scope.h" />
     <ClInclude Include="..\..\include\rbjit\ssachecker.h" />
     <ClInclude Include="..\..\include\rbjit\typeanalyzer.h" />
     <ClInclude Include="..\..\include\rbjit\typecontext.h" />

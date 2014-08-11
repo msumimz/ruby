@@ -11,6 +11,7 @@
 #include "rbjit/idstore.h"
 #include "rbjit/rubytypes.h"
 #include "rbjit/rubyidtable.h"
+#include "rbjit/scope.h"
 
 #include "ruby.h"
 #include "node.h"
@@ -53,6 +54,7 @@ ControlFlowGraph*
 CfgBuilder::buildMethod(const RNode* rootNode, ID name)
 {
   cfg_ = new ControlFlowGraph;
+  scope_ = new Scope(rootNode->nd_tbl, nullptr);
   name_ = name;
 
   OpcodeFactory factory(cfg_);

@@ -7,6 +7,7 @@ class TypeConstraint;
 class TypeContext;
 class ControlFlowGraph;
 class PrecompiledMethodInfo;
+class Scope;
 
 class CompilationInstance {
 public:
@@ -48,6 +49,8 @@ private:
   ControlFlowGraph* origCfg_;
   TypeContext* typeContext_;
   TypeConstraint* returnType_;
+  Scope* scope_;
+
   State mutator_;
   State jitOnly_;
 

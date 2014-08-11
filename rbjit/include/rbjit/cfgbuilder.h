@@ -13,6 +13,7 @@ class Opcode;
 class BlockHeader;
 class OpcodeFactory;
 class MethodInfo;
+class Scope;
 
 ////////////////////////////////////////////////////////////
 // UnsupportedSyntaxException
@@ -67,6 +68,7 @@ private:
   Variable* buildToplevelConstant(OpcodeFactory* factory, const RNode* node, bool useResult);
 
   ControlFlowGraph* cfg_;
+  Scope* scope_;
 
   std::unordered_map<ID, Variable*> namedVariables_;
 

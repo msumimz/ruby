@@ -364,6 +364,9 @@
     <ClCompile Include="..\..\src\compilationinstance.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\scope.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -483,6 +486,9 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\rubyidtable.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\scope.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
