@@ -82,11 +82,6 @@ rbjit_enterMethod(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
   rb_iseq_t *iseq = ci->me->def->body.iseq;
   VALUE *sp = argv + iseq->arg_size;
 
-  /* clear local variables (arg_size...local_size) */
-  for (i = iseq->arg_size, local_size = iseq->local_size; i < local_size; i++) {
-    *sp++ = Qnil;
-  }
-
   // static inline rb_control_frame_t *
   // vm_push_frame(rb_thread_t *th,
   //               const rb_iseq_t *iseq,
