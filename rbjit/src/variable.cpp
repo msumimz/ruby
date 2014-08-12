@@ -38,10 +38,6 @@ Variable::clearDefInfo()
   }
 }
 
-extern "C" {
-#include "ruby.h"
-}
-
 std::string
 Variable::debugPrint() const
 {

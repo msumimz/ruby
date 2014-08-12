@@ -3,10 +3,6 @@
 #include "rbjit/definfo.h"
 #include "rbjit/rubytypes.h"
 
-namespace llvm {
-class Value;
-};
-
 RBJIT_NAMESPACE_BEGIN
 
 class Opcode;

@@ -1,6 +1,5 @@
 #include <intrin.h> // suppress warning in ruby_atomic.h
 #include "rbjit/rubymethod.h"
-
 #include "ruby.h"
 
 extern "C" {
@@ -20,6 +19,7 @@ typedef enum call_type {
 extern int rb_method_call_status(rb_thread_t *th, const rb_method_entry_t *me, call_type scope, VALUE self);
 
 // defined in vm_method.c
+typedef struct rb_method_cfunc_struct rb_method_cfunc_t;
 extern void setup_method_cfunc_struct(rb_method_cfunc_t *cfunc, VALUE (*func)(), int argc);
 extern void release_method_definition(rb_method_definition_t *def);
 
@@ -27,7 +27,6 @@ extern VALUE (*call_cfunc_invoker_func(int argc))(VALUE (*func)(...), VALUE recv
 
 // defined in vm_insnhelper.c
 extern VALUE vm_call0(rb_thread_t* th, VALUE recv, ID id, int argc, const VALUE *argv, const rb_method_entry_t *me, VALUE defined_class);
-
 
 }
 
