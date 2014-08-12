@@ -11,6 +11,8 @@ RBJIT_NAMESPACE_BEGIN
 
 class Variable;
 class BlockHeader;
+class Scope;
+
 class OpcodeCopy;
 class OpcodeJump;
 class OpcodeJumpIf;
@@ -632,21 +634,17 @@ public:
 class OpcodeEnter : public Opcode {
 public:
 
-  OpcodeEnter(int file, int line, Opcode* prev, rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
-    : Opcode(file, line, prev), thread_(th), cfp_(cfp), ci_(ci)
+  OpcodeEnter(int file, int line, Opcode* prev, Scope* scope)
+    : Opcode(file, line, prev), scope_(scope)
   {}
 
-  rb_thread_t* thread() const { return thread_; }
-  rb_control_frame_t* controlFramePointer() const { return cfp_; }
-  rb_call_info_t* callInfo() const { return ci_; }
+  Scope* scope() const { return scope_; }
 
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
-  rb_thread_t* thread_;
-  rb_control_frame_t* cfp_;
-  rb_call_info_t* ci_;
+  Scope* scope_;
 };
 
 class OpcodeLeave : public Opcode {

@@ -690,12 +690,12 @@ NativeCompiler::visitOpcode(OpcodeHash* op)
 bool
 NativeCompiler::visitOpcode(OpcodeEnter* op)
 {
-  std::vector<llvm::Value*> args(3);
-  args[0] = getInt(reinterpret_cast<size_t>(op->thread()));
-  args[1] = getInt(reinterpret_cast<size_t>(op->controlFramePointer()));
-  args[2] = getInt(reinterpret_cast<size_t>(op->callInfo()));
-
-  emitCall(runtime_[RF_enterMethod], args);
+//  std::vector<llvm::Value*> args(3);
+//  args[0] = getInt(reinterpret_cast<size_t>(op->thread()));
+//  args[1] = getInt(reinterpret_cast<size_t>(op->controlFramePointer()));
+//  args[2] = getInt(reinterpret_cast<size_t>(op->callInfo()));
+//
+//  emitCall(runtime_[RF_enterMethod], args);
 
   return true;
 }
@@ -703,8 +703,8 @@ NativeCompiler::visitOpcode(OpcodeEnter* op)
 bool
 NativeCompiler::visitOpcode(OpcodeLeave* op)
 {
-  std::vector<llvm::Value*> args;
-  llvm::Value* value = emitCall(runtime_[RF_leaveMethod], args);
+//  std::vector<llvm::Value*> args;
+//  llvm::Value* value = emitCall(runtime_[RF_leaveMethod], args);
 
   return true;
 }

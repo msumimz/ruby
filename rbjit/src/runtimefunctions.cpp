@@ -6,7 +6,7 @@ extern "C" {
 #include "vm_core.h" // GET_THREAD
 #include "constant.h" // rb_public_const_get
 
-// Defined in vm_insnhelper.c (originally defined as static inline)
+// The following functions are defined in vm_insnhelper.c (originally defined as static inline)
 VALUE
 vm_get_ev_const(rb_thread_t *th, const rb_iseq_t *iseq,
                 VALUE orig_klass, ID id, int is_defined);
@@ -23,6 +23,9 @@ vm_push_frame(rb_thread_t *th,
               int local_size,
               const rb_method_entry_t *me,
               size_t stack_max);
+
+void vm_pop_frame(rb_thread_t *th);
+
 }
 
 RBJIT_NAMESPACE_BEGIN
@@ -72,45 +75,38 @@ rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp,
 }
 
 void
-rbjit_enterMethod(rb_thread_t* th, rb_control_frame_t* cfp, rb_call_info_t* ci)
+rbjit_enterMethod(rb_thread_t* th, rb_call_info_t* ci)
 {
+#if 0
   // ref. vm_insnhelper.c:vm_call_iseq_setup_normal
   //      vm_call_cfunc_with_frame
 
-  int i, local_size;
-  VALUE *argv = cfp->sp - ci->argc;
-  rb_iseq_t *iseq = ci->me->def->body.iseq;
-  VALUE *sp = argv + iseq->arg_size;
+  rb_control_frame_t cfp = th->cfp;
+  VALUE* argv = cfp->sp - ci->argc;
+  rb_iseq_t* iseq = ci->me->def->body.iseq;
+  VALUE* sp = argv + iseq->arg_size;
 
-  // static inline rb_control_frame_t *
-  // vm_push_frame(rb_thread_t *th,
-  //               const rb_iseq_t *iseq,
-  //               VALUE type,
-  //               VALUE self,
-  //               VALUE klass,
-  //               VALUE specval,
-  //               const VALUE *pc,
-  //               VALUE *sp,
-  //               int local_size,
-  //               const rb_method_entry_t *me,
-  //               size_t stack_max)
   vm_push_frame(
-      th,                                  // th
-      iseq,                                // iseq
-      VM_FRAME_MAGIC_RBJIT_COMPILED,       // type
-      ci->recv,                            // self
-      ci->defined_class,                   // klass
-      0, //VM_ENVVAL_BLOCK_PTR(ci->blockptr),   // specval
-      0,                                   // pc
-      sp,                                  // sp
-      0,                                   // local_size
-      ci->me,                              // me
-      iseq->stack_max);                    // stack_max
+      th,                                  // rb_thread_t* th
+      0,                                   // const rb_iseq_t* iseq
+      VM_FRAME_MAGIC_RBJIT_COMPILED,       // VALUE type
+      ci->recv,                            // VALUE self
+      ci->defined_class,                   // VALUE klass
+      0, //VM_ENVVAL_BLOCK_PTR(ci->blockptr),   // VALUE specval
+      0,                                   // const VALUE* pc
+      sp,                                  // VALUE* sp
+      0,                                   // int local_size
+      ci->me,                              // const rb_methdo_entry_t* me
+      iseq->stack_max);                    // size_t stack_max
+#endif
 }
 
 void
 rbjit_leaveMethod()
 {
+#if 0
+  vm_pop_frame(GET_THREAD());
+#endif
 }
 
 ////////////////////////////////////////////////////////////

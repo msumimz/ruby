@@ -364,7 +364,7 @@ CodeDuplicator::visitOpcode(OpcodeHash* op)
 bool
 CodeDuplicator::visitOpcode(OpcodeEnter* op)
 {
-  OpcodeEnter* newOp = new OpcodeEnter(op->file(), op->line(), lastOpcode_, op->thread(), op->controlFramePointer(), op->callInfo());
+  OpcodeEnter* newOp = new OpcodeEnter(op->file(), op->line(), lastOpcode_, op->scope());
   lastOpcode_ = newOp;
 
   return true;

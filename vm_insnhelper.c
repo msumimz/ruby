@@ -98,7 +98,7 @@ vm_push_frame(rb_thread_t *th,
     return cfp;
 }
 
-static inline void
+inline void
 vm_pop_frame(rb_thread_t *th)
 {
     th->cfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(th->cfp);

@@ -549,19 +549,36 @@ OpcodeFactory::addHash(Variable*const*elemsBegin, Variable*const* elemsEnd, bool
 void
 OpcodeFactory::createEntryExitBlocks()
 {
+  ////////////////////////////////////////////////////////////
   // entry block
-  cfg_->entry_ = addFreeBlockHeader(0);
+
+  BlockHeader* entry = addFreeBlockHeader(0);
+  cfg_->entry_ = entry;
+
+  // undefined
   cfg_->undefined_ = addImmediate(mri::Object::nilObject(), true);
+
+  // env
   Variable* env = addEnv(true);
   cfg_->entryEnv_ = cfg_->exitEnv_ = env;
 
+  // scope
+  lastOpcode_ = new OpcodeEnter(0, 0, lastOpcode_, scope_);
+  entry->setFooter(lastOpcode_);
+
+  ////////////////////////////////////////////////////////////
   // exit block
+
   BlockHeader* exit = createFreeBlockHeader(0);
+  cfg_->exit_ = exit;
+
+  // exit env
   Opcode* op = new OpcodeCopy(0, 0, exit, env, env);
   env->updateDefSite(exit, op);
+
+  // exit
   op = new OpcodeExit(0, 0, op);
   exit->setFooter(op);
-  cfg_->exit_ = exit;
 }
 
 RBJIT_NAMESPACE_END

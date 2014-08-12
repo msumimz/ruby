@@ -573,14 +573,8 @@ SanityChecker::visitOpcode(OpcodeHash* op)
 bool
 SanityChecker::visitOpcode(OpcodeEnter* op)
 {
-  if (!op->thread()) {
-    addError(op, "rb_thread_t* is null");
-  }
-  if (!op->controlFramePointer()) {
-    addError(op, "rb_control_frame_t* is null");
-  }
-  if (!op->callInfo()) {
-    addError(op, "rb_call_info_t* is null");
+  if (!op->scope()) {
+    addError(op, "scope is null");
   }
   return true;
 }
@@ -949,8 +943,7 @@ Dumper::visitOpcode(OpcodeHash* op)
 bool
 Dumper::visitOpcode(OpcodeEnter* op)
 {
-  put("th %Ix cfp %Ix ci %Ix",
-      op->thread(), op->controlFramePointer(), op->callInfo());
+  put("%Ix", op->scope());
   return true;
 }
 
