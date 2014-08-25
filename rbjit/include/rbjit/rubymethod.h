@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rbjit/rubyobject.h"
+#include "rbjit/mri/decl.h"
 
 RBJIT_NAMESPACE_BEGIN
 

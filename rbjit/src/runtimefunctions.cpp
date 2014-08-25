@@ -2,11 +2,15 @@
 #include "rbjit/rubymethod.h"
 
 #include "ruby.h"
-extern "C" {
-#include "vm_core.h" // GET_THREAD
-#include "constant.h" // rb_public_const_get
 
-// The following functions are defined in vm_insnhelper.c (originally defined as static inline)
+extern "C" {
+
+#include "vm_core.h"
+#include "method.h"
+
+// The following functions are defined in vm_insnhelper.c (originally defined
+// as static inline)
+
 VALUE
 vm_get_ev_const(rb_thread_t *th, const rb_iseq_t *iseq,
                 VALUE orig_klass, ID id, int is_defined);
@@ -221,6 +225,6 @@ rbjit_createHash(int count, ...)
   return result;
 }
 
-}
+} // extern "C"
 
 RBJIT_NAMESPACE_END

@@ -5,6 +5,15 @@
 #include "rbjit/debugprint.h"
 #include "rbjit/rubymethod.h"
 
+#include "ruby.h"
+extern "C" {
+#include "node.h"
+#include "vm_core.h"
+#include "method.h"
+
+void rb_vmdebug_proc_dump_raw(rb_proc_t *proc);
+}
+
 #ifdef _x64
 # define PTRF "% 16Ix"
 # define SPCF "                "
@@ -12,11 +21,6 @@
 # define PTRF "% 8Ix"
 # define SPCF "        "
 #endif
-
-extern "C" {
-#include "vm_core.h"
-void rb_vmdebug_proc_dump_raw(rb_proc_t *proc);
-}
 
 RBJIT_NAMESPACE_BEGIN
 
