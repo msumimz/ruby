@@ -70,6 +70,15 @@ VALUE
 rbjit_callCompiledCode(rb_thread_t* th, rb_call_info_t* ci, const VALUE* argv)
 {
   return Qnil;
+#if 0
+  const rb_method_entry_t* me = ci->me;
+  PrecompiledMethodInfo* mi = reinerpret_cast<PrecompiledMethodInfo*>(me->jit_method_info);
+  assert(mi);
+
+  mi->compilationInstance()->
+
+
+#endif
 }
 
 VALUE
@@ -79,38 +88,33 @@ rbjit_callCompiledCodeWithControlFrame(rb_thread_t* th, rb_control_frame_t* cfp,
 }
 
 void
-rbjit_enterMethod(rb_thread_t* th, rb_call_info_t* ci)
+rbjit_enterMethod(VALUE receiver, VALUE holderClass, size_t argc, rb_method_entry_t* me)
 {
-#if 0
   // ref. vm_insnhelper.c:vm_call_iseq_setup_normal
   //      vm_call_cfunc_with_frame
 
-  rb_control_frame_t cfp = th->cfp;
-  VALUE* argv = cfp->sp - ci->argc;
-  rb_iseq_t* iseq = ci->me->def->body.iseq;
-  VALUE* sp = argv + iseq->arg_size;
+  rb_thread_t* th = GET_THREAD();
+  rb_control_frame_t* cfp = th->cfp;
+  VALUE* sp = cfp->sp - argc;
 
   vm_push_frame(
       th,                                  // rb_thread_t* th
       0,                                   // const rb_iseq_t* iseq
       VM_FRAME_MAGIC_RBJIT_COMPILED,       // VALUE type
-      ci->recv,                            // VALUE self
-      ci->defined_class,                   // VALUE klass
+      receiver,                            // VALUE self
+      holderClass,                         // VALUE klass
       0, //VM_ENVVAL_BLOCK_PTR(ci->blockptr),   // VALUE specval
       0,                                   // const VALUE* pc
       sp,                                  // VALUE* sp
       0,                                   // int local_size
-      ci->me,                              // const rb_methdo_entry_t* me
-      iseq->stack_max);                    // size_t stack_max
-#endif
+      me,                                  // const rb_methdo_entry_t* me
+      0);                                  // size_t stack_max
 }
 
 void
 rbjit_leaveMethod()
 {
-#if 0
   vm_pop_frame(GET_THREAD());
-#endif
 }
 
 ////////////////////////////////////////////////////////////
