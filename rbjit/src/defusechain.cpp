@@ -36,6 +36,7 @@ void
 DefUseChain::build()
 {
   for (auto i = cfg_->begin(), end = cfg_->end(); i != end; ++i) {
+    block_ = *i;
     (*i)->visitEachOpcode(this);
   }
 }

@@ -70,4 +70,23 @@ DefInfoMap::updateDefSite(Variable* v, Block* defBlock, Opcode* defOpcode)
   }
 }
 
+std::string
+DefInfoMap::debugPrint() const
+{
+  std::string out = stringFormat("[DefInfoMap: %Ix]\n", this);
+
+  for (auto i = map_.cbegin(), end = map_.cend(); i != end; ++i) {
+    Variable* v = i->first;
+    DefInfo* defInfo = i->second;
+    out += stringFormat("%Ix: defInfo=%Ix defCount=%d local=%s defSite=",
+      v, defInfo, defInfo->defCount(), defInfo->isLocal() ? "true" : "false");
+    for (const DefSite* s = defInfo->defSite(); s; s = s->next()) {
+      out += stringFormat("%Ix ", s);
+    }
+    out += '\n';
+  }
+
+  return out;
+}
+
 RBJIT_NAMESPACE_END

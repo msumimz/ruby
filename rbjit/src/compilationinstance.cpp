@@ -143,6 +143,7 @@ CompilationInstance::buildCfg()
   RBJIT_DPRINT(cfg_->debugPrintDotHeader());
   RBJIT_DPRINT(cfg_->debugPrintAsDot());
   RBJIT_DPRINT(cfg_->debugPrintVariables());
+  RBJIT_DPRINT(defInfoMap->debugPrint());
   assert(cfg_->checkSanityAndPrintErrors());
 
   LTDominatorFinder domFinder(cfg_);

@@ -85,6 +85,8 @@ public:
     return i != map_.end() ? i->second : nullptr;
   }
 
+  std::string debugPrint() const;
+
 private:
 
   // TODO: Use an array

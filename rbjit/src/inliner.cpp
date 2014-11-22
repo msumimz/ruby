@@ -8,7 +8,6 @@
 #include "rbjit/codeduplicator.h"
 #include "rbjit/block.h"
 #include "rbjit/blockbuilder.h"
-#include "rbjit/opcodefactory.h"
 #include "rbjit/debugprint.h"
 #include "rbjit/opcodedemux.h"
 #include "rbjit/recompilationmanager.h"
@@ -106,8 +105,13 @@ Inliner::inlineCallSite(Block* block, Block::Iterator callIter)
   if (!otherwise && cases.size() == 1 && inlinable[0]) {
     Block* join = cfg_->splitBlock(block, callIter, true);
     join->setDebugName("inliner_join");
-    Block* initBlock = cfg_->insertEmptyBlockAfter(block);
+
+    Block* initBlock = new Block;
     initBlock->setDebugName("inliner_arguments");
+    cfg_->addBlock(initBlock);
+    block->footer()->setNextBlock(initBlock);
+    initBlock->addBackedge(block);
+
     replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->outEnv());
   }
   else {
@@ -120,8 +124,8 @@ Inliner::inlineCallSite(Block* block, Block::Iterator callIter)
     int otherwiseIndex = size - 1;
     for (int i = 0; i < size; ++i) {
       Block* block = mul.segments()[i];
-      Block* join = cfg_->insertEmptyBlockAfter(block);
-      join->setDebugName("inliner_join");
+      Block* join = new Block;
+      join->setDebugName("inliner_join"); /**********************************/
 
       std::pair<Variable*, Variable*> result;
       if (i == otherwiseIndex) {
@@ -253,7 +257,7 @@ Inliner::insertCall(mri::MethodEntry me, Block* entry, Block* exit, OpcodeCall* 
   Opcode* call = duplicateCall(op, newLookup, builder.block());
   builder.addWithoutLhsAssigned(call);
 
-  builder.add(new OpcodeJump(nullptr, exit));
+  builder.addJump(nullptr, exit);
 
   return std::make_pair(call->lhs(), call->outEnv());
 }

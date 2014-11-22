@@ -210,6 +210,7 @@ loop_head:
         di->decreaseDefCount();
       }
       i = b->removeOpcode(i);
+      end = b->end();
       goto loop_head;
     }
     else {

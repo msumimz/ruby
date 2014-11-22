@@ -87,24 +87,6 @@ ControlFlowGraph::debugPrint() const
 }
 
 std::string
-ControlFlowGraph::debugPrintDotHeader() const
-{
-  static int count = 0;
-  return stringFormat("[Dot: %d %Ix]\n", count++, this);
-}
-
-std::string
-ControlFlowGraph::debugPrintAsDot() const
-{
-  std::string out;
-  BlockDebugPrinter printer;
-  for (auto i = begin(), e = end(); i != e; ++i) {
-    out += printer.printAsDot(*i);
-  }
-  return out;
-}
-
-std::string
 ControlFlowGraph::debugPrintBlock(Block* block) const
 {
   std::string out = stringFormat("[Block %Ix (CFG: %Ix)]\n", block, this);
@@ -125,6 +107,32 @@ ControlFlowGraph::debugPrintVariables() const
   for (auto i = constVariableBegin(), end = constVariableEnd(); i != end; ++i) {
     out += (*i)->debugPrint();
   };
+
+  return out;
+}
+
+std::string
+ControlFlowGraph::debugPrintDotHeader() const
+{
+  static int count = 0;
+  return stringFormat("[Dot: %d %Ix]\n", count++, this);
+}
+
+std::string
+ControlFlowGraph::debugPrintAsDot() const
+{
+  std::string cfgInfo = stringFormat("entry=%Ix exit=%Ix output=%Ix entryEnv=%Ix exitEnv=%Ix",
+    entryBlock(), exitBlock(), output(), entryEnv(), exitEnv());
+  std::string out = "digraph {\n"
+    "graph [label=\"" + cfgInfo + "\" labelloc=t labeljust=l fontname=\"Consolas\"]\n"
+    "node [shape=box fontname=\"Consolas\"]\n";
+
+  BlockDebugPrinter printer;
+  for (auto i = begin(), e = end(); i != e; ++i) {
+    out += printer.printAsDot(*i);
+  }
+
+  out += "}\n";
 
   return out;
 }

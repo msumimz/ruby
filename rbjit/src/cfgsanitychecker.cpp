@@ -211,7 +211,7 @@ CfgSanityChecker::checkBlock(Block* block)
     else if (!cfg_->containsBlock(b)) {
       addError("Backedge %Ix does not belong to the cfg", b);
     }
-    else if (block->nextBlock() != block && block->nextAltBlock() != block) {
+    else if (b->nextBlock() != block && b->nextAltBlock() != block) {
       addError("Backedge %d refers to the block %d(%Ix), which has no edges to this block",
 	std::distance(block->constBackedgeBegin(), i), b->index(), b);
     }

@@ -10,13 +10,17 @@ RBJIT_NAMESPACE_BEGIN
 BlockBuilder::BlockBuilder(ControlFlowGraph* cfg, Scope* scope, DefInfoMap* defInfoMap, Block* block)
   : cfg_(cfg), scope_(scope), defInfoMap_(defInfoMap), block_(block), halted_(false)
 {
-  cfg_->addBlock(block);
+  if (!cfg_->containsBlock(block)) {
+    cfg_->addBlock(block);
+  }
 }
 
 BlockBuilder::BlockBuilder(const BlockBuilder* builder, Block* block)
   : cfg_(builder->cfg_), scope_(builder->scope_), defInfoMap_(builder->defInfoMap_), block_(block), halted_(false)
 {
-  cfg_->addBlock(block);
+  if (!cfg_->containsBlock(block)) {
+    cfg_->addBlock(block);
+  }
 }
 
 void
@@ -74,12 +78,15 @@ void
 BlockBuilder::addJump(SourceLocation* loc, Block* dest)
 {
   addWithoutLhsAssigned(new OpcodeJump(loc, dest));
+  dest->addBackedge(block_);
 }
 
 void
 BlockBuilder::addJumpIf(SourceLocation* loc, Variable* cond, Block* ifTrue, Block* ifFalse)
 {
   addWithoutLhsAssigned(new OpcodeJumpIf(loc, cond, ifTrue, ifFalse));
+  ifTrue->addBackedge(block_);
+  ifFalse->addBackedge(block_);
 }
 
 RBJIT_NAMESPACE_END

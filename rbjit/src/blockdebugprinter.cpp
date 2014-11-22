@@ -18,7 +18,7 @@ BlockDebugPrinter::putCommonOutput(Opcode* op)
 {
   std::string opname = op->shortTypeName();
 
-  out_ += stringFormat("  " PTRF " " PTRF, op, op->sourceLocation());
+  out_ += stringFormat(PTRF " " PTRF " ", op, op->sourceLocation());
   if (op->lhs()) {
     out_ += stringFormat(PTRF " %-7s", op->lhs(), opname.c_str());
   }
@@ -38,6 +38,8 @@ BlockDebugPrinter::put(const char* format, ...)
 std::string
 BlockDebugPrinter::print(Block* b)
 {
+  out_.clear();
+
   put("BLOCK %d: %Ix (%s)\n", b->index(), b, b->debugName());
   put("backedges=");
   for (auto i = b->backedgeBegin(), end = b->backedgeEnd(); i != end; ++i) {
@@ -46,6 +48,7 @@ BlockDebugPrinter::print(Block* b)
   out_ += '\n';
 
   for (auto i = b->begin(), end = b->end(); i != end; ++i) {
+    putCommonOutput(*i);
     bool ok = (*i)->accept(this);
     out_ += '\n';
     if (!ok) {

@@ -130,10 +130,10 @@ protected:
 
 class OpcodeTerminator {
 public:
-  virtual Block* nextBlock() const = 0;
-  virtual void setNextBlock(Block* block) {}
-  virtual Block* nextAltBlock() const = 0;
-  virtual void setNextAltBlock(Block* block) {}
+  virtual Block* nextBlock() const { return nullptr; }
+  virtual void setNextBlock(Block* block) { assert(!"Undefined");  }
+  virtual Block* nextAltBlock() const { return nullptr; }
+  virtual void setNextAltBlock(Block* block) { assert(!"Undefined"); }
 };
 
 ////////////////////////////////////////////////////////////
@@ -444,7 +444,7 @@ private:
   Block* block_;
 };
 
-class OpcodeExit : public Opcode {
+class OpcodeExit : public Opcode, public OpcodeTerminator {
 public:
 
   OpcodeExit(SourceLocation* loc)

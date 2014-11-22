@@ -1,6 +1,5 @@
 #include <cassert>
 
-#include "rbjit/opcodefactory.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/cfgbuilder.h"
 #include "rbjit/rubyobject.h"
@@ -46,6 +45,7 @@ CfgBuilder::createNamedVariable(BlockBuilder* builder, ID name)
   assert(nv);
 
   Variable* v  = new Variable(name, nv);
+  cfg_->addVariable(v);
   namedVariables_.insert(std::make_pair(name, v));
 
   return v;
@@ -59,7 +59,7 @@ CfgBuilder::buildJumpToReturnBlock(BlockBuilder* builder, Variable* returnValue)
     cfg_->setOutput(output);
   }
 
-  builder->add(new OpcodeJump(loc_, cfg_->exitBlock()));
+  builder->addJump(loc_, cfg_->exitBlock());
 
   builder->halt();
 }
@@ -87,6 +87,7 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
 
   // env
   Variable* env = builder.add(new OpcodeEnv(loc_, nullptr));
+  env->setName(IdStore::get(ID_env));
   cfg_->setEntryEnv(env);
   cfg_->setExitEnv(env);
 
@@ -731,6 +732,7 @@ CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, bool useResult)
 
   // Create a Call opcode
   OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->exitEnv());
+  defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
 
   // Arguments
   Variable** args = op->begin();
@@ -776,6 +778,7 @@ CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, bool useResul
   Variable* receiver = buildSelf(builder, 0, true);
   OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
   OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->exitEnv());
+  defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
 
   // Arguments
   Variable** args = op->begin();
@@ -794,7 +797,10 @@ CfgBuilder::buildConstant(BlockBuilder* builder, const RNode* node, bool useResu
 {
   assert(nd_type(node) == NODE_CONST);
 
-  return builder->add(useResult, new OpcodeConstant(loc_, nullptr, cfg_->undefined(), node->nd_vid, false, cfg_->entryEnv(), cfg_->exitEnv()));
+  OpcodeConstant* op = new OpcodeConstant(loc_, nullptr, cfg_->undefined(), node->nd_vid, false, cfg_->entryEnv(), cfg_->exitEnv());
+  defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
+
+  return builder->add(useResult, op);
 }
 
 Variable*
@@ -803,7 +809,10 @@ CfgBuilder::buildRelativeConstant(BlockBuilder* builder, const RNode* node, bool
   assert(nd_type(node) == NODE_COLON2);
 
   Variable* base = buildNode(builder, node->nd_head, true);
-  return builder->add(useResult, new OpcodeConstant(loc_, nullptr, base, node->nd_mid, false, cfg_->entryEnv(), cfg_->exitEnv()));
+  OpcodeConstant* op = new OpcodeConstant(loc_, nullptr, base, node->nd_mid, false, cfg_->entryEnv(), cfg_->exitEnv());
+  defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
+
+  return builder->add(useResult, op);
 }
 
 Variable*
@@ -811,7 +820,10 @@ CfgBuilder::buildToplevelConstant(BlockBuilder* builder, const RNode* node, bool
 {
   assert(nd_type(node) == NODE_COLON3);
 
-  return builder->add(useResult, new OpcodeConstant(loc_, nullptr, cfg_->undefined(), node->nd_mid, true, cfg_->entryEnv(), cfg_->exitEnv()));
+  OpcodeConstant* op = new OpcodeConstant(loc_, nullptr, cfg_->undefined(), node->nd_mid, true, cfg_->entryEnv(), cfg_->exitEnv());
+  defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
+
+  return  builder->add(useResult, op);
 }
 
 RBJIT_NAMESPACE_END

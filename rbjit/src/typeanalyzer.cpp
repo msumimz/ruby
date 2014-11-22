@@ -90,10 +90,10 @@ TypeAnalyzer::analyze()
 
   do {
     do {
-      Block* b = blocks_.back();
+      block_ = blocks_.back();
       blocks_.pop_back();
 
-      b->visitEachOpcode(this);
+      block_->visitEachOpcode(this);
     } while (!blocks_.empty());
 
     while (!variables_.empty()) {

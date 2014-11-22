@@ -69,7 +69,6 @@ public:
     Block* newBlock = new Block;
     addBlock(newBlock);
 
-    newBlock->setNextBlock(b->nextBlock());
     if (b->nextBlock()) {
       b->nextBlock()->updateBackedge(b, newBlock);
     }
