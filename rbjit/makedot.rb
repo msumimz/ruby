@@ -36,8 +36,8 @@ if !dot
   exit(1)
 end
 
-File.open("test.dot", "w") do |f|
+File.open("temp.dot", "w") do |f|
   f.write(dot)
 end
 
-system("dot -Tpng test.dot -o test.png")
+system("dot -Tpng temp.dot -o temp.png")
