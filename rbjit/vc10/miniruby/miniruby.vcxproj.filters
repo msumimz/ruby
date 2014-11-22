@@ -235,15 +235,6 @@
     <ClCompile Include="..\..\..\missing\acosh.c">
       <Filter>ruby</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\missing\cbrt.c">
-      <Filter>ruby</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\missing\erf.c">
-      <Filter>ruby</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\missing\tgamma.c">
-      <Filter>ruby</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\dmyext.c">
       <Filter>ruby</Filter>
     </ClCompile>
@@ -280,9 +271,6 @@
     <ClCompile Include="..\..\src\opcode.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\opcodefactory.cpp">
-      <Filter>rbjit\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\setup.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
@@ -305,9 +293,6 @@
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\cooperdominatorfinder.cpp">
-      <Filter>rbjit\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\dominatorfinder.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ltdominatorfinder.cpp">
@@ -337,9 +322,6 @@
     <ClCompile Include="..\..\src\inliner.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\opcodemultiplexer.cpp">
-      <Filter>rbjit\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\idstore.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
@@ -367,6 +349,21 @@
     <ClCompile Include="..\..\src\scope.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\block.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\blockbuilder.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\opcodedemux.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\cfgsanitychecker.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\blockdebugprinter.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -384,9 +381,6 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\definfo.h">
-      <Filter>rbjit\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\rbjit\opcodefactory.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\variable.h">
@@ -458,9 +452,6 @@
     <ClInclude Include="..\..\include\rbjit\inliner.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\rbjit\opcodemultiplexer.h">
-      <Filter>rbjit\Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\include\rbjit\idstore.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
@@ -489,6 +480,21 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\scope.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\block.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\blockbuilder.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\opcodedemux.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\cfgsanitychecker.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\blockdebugprinter.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>

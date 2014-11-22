@@ -18,7 +18,7 @@ RBJIT_NAMESPACE_BEGIN
 
 TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg, mri::Class holderClass, mri::CRef cref)
   : cfg_(cfg),
-    reachBlocks_(cfg->blocks()->size(), UNKNOWN),
+    reachBlocks_(cfg->blockCount(), UNKNOWN),
     defUseChain_(cfg),
     typeContext_(new TypeContext(cfg)),
     mutator_(false), jitOnly_(false),
@@ -29,7 +29,7 @@ TypeAnalyzer::TypeAnalyzer(ControlFlowGraph* cfg, mri::Class holderClass, mri::C
 void
 TypeAnalyzer::setInputTypeConstraint(int index, const TypeConstraint& type)
 {
-  typeContext_->updateTypeConstraint((*cfg_->inputs())[index], type);
+  typeContext_->updateTypeConstraint(cfg_->input(index), type);
 }
 
 void
@@ -53,7 +53,7 @@ TypeAnalyzer::updateTypeConstraint(Variable* v, const TypeConstraint& newType)
 }
 
 void
-TypeAnalyzer::makeEdgeReachable(BlockHeader* from, BlockHeader* to)
+TypeAnalyzer::makeEdgeReachable(Block* from, Block* to)
 {
   auto c = reachEdges_.find(std::make_pair(from, to));
   if (c == reachEdges_.end()) {
@@ -71,7 +71,7 @@ TypeAnalyzer::makeEdgeReachable(BlockHeader* from, BlockHeader* to)
 }
 
 void
-TypeAnalyzer::makeEdgeUnreachable(BlockHeader* from, BlockHeader* to)
+TypeAnalyzer::makeEdgeUnreachable(Block* from, Block* to)
 {
   reachEdges_[std::make_pair(from, to)] = UNREACHABLE;
 }
@@ -80,17 +80,17 @@ std::tuple<TypeContext*, bool, bool>
 TypeAnalyzer::analyze()
 {
   // Initialize type constraints
-  for (auto i = cfg_->variables()->cbegin(), end = cfg_->variables()->cend(); i != end; ++i) {
+  for (auto i = cfg_->constVariableBegin(), end = cfg_->constVariableEnd(); i != end; ++i) {
     if (!typeContext_->typeConstraintOf(*i)) {
       typeContext_->setTypeConstraint(*i, TypeAny::create());
     }
   };
 
-  blocks_.push_back(cfg_->entry());
+  blocks_.push_back(cfg_->entryBlock());
 
   do {
     do {
-      BlockHeader* b = blocks_.back();
+      Block* b = blocks_.back();
       blocks_.pop_back();
 
       b->visitEachOpcode(this);
@@ -111,19 +111,11 @@ TypeAnalyzer::analyze()
 void
 TypeAnalyzer::evaluateExpressionsUsing(Variable* v)
 {
-  const std::vector<std::pair<BlockHeader*, Variable*>>& uses = defUseChain_.uses(v);
+  const std::vector<std::pair<Block*, Variable*>>& uses = defUseChain_.uses(v);
   for (auto i = uses.cbegin(), end = uses.cend(); i != end; ++i) {
     block_ = i->first;
     i->second->defOpcode()->accept(this);
   };
-}
-
-bool
-TypeAnalyzer::visitOpcode(BlockHeader* op)
-{
-  reachBlocks_[op->index()] = REACHABLE;
-  block_ = op;
-  return true;
 }
 
 bool
@@ -136,7 +128,7 @@ TypeAnalyzer::visitOpcode(OpcodeCopy* op)
 bool
 TypeAnalyzer::visitOpcode(OpcodeJump* op)
 {
-  auto* b = op->nextBlock();
+  Block* b = op->nextBlock();
   blocks_.push_back(b);;
   reachEdges_[std::make_pair(block_, b)] = REACHABLE;
   return true;
@@ -150,18 +142,18 @@ TypeAnalyzer::visitOpcode(OpcodeJumpIf* op)
 
   switch (condType->evaluatesToBoolean()) {
   case TypeConstraint::ALWAYS_TRUE:
-    makeEdgeReachable(block_, op->ifTrue());
-    makeEdgeUnreachable(block_, op->ifFalse());
+    makeEdgeReachable(block_, op->nextBlock());
+    makeEdgeUnreachable(block_, op->nextAltBlock());
     break;
 
   case TypeConstraint::ALWAYS_FALSE:
-    makeEdgeUnreachable(block_, op->ifTrue());
-    makeEdgeReachable(block_, op->ifFalse());
+    makeEdgeUnreachable(block_, op->nextBlock());
+    makeEdgeReachable(block_, op->nextAltBlock());
     break;
 
   case TypeConstraint::TRUE_OR_FALSE:
-    makeEdgeReachable(block_, op->ifTrue());
-    makeEdgeReachable(block_, op->ifFalse());
+    makeEdgeReachable(block_, op->nextBlock());
+    makeEdgeReachable(block_, op->nextAltBlock());
     break;
 
   default:
@@ -340,7 +332,7 @@ TypeAnalyzer::visitOpcode(OpcodeConstant* op)
     }
     else {
       // TODO
-      // if a base object is not a class or module, then TypeError will be
+      // If the base object is not a class or module, then TypeError will be
       // raised on runtime. When we implement begin-rescue caluses, don't
       // forget to add control edges from constants to rescue clauses.
     }
@@ -447,11 +439,10 @@ bool
 TypeAnalyzer::visitOpcode(OpcodePhi* op)
 {
   TypeSelection types;
-  BlockHeader::Backedge* e = block_->backedge();
-  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i, e = e->next()) {
-    assert(e->block());
+  auto e = block_->backedgeBegin();
+  for (auto i = op->begin(), end = op->end(); i < end; ++i, ++e) {
     if (typeContext_->typeConstraintOf(*i)) {
-      auto r = reachEdges_.find(std::make_pair(e->block(), block_));
+      auto r = reachEdges_.find(std::make_pair(*e, block_));
       if (r != reachEdges_.end() && r->second == REACHABLE) {
         TypeConstraint* t = typeContext_->typeConstraintOf(*i);
         if (typeid(*t) == typeid(TypeEnv)) {

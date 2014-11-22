@@ -3,6 +3,7 @@
 #include "rbjit/ltdominatorfinder.h"
 #include "rbjit/opcode.h"
 #include "rbjit/controlflowgraph.h"
+#include "rbjit/block.h"
 
 #ifdef RBJIT_DEBUG
 #include "rbjit/cooperdominatorfinder.h"
@@ -10,32 +11,32 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-LTDominatorFinder::LTDominatorFinder(ControlFlowGraph* cfg)
-  : DominatorFinder(cfg),
-    parent_(blocks_->size() + 1, 0),
-    ancestor_(blocks_->size() + 1, 0),
-    child_(blocks_->size() + 1, 0),
-    vertex_(blocks_->size() + 1, 0),
-    label_(blocks_->size() + 1, 0),
-    semi_(blocks_->size() + 1, 0),
-    size_(blocks_->size() + 1, 0),
-    dom_(blocks_->size() + 1, 0),
-    pred_(blocks_->size() + 1),
-    bucket_(blocks_->size() + 1),
+LTDominatorFinder::LTDominatorFinder(const ControlFlowGraph* cfg)
+  : cfg_(cfg),
+    parent_(cfg_->blockCount() + 1, 0),
+    ancestor_(cfg_->blockCount() + 1, 0),
+    child_(cfg_->blockCount() + 1, 0),
+    vertex_(cfg_->blockCount() + 1, 0),
+    label_(cfg_->blockCount() + 1, 0),
+    semi_(cfg_->blockCount() + 1, 0),
+    size_(cfg_->blockCount() + 1, 0),
+    dom_(cfg_->blockCount() + 1, 0),
+    pred_(cfg_->blockCount() + 1),
+    bucket_(cfg_->blockCount() + 1),
     computed_(false)
 {}
 
-std::vector<BlockHeader*>
+std::vector<Block*>
 LTDominatorFinder::dominators()
 {
   findDominators();
 
-  std::vector<BlockHeader*> idoms(blocks_->size());
-  for (int i = 0; i < blocks_->size(); ++i) {
+  std::vector<Block*> idoms(cfg_->blockCount());
+  for (int i = 0; i < cfg_->blockCount(); ++i) {
     if (dom_[i + 1] == 0) {
       continue;
     }
-    idoms[i] = (*blocks_)[dom_[i + 1] - 1];
+    idoms[i] = cfg_->block(dom_[i + 1] - 1);
   }
 
 #ifdef RBJIT_DEBUG
@@ -45,46 +46,29 @@ LTDominatorFinder::dominators()
   return idoms;
 }
 
-void
-LTDominatorFinder::setDominatorsToCfg()
-{
-  findDominators();
-
-#ifdef RBJIT_DEBUG
-  debugVerify(dominators());
-#endif
-
-  for (int i = 0; i < blocks_->size(); ++i) {
-    if (dom_[i + 1] == 0) {
-      continue;
-    }
-    (*blocks_)[i]->setIdom((*blocks_)[dom_[i + 1] - 1]);
-  }
-}
-
 #ifdef RBJIT_DEBUG
 
 void
-LTDominatorFinder::debugVerify(std::vector<BlockHeader*>& doms)
+LTDominatorFinder::debugVerify(std::vector<Block*>& doms)
 {
   CooperDominatorFinder cooper(cfg_);
-  std::vector<BlockHeader*> cooperDoms = cooper.dominators();
+  std::vector<Block*> cooperDoms = cooper.dominators();
 
   bool error = false;
-  for (int i = 0; i < blocks_->size(); ++i) {
+  for (int i = 0; i < cfg_->blockCount(); ++i) {
     // LTDominatorFinder does not find an exit block's dominator
-    if (i == cfg_->exit()->index()) {
+    if (cfg_->block(i) == cfg_->exitBlock()) {
       continue;
     }
     if (doms[i] != cooperDoms[i]) {
-      fprintf(stderr, "error block %Ix's idom is wrong: cooper %Ix, lt %Ix\n", (*blocks_)[i], cooperDoms[i], doms[i]);
+      fprintf(stderr, "error block %Ix's idom is wrong: cooper %Ix, lt %Ix\n", cfg_->block(i), cooperDoms[i], doms[i]);
       error = true;
     }
   }
 
   if (error) {
-    for (int i = 0; i < blocks_->size(); ++i) {
-      fprintf(stderr, "%2d: %Ix %Ix %Ix\n", i, (*cfg_->blocks())[i], cooperDoms[i], doms[i]);
+    for (int i = 0; i < cfg_->blockCount(); ++i) {
+      fprintf(stderr, "%2d: %Ix %Ix %Ix\n", i, cfg_->block(i), cooperDoms[i], doms[i]);
     }
   }
 
@@ -107,7 +91,7 @@ LTDominatorFinder::findDominators()
   // variables used in succeeding steps.
   dfs();
 
-  for (int i = blocks_->size(); i >= 2; --i) {
+  for (int i = cfg_->blockCount(); i >= 2; --i) {
     int w = vertex_[i];
     // Step 2
     // Compute the semidominators of all vertices. Carry out the computation
@@ -140,7 +124,7 @@ LTDominatorFinder::findDominators()
   // Step 4
   // Explicitly define the immediate dominator of each vertex, carrying out the
   // computation vertex by vertex in increasing order by number.
-  for (int i = 2; i <= blocks_->size(); ++i) {
+  for (int i = 2; i <= cfg_->blockCount(); ++i) {
     int w = vertex_[i];
     if (dom_[w] != vertex_[semi_[w]]) {
       dom_[w] = dom_[dom_[w]];
@@ -155,8 +139,8 @@ LTDominatorFinder::dfs()
   std::vector<int> work;
   int n = 0;
 
-  int v = cfg_->entry()->index() + 1;
-  BlockHeader* b;
+  int v = cfg_->entryBlock()->index() + 1;
+  Block* b;
   for (;;) {
     for (;;) {
       semi_[v] = ++n;
@@ -166,7 +150,7 @@ LTDominatorFinder::dfs()
 
       work.push_back(v);
 
-      b = (*blocks_)[v - 1]->nextBlock();
+      b = cfg_->block(v - 1)->nextBlock();
       if (!b) {
         break;
       }
@@ -188,7 +172,7 @@ LTDominatorFinder::dfs()
     while (!work.empty()) {
       v = work.back();
       work.pop_back();
-      b = (*blocks_)[v - 1]->nextAltBlock();
+      b = cfg_->block(v - 1)->nextAltBlock();
       if (b) {
         break;
       }

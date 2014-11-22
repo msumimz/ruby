@@ -1,21 +1,24 @@
 #pragma once
+#include <unordered_map>
 #include "rbjit/common.h"
 
 RBJIT_NAMESPACE_BEGIN
 
-class BlockHeader;
+class Block;
+class Variable;
+class Opcode;
 
 class DefSite {
 public:
 
-  DefSite(BlockHeader* defBlock, DefSite* next)
+  DefSite(Block* defBlock, DefSite* next)
     : defBlock_(defBlock), next_(next)
   {}
 
-  BlockHeader* defBlock() const { return defBlock_; }
+  Block* defBlock() const { return defBlock_; }
   DefSite* next() const { return next_; }
 
-  void addDefSite(BlockHeader* defBlock)
+  void addDefSite(Block* defBlock)
   {
     if (defBlock_ == 0) {
       defBlock_ = defBlock;
@@ -30,7 +33,7 @@ public:
 private:
 
 
-  BlockHeader* defBlock_;
+  Block* defBlock_;
   DefSite* next_;
 
 };
@@ -40,13 +43,13 @@ public:
 
   DefInfo() : defSite_(0, 0), defCount_(0), local_(true) {}
 
-  DefInfo(BlockHeader* defBlock)
+  DefInfo(Block* defBlock)
     : defSite_(defBlock, 0), defCount_(1), local_(true) {}
 
   ~DefInfo();
 
   const DefSite* defSite() const { return &defSite_; }
-  void addDefSite(BlockHeader* block);
+  void addDefSite(Block* block);
 
   int defCount() const { return defCount_; }
   void increaseDefCount() { ++defCount_; }
@@ -67,7 +70,25 @@ private:
 
   // True if every def and use is located in the same block
   bool local_;
+};
 
+class DefInfoMap {
+public:
+
+  ~DefInfoMap();
+
+  void updateDefSite(Variable* v, Block* defBlock, Opcode* defOpcode);
+
+  DefInfo* find(Variable* v)
+  {
+    auto i = map_.find(v);
+    return i != map_.end() ? i->second : nullptr;
+  }
+
+private:
+
+  // TODO: Use an array
+  std::unordered_map<Variable*, DefInfo*> map_;
 };
 
 RBJIT_NAMESPACE_END

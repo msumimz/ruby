@@ -6,7 +6,7 @@
 RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
-class BlockHeader;
+class Block;
 
 class DomTree {
 public:
@@ -15,6 +15,7 @@ public:
   public:
     Node() {}
 
+    Node* parent() { return parent_; }
     Node* firstChild() { return firstChild_; }
     Node* nextSibling() { return nextSibling_; }
 
@@ -22,26 +23,27 @@ public:
 
     friend class DomTree;
 
+    Node* parent_;
     Node* firstChild_;
     Node* nextSibling_;
   };
 
-  DomTree(ControlFlowGraph* cfg);
-  DomTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms);
+  DomTree(const ControlFlowGraph* cfg, const std::vector<Block*>& doms);
   ~DomTree();
 
-  Node* nodeOf(BlockHeader* block) const;
+  Node* nodeOf(Block* block) const;
   size_t blockIndexOf(Node* node) const;
+  Block* blockOf(Node* node) const;
+  Block* idomOf(Block* block) const;
 
   std::string debugPrint() const;
 
 private:
 
-  void addChild(BlockHeader* parent, BlockHeader* child);
-  void buildTree(ControlFlowGraph* cfg);
-  void buildTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms);
+  void addChild(Block* parent, Block* child);
+  void buildTree(const ControlFlowGraph* cfg, const std::vector<Block*>& doms);
 
-  size_t size_;
+  const ControlFlowGraph* cfg_;
   Node* nodes_;
 };
 

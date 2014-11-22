@@ -6,17 +6,30 @@
 RBJIT_NAMESPACE_BEGIN
 
 class Opcode;
-class BlockHeader;
+class Block;
 class TypeConstraint;
 class NamedVariable;
 
 class Variable {
 public:
 
-  ~Variable() { delete defInfo_; }
+  Variable(ID name = 0, NamedVariable* nameRef = nullptr, Variable* original = nullptr, Block* defBlock = nullptr, Opcode* defOpcode = nullptr)
+    : index_(-1), name_(name),
+      nameRef_(nameRef),
+      original_(original == 0 ? this : original),
+      defBlock_(defBlock), defOpcode_(defOpcode)
+  {}
 
-  BlockHeader* defBlock() const { return defBlock_; }
-  void setDefBlock(BlockHeader* block) { defBlock_ = block; }
+  Variable* copy(Block* defBlock, Opcode* defOpcode)
+  {
+    Variable* original = original_ ? original_ : this;
+    return new Variable(name_, nameRef_, original, defBlock, defOpcode);
+  }
+
+  int index() const { return index_; }
+
+  Block* defBlock() const { return defBlock_; }
+  void setDefBlock(Block* block) { defBlock_ = block; }
 
   Opcode* defOpcode() const { return defOpcode_; }
   void setDefOpcode(Opcode* opcode) { defOpcode_ = opcode; }
@@ -28,21 +41,6 @@ public:
 
   NamedVariable* nameRef() const { return nameRef_; }
 
-  bool local() const { return defInfo_->isLocal(); }
-  void setLocal(bool local) { defInfo_->setLocal(local); }
-
-  int index() const { return index_; }
-  void setIndex(int i) { index_ = i; }
-
-  // DefInfo
-  DefInfo* defInfo() const { return defInfo_; }
-  void setDefInfo(DefInfo* defInfo) { defInfo_ = defInfo; }
-  int defCount() const { return defInfo_ ? defInfo_->defCount() : 0; }
-
-  void updateDefSite(BlockHeader* defBlock, Opcode* defOpcode);
-
-  void clearDefInfo();
-
   std::string debugPrint() const;
 
 private:
@@ -50,27 +48,23 @@ private:
   friend class ControlFlowGraph;
   friend class CodeDuplicator;
 
-  // constructor indirectly called by factory methods in ControlFlowGraph
-  Variable(BlockHeader* defBlock, Opcode* defOpcode, ID name, Variable* original, NamedVariable* nameRef, int index, DefInfo* defInfo);
-  Variable* copy(BlockHeader* defBlock, Opcode* defOpcode, int index);
+  int index_;
 
-  // location where this variable is defined
-  BlockHeader* defBlock_;
-  Opcode* defOpcode_;
+  // Accesses by the ControlFlowGraph class
+  void setIndex(int i) { index_ = i; }
 
-  // variable name
+  // Variable name
   ID name_;
-
-  // original variable when this variable is created by renaming the existing one
-  Variable* original_;
 
   // Reference to a named variable in the scope
   NamedVariable* nameRef_;
 
-  int index_;
+  // Original variable when this variable is created by renaming the existing one
+  Variable* original_;
 
-  DefInfo* defInfo_;
-
+  // Location where this variable is defined
+  Block* defBlock_;
+  Opcode* defOpcode_;
 };
 
 RBJIT_NAMESPACE_END

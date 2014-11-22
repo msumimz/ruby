@@ -2,17 +2,12 @@
 #include "rbjit/domtree.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/opcode.h"
+#include "rbjit/block.h"
 
 RBJIT_NAMESPACE_BEGIN
 
-DomTree::DomTree(ControlFlowGraph* cfg)
-  : size_(cfg->blocks()->size()), nodes_((Node*)calloc(size_, sizeof(Node)))
-{
-  buildTree(cfg);
-}
-
-DomTree::DomTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms)
-  : size_(cfg->blocks()->size()), nodes_((Node*)calloc(size_, sizeof(Node)))
+DomTree::DomTree(const ControlFlowGraph* cfg, const std::vector<Block*>& doms)
+  : cfg_(cfg), nodes_((Node*)calloc(cfg_->blockCount(), sizeof(Node)))
 {
   buildTree(cfg, doms);
 }
@@ -23,7 +18,7 @@ DomTree::~DomTree()
 }
 
 DomTree::Node*
-DomTree::nodeOf(BlockHeader* block) const
+DomTree::nodeOf(Block* block) const
 {
   return nodes_ + block->index();
 }
@@ -34,35 +29,35 @@ DomTree::blockIndexOf(Node* node) const
   return node - nodes_;
 }
 
+Block*
+DomTree::blockOf(Node* node) const
+{
+  return cfg_->block(blockIndexOf(node));
+}
+
+Block*
+DomTree::idomOf(Block* block) const
+{
+  return cfg_->block(blockIndexOf(nodeOf(block)->parent()));
+}
+
 void
-DomTree::addChild(BlockHeader* parent, BlockHeader* child)
+DomTree::addChild(Block* parent, Block* child)
 {
   Node* p = nodeOf(parent);
   Node* c = nodeOf(child);
+  c->parent_ = p;
   c->nextSibling_ = p->firstChild_;
   p->firstChild_ = c;
 }
 
 void
-DomTree::buildTree(ControlFlowGraph* cfg)
+DomTree::buildTree(const ControlFlowGraph* cfg, const std::vector<Block*>& doms)
 {
-  for (unsigned i = 0; i < size_; ++i) {
-    BlockHeader* b = (*cfg->blocks())[i];
-    if (!b->idom()) {
-      assert(b == cfg->entry());
-      continue;
-    }
-    addChild(b->idom(), b);
-  }
-}
-
-void
-DomTree::buildTree(ControlFlowGraph* cfg, const std::vector<BlockHeader*>& doms)
-{
-  for (unsigned i = 0; i < size_; ++i) {
-    BlockHeader* b = (*cfg->blocks())[i];
+  for (unsigned i = 0; i < cfg_->blockCount(); ++i) {
+    Block* b = cfg->block(i);
     if (!doms[i]) {
-      assert(b == cfg->entry());
+      assert(b == cfg->entryBlock());
       continue;
     }
     addChild(doms[i], b);
@@ -74,7 +69,7 @@ DomTree::debugPrint() const
 {
   std::string result = stringFormat("[DomTree: %Ix]\n", this);
 
-  for (size_t i = 0; i < size_; ++i) {
+  for (size_t i = 0; i < cfg_->blockCount(); ++i) {
     Node* n = nodes_ + i;
     result += stringFormat("%3d: %Ix(%d) firstChild=%Ix(%d) nextSibling=%Ix(%d)\n",
       i,

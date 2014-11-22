@@ -7,7 +7,7 @@
 
 RBJIT_NAMESPACE_BEGIN
 
-SsaChecker::SsaChecker(ControlFlowGraph* cfg)
+SsaChecker::SsaChecker(const ControlFlowGraph* cfg)
   : cfg_(cfg)
 {}
 
@@ -15,24 +15,23 @@ void
 SsaChecker::check()
 {
   // Define input variables
-  for (auto i = cfg_->inputs()->cbegin(), end = cfg_->inputs()->cend(); i != end; ++i) {
+  for (auto i = cfg_->inputBegin(), end = cfg_->inputEnd(); i != end; ++i) {
     variables_.insert(*i);
   }
 
   LTDominatorFinder domFinder(cfg_);
-  std::vector<BlockHeader*> doms = domFinder.dominators();
+  std::vector<Block*> doms = domFinder.dominators();
   DomTree domTree(cfg_, doms);
 
   std::vector<DomTree::Node*> work;
-  DomTree::Node* node = domTree.nodeOf(cfg_->entry());
+  DomTree::Node* node = domTree.nodeOf(cfg_->entryBlock());
   work.push_back(node);
 
   while (!work.empty()) {
     DomTree::Node* node = work.back();
     work.pop_back();
 
-    BlockHeader* block = (*cfg_->blocks())[domTree.blockIndexOf(node)];
-    checkBlock(block);
+    checkBlock(domTree.blockOf(node));
 
     for (node = node->firstChild(); node; node = node->nextSibling()) {
       work.push_back(node);
@@ -41,13 +40,12 @@ SsaChecker::check()
 }
 
 void
-SsaChecker::checkBlock(BlockHeader* block)
+SsaChecker::checkBlock(Block* block)
 {
-  Opcode* op = block;
-  Opcode* footer = block->footer();
-  do {
+  for (auto i = block->begin(), end = block->end(); i != end; ++i) {
+    Opcode* op = *i;
     if (typeid(*op) != typeid(OpcodePhi)) {
-      for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i) {
+      for (auto i = op->begin(), end = op->end(); i < end; ++i) {
         Variable* rhs = *i;
         if (rhs && variables_.find(rhs) == variables_.end()) {
           errors_.push_back(stringFormat("The use of variable %Ix at block %Ix, opcode %Ix is not dominated by its definition", rhs, block, op));
@@ -69,12 +67,7 @@ SsaChecker::checkBlock(BlockHeader* block)
         errors_.push_back(stringFormat("Env variable %Ix at block %Ix, opcode %Ix is defined twice", outEnv, block, op));
       }
     }
-
-    if (op == footer) {
-      break;
-    }
-    op = op->next();
-  } while (op);
+  }
 
   // Check phi nodes of the succeeding blocks
   checkPhiNodeOfSucceedingBlock(block, block->nextBlock());
@@ -82,17 +75,20 @@ SsaChecker::checkBlock(BlockHeader* block)
 }
 
 void
-SsaChecker::checkPhiNodeOfSucceedingBlock(BlockHeader* block, BlockHeader* succ)
+SsaChecker::checkPhiNodeOfSucceedingBlock(Block* block, Block* succ)
 {
-  if (!succ || typeid(*succ->next()) != typeid(OpcodePhi)) {
+  if (!succ || typeid(*succ->begin()) != typeid(OpcodePhi)) {
     return;
   }
 
   int index = succ->backedgeIndexOf(block);
   assert(index >= 0);
 
-  for (Opcode* op = succ->next(); op && typeid(*op) == typeid(OpcodePhi); op = op->next()) {
-    OpcodePhi* phi = static_cast<OpcodePhi*>(op);
+  for (auto i = succ->begin(), end = succ->end(); i != end; ++i) {
+    OpcodePhi* phi = dynamic_cast<OpcodePhi*>(*i);
+    if (!phi) {
+      break;
+    }
     Variable* v = phi->rhs(index);
     if (v && variables_.find(v) == variables_.end()) {
       errors_.push_back(stringFormat("The use of the %d-th variable %Ix of the phi node %Ix at block %Ix is not dominated by its definition", index, v, phi, block));

@@ -1,3 +1,4 @@
+#include <memory>
 #include "rbjit/inliner.h"
 #include "rbjit/methodinfo.h"
 #include "rbjit/opcode.h"
@@ -5,9 +6,11 @@
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/codeduplicator.h"
+#include "rbjit/block.h"
+#include "rbjit/blockbuilder.h"
 #include "rbjit/opcodefactory.h"
 #include "rbjit/debugprint.h"
-#include "rbjit/opcodemultiplexer.h"
+#include "rbjit/opcodedemux.h"
 #include "rbjit/recompilationmanager.h"
 #include "rbjit/compilationinstance.h"
 
@@ -17,38 +20,38 @@ Inliner::Inliner(PrecompiledMethodInfo* mi)
   : mi_(mi), cfg_(mi->compilationInstance()->cfg()),
     scope_(mi->compilationInstance()->scope()),
     typeContext_(mi->compilationInstance()->typeContext()),
-    visited_(cfg_->blocks()->size(), false)
+    visited_(cfg_->blockCount(), false)
 {}
 
 void
 Inliner::doInlining()
 {
-  work_.push_back(cfg_->entry());
+  work_.push_back(cfg_->entryBlock());
 
 loop:
   while (!work_.empty()) {
-    BlockHeader* block = work_.back();
+    Block* block = work_.back();
     work_.pop_back();
     visited_[block->index()] = true;
 
-    Opcode* footer = block->footer();
-    for (Opcode* op = block->next(); op != footer; op = op->next()) {
+    for (auto i = block->begin(), end = block->end(); i != end; ++i) {
+      Opcode* op = *i;
       OpcodeCall* call = dynamic_cast<OpcodeCall*>(op);
       if (call) {
         ID methodName = call->lookupOpcode()->methodName();
-        if (inlineCallSite(block, call)) {
-          visited_.resize(cfg_->blocks()->size());
+        if (inlineCallSite(block, i)) {
+          visited_.resize(cfg_->blockCount());
           RecompilationManager::instance()->addCalleeCallerRelation(methodName, mi_);
           goto loop;
         }
       }
     }
 
-    BlockHeader* b = footer->nextBlock();
+    Block* b = block->nextBlock();
     if (b && !visited_[b->index()]) {
       work_.push_back(b);
     }
-    b = footer->nextAltBlock();
+    b = block->nextAltBlock();
     if (b && !visited_[b->index()]) {
       work_.push_back(b);
     }
@@ -56,10 +59,16 @@ loop:
 }
 
 bool
-Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
+Inliner::inlineCallSite(Block* block, Block::Iterator callIter)
 {
+  OpcodeCall* op = static_cast<OpcodeCall*>(*callIter);
+  RBJIT_ASSERT(typeid(*op) == typeid(OpcodeCall));
+
   RBJIT_DPRINTF(("----------Call Site: (%Ix %Ix) '%s'\n",
     block, op, mri::Id(op->lookupOpcode()->methodName()).name()));
+
+  TypeConstraint* type = typeContext_->typeConstraintOf(op->receiver());
+  std::unique_ptr<TypeList> list(type->resolve());
 
   TypeLookup* lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
@@ -95,23 +104,23 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
   }
 
   if (!otherwise && cases.size() == 1 && inlinable[0]) {
-    BlockHeader* join = cfg_->splitBlock(block, op, true, true);
+    Block* join = cfg_->splitBlock(block, callIter, true);
     join->setDebugName("inliner_join");
-    BlockHeader* initBlock = cfg_->insertEmptyBlockAfter(block);
+    Block* initBlock = cfg_->insertEmptyBlockAfter(block);
     initBlock->setDebugName("inliner_arguments");
     replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->outEnv());
   }
   else {
-    OpcodeMultiplexer mul(cfg_, scope_, typeContext_);
-    BlockHeader* exitBlock = mul.multiplex(block, op, op->receiver(), cases, otherwise);
+    OpcodeDemux mul(cfg_, scope_, typeContext_);
+    Block* exitBlock = mul.demultiplex(block, callIter, op->receiver(), cases, otherwise);
 
     OpcodePhi* phi = mul.phi();
     OpcodePhi* envPhi = mul.envPhi();
     int size = methodInfos.size() + otherwise;
     int otherwiseIndex = size - 1;
     for (int i = 0; i < size; ++i) {
-      BlockHeader* block = mul.segments()[i];
-      BlockHeader* join = cfg_->splitBlock(block, block, false, false);
+      Block* block = mul.segments()[i];
+      Block* join = cfg_->insertEmptyBlockAfter(block);
       join->setDebugName("inliner_join");
 
       std::pair<Variable*, Variable*> result;
@@ -143,7 +152,15 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
     }
   }
 
-  removeOpcodeCall(op);
+  // Remove OpcodeLookup
+  // The variable does not be removed; instead, its defOpode is cleared to zero.
+  Opcode* l = op->lookup()->defOpcode();
+  block->removeOpcode(l);
+  delete op->lookup()->defOpcode();
+  op->lookup()->setDefOpcode(0);
+
+  // Remove OpcodeCall
+  delete op;
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintDotHeader());
@@ -157,10 +174,10 @@ Inliner::inlineCallSite(BlockHeader* block, OpcodeCall* op)
 }
 
 std::pair<Variable*, Variable*>
-Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result, Variable* exitEnv)
+Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* exit, OpcodeCall* op, Variable* result, Variable* exitEnv)
 {
   // entry should not be terminated
-  assert(!entry->footer()->isTerminator());
+  assert(!entry->footer());
 
   assert(typeid(*methodInfo) == typeid(PrecompiledMethodInfo));
   PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(methodInfo);
@@ -171,14 +188,14 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   dup.incorporate(inlinedCfg, inlinedTypeContext, cfg_, typeContext_);
 
   // Duplicate the arguments
-  OpcodeFactory entryFactory(cfg_, scope_, entry, entry->footer());
-  auto i = op->rhsBegin();
-  auto end = op->rhsEnd();
-  auto arg = inlinedCfg->inputs()->cbegin();
-  auto argEnd = inlinedCfg->inputs()->cend();
+  BlockBuilder entryBuilder(cfg_, scope_, nullptr, entry);
+  auto i = op->begin();
+  auto end = op->end();
+  auto arg = inlinedCfg->constInputBegin();
+  auto argEnd = inlinedCfg->constInputEnd();
   for (; arg != argEnd; ++arg, ++i) {
     Variable* newArg = dup.duplicatedVariableOf(*arg);
-    entryFactory.addCopy(newArg, *i, true);
+    entryBuilder.add(new OpcodeCopy(nullptr, newArg, *i));
   }
 
   // Set the inlined method's entry env
@@ -187,29 +204,31 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
   typeContext_->updateTypeConstraint(entryEnv, TypeSameAs(typeContext_, curEnv));
 
   // Jump to the duplicated method's entry block
-  entryFactory.addJump(dup.entry());
+  entryBuilder.add(new OpcodeJump(nullptr, dup.entry()));
 
   // Begin at the duplicated method's exit block
-  OpcodeFactory exitFactory(cfg_, scope_, dup.exit(), dup.exit()->footer());
+  BlockBuilder exitBuilder(cfg_, scope_, nullptr, dup.exit());
 
   // Set the output variable
   if (op->lhs()) {
-    exitFactory.addCopy(result, dup.duplicatedVariableOf(inlinedCfg->output()), true);
+    OpcodeCopy* copy = new OpcodeCopy(nullptr, result, dup.duplicatedVariableOf(inlinedCfg->output()));
     if (!result) {
-      result = cfg_->copyVariable(exitFactory.lastBlock(), exitFactory.lastOpcode(), op->lhs());
+      result = op->lhs()->copy(exitBuilder.block(), copy);
       typeContext_->addNewTypeConstraint(result, typeContext_->typeConstraintOf(op->lhs())->clone());
-      static_cast<OpcodeL*>(exitFactory.lastOpcode())->setLhs(result);
+      copy->setLhs(result);
+      cfg_->addVariable(result);
     }
+    exitBuilder.add(copy);
   }
 
   // Set the env variable
   Variable* env = dup.duplicatedVariableOf(inlinedCfg->exitEnv());
   if (exitEnv) {
-    exitFactory.addCopy(exitEnv, env, true);
+    exitBuilder.add(new OpcodeCopy(nullptr, exitEnv, env));
     env = exitEnv;
   }
 
-  exitFactory.addJump(exit);
+  exitBuilder.add(new OpcodeJump(nullptr, exit));
 
   work_.push_back(dup.entry());
 
@@ -217,12 +236,12 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, B
 }
 
 std::pair<Variable*, Variable*>
-Inliner::insertCall(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op)
+Inliner::insertCall(mri::MethodEntry me, Block* entry, Block* exit, OpcodeCall* op)
 {
   // OpcodeLookup
   OpcodeLookup* lookup = op->lookupOpcode();
-  OpcodeFactory factory(cfg_, scope_, entry, entry->footer());
-  Variable* newLookup = factory.addLookup(lookup->receiver(), lookup->methodName(), me);
+  BlockBuilder builder(cfg_, scope_, nullptr, entry);
+  Variable* newLookup = builder.add(new OpcodeLookup(nullptr, nullptr, lookup->receiver(), lookup->methodName(), lookup->env(), me));
   if (!me.isNull()) {
     typeContext_->addNewTypeConstraint(newLookup, TypeConstant::create(reinterpret_cast<VALUE>(me.ptr())));
   }
@@ -231,29 +250,36 @@ Inliner::insertCall(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, 
   }
 
   // OpcodeCall
-  Variable* result = factory.addDuplicateCall(op, newLookup, !!op->lhs());
-  Variable* env = static_cast<OpcodeCall*>(factory.lastOpcode())->outEnv();
-  if (result) {
-    typeContext_->addNewTypeConstraint(result, TypeAny::create());
-  }
-  typeContext_->addNewTypeConstraint(env, TypeEnv::create());
+  Opcode* call = duplicateCall(op, newLookup, builder.block());
+  builder.addWithoutLhsAssigned(call);
 
-  factory.addJump(exit);
+  builder.add(new OpcodeJump(nullptr, exit));
 
-  return std::make_pair(result, env);
+  return std::make_pair(call->lhs(), call->outEnv());
 }
 
-void
-Inliner::removeOpcodeCall(OpcodeCall* op)
+OpcodeCall*
+Inliner::duplicateCall(OpcodeCall* source, Variable* lookup, Block* defBlock)
 {
-  // Remove OpcodeLookup
-  // The variable does not be removed; instead, its defOpode is cleared to zero.
-  op->lookup()->defOpcode()->unlink();
-  delete op->lookup()->defOpcode();
-  op->lookup()->setDefOpcode(0);
+  OpcodeCall* op = new OpcodeCall(source->sourceLocation(), nullptr, lookup, source->rhsCount(), nullptr);
 
-  // Remove OpcodeCall
-  delete op;
+  if (source->lhs()) {
+    Variable* lhs = source->lhs()->copy(defBlock, op);
+    cfg_->addVariable(lhs);
+    typeContext_->addNewTypeConstraint(lhs, TypeAny::create());
+    op->setLhs(lhs);
+  }
+
+  Variable* outEnv = source->outEnv()->copy(defBlock, op);
+  cfg_->addVariable(outEnv);
+  typeContext_->addNewTypeConstraint(outEnv, TypeEnv::create());
+  op->setOutEnv(outEnv);
+
+  for (int i = 0; i < source->rhsCount(); ++i) {
+    op->setRhs(i, source->rhs(i));
+  }
+
+  return op;
 }
 
 RBJIT_NAMESPACE_END

@@ -14,17 +14,19 @@ public:
 
   DefUseChain(ControlFlowGraph* cfg);
 
-  std::vector<std::pair<BlockHeader*, Variable*>>& uses(int index) { return uses_[index]; }
-  const std::vector<std::pair<BlockHeader*, Variable*>>& uses(int index) const { return uses_[index]; }
+  std::vector<std::pair<Block*, Variable*>>& uses(int index)
+  { return uses_[index]; }
+  const std::vector<std::pair<Block*, Variable*>>& uses(int index) const
+  { return uses_[index]; }
 
-  std::vector<std::pair<BlockHeader*, Variable*>>& uses(Variable* v);
-  const std::vector<std::pair<BlockHeader*, Variable*>>& uses(Variable* v) const;
+  std::vector<std::pair<Block*, Variable*>>& uses(Variable* v);
+  const std::vector<std::pair<Block*, Variable*>>& uses(Variable* v) const;
 
   bool isCondition(int index) const { return conditions_[index]; }
   bool isCondition(Variable* v) const;
 
   // visitors
-  bool visitOpcode(BlockHeader* op);
+  bool visitOpcode(Block* op);
   bool visitOpcode(OpcodeCopy* op);
   bool visitOpcode(OpcodeJump* op);
   bool visitOpcode(OpcodeJumpIf* op);
@@ -49,13 +51,13 @@ public:
 private:
 
   void build();
-  bool visitOpcodeVa(OpcodeVa* op);
+  bool visitOpcodeVa(Variable* lhs, OpcodeVa* op);
   void addDefUseChain(Variable* def, Variable* use);
 
   ControlFlowGraph* cfg_;
-  std::vector<std::vector<std::pair<BlockHeader*, Variable*>>> uses_;
+  std::vector<std::vector<std::pair<Block*, Variable*>>> uses_;
   std::vector<bool> conditions_;
-  BlockHeader* block_;
+  Block* block_;
 };
 
 RBJIT_NAMESPACE_END

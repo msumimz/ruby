@@ -7,20 +7,20 @@ RBJIT_NAMESPACE_BEGIN
 
 DefUseChain::DefUseChain(ControlFlowGraph* cfg)
   : cfg_(cfg),
-    uses_(cfg_->variables()->size()),
-    conditions_(cfg_->variables()->size(), false),
-    block_(0)
+    uses_(cfg_->variableCount()),
+    conditions_(cfg_->variableCount(), false),
+    block_(nullptr)
 {
   build();
 }
 
-std::vector<std::pair<BlockHeader*, Variable*>>&
+std::vector<std::pair<Block*, Variable*>>&
 DefUseChain::uses(Variable* v)
 {
   return uses_[v->index()];
 }
 
-const std::vector<std::pair<BlockHeader*, Variable*>>&
+const std::vector<std::pair<Block*, Variable*>>&
 DefUseChain::uses(Variable* v) const
 {
   return uses_[v->index()];
@@ -35,22 +35,19 @@ DefUseChain::isCondition(Variable* v) const
 void
 DefUseChain::build()
 {
-  size_t blockCount = cfg_->blocks()->size();
-  for (size_t i = 0; i < blockCount; ++i) {
-    BlockHeader* block = (*cfg_->blocks())[i];
-    block->visitEachOpcode(this);
+  for (auto i = cfg_->begin(), end = cfg_->end(); i != end; ++i) {
+    (*i)->visitEachOpcode(this);
   }
 }
 
 bool
-DefUseChain::visitOpcodeVa(OpcodeVa* op)
+DefUseChain::visitOpcodeVa(Variable* lhs, OpcodeVa* op)
 {
-  Variable* lhs = op->lhs();
   if (!lhs) {
     return true;
   }
 
-  for (auto i = op->rhsBegin(), end = op->rhsEnd(); i < end; ++i) {
+  for (auto i = op->begin(), end = op->end(); i < end; ++i) {
     uses_[(*i)->index()].push_back(std::make_pair(block_, lhs));
   }
   return true;
@@ -60,13 +57,6 @@ void
 DefUseChain::addDefUseChain(Variable* def, Variable* use)
 {
   uses_[use->index()].push_back(std::make_pair(block_, def));
-}
-
-bool
-DefUseChain::visitOpcode(BlockHeader* op)
-{
-  block_ = op;
-  return true;
 }
 
 bool
@@ -112,7 +102,9 @@ DefUseChain::visitOpcode(OpcodeLookup* op)
 bool
 DefUseChain::visitOpcode(OpcodeCall* op)
 {
-  return visitOpcodeVa(op);
+  visitOpcodeVa(op->lhs(), op);
+  visitOpcodeVa(op->outEnv(), op);
+  return true;
 }
 
 bool
@@ -131,13 +123,13 @@ DefUseChain::visitOpcode(OpcodeConstant* op)
 bool
 DefUseChain::visitOpcode(OpcodePrimitive* op)
 {
-  return true;
+  return visitOpcodeVa(op->lhs(), op);
 }
 
 bool
 DefUseChain::visitOpcode(OpcodePhi* op)
 {
-  return visitOpcodeVa(op);
+  return visitOpcodeVa(op->lhs(), op);
 }
 
 bool
@@ -149,7 +141,7 @@ DefUseChain::visitOpcode(OpcodeExit* op)
 bool
 DefUseChain::visitOpcode(OpcodeArray* op)
 {
-  return visitOpcodeVa(op);
+  return visitOpcodeVa(op->lhs(), op);
 }
 
 bool
@@ -172,7 +164,7 @@ DefUseChain::visitOpcode(OpcodeString* op)
 bool
 DefUseChain::visitOpcode(OpcodeHash* op)
 {
-  return visitOpcodeVa(op);
+  return visitOpcodeVa(op->lhs(), op);
 }
 
 bool
@@ -201,10 +193,10 @@ DefUseChain::debugPrint() const
 {
   std::string out;
 
-  size_t size = cfg_->variables()->size();
+  size_t size = cfg_->variableCount();
   for (size_t i = 0; i < size; ++i) {
-    out += stringFormat("%Ix:", (*cfg_->variables())[i]);
-    const std::vector<std::pair<BlockHeader*, Variable*>>& uses = uses_[i];
+    out += stringFormat("%Ix:", cfg_->variable(i));
+    const std::vector<std::pair<Block*, Variable*>>& uses = uses_[i];
     for (auto i = uses.cbegin(), end = uses.cend(); i != end; ++i) {
       out += stringFormat(" %Ix:%Ix", i->first, i->second);
     };

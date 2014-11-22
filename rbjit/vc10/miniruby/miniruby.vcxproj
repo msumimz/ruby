@@ -27,8 +27,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>Windows7.1SDK</PlatformToolset>
+    <PlatformToolset>v120_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -40,8 +39,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>Windows7.1SDK</PlatformToolset>
+    <PlatformToolset>v120_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -67,7 +65,6 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
     <IncludePath>C:\llvm\llvm-3.4-Debug\include;$(ProjectDir)..\..\..\include;$(ProjectDir)..\..\..\missing;$(IncludePath)</IncludePath>
     <SourcePath>C:\llvm\llvm-3.4-Debug\lib;$(ProjectDir)..\..\..\..;$(ProjectDir)..\..\..\..\missing;$(SourcePath)</SourcePath>
     <LibraryPath>C:\llvm\llvm-3.4-Debug\lib;$(LibraryPath)</LibraryPath>
@@ -95,7 +92,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS=1;RBJIT_ENABLED;RBJIT_DEBUG;RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_100;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include;$(ProjectDir)\..\..\..\rbjit</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_120;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include;$(ProjectDir)\..\..\..\rbjit</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
@@ -150,7 +147,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_SCL_SECURE_NO_WARNINGS=1;RBJIT_ENABLED;RUBY_EXPORT;_WIN32_NT_=0x501;WIN32;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_100;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include;$(ProjectDir)\..\..\..\rbjit</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\..\..;$(ProjectDir)\..\..\..\.ext\include\i386-mswin32_120;$(ProjectDir)\..\..\..\include;$(ProjectDir)\..\..\..\missing;$(ProjectDir)\..\..\..\rbjit\include;$(ProjectDir)\..\..\..\rbjit</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>
       </PrecompiledHeaderFile>
       <DisableSpecificWarnings>4355</DisableSpecificWarnings>
@@ -225,15 +222,12 @@
     <ClCompile Include="..\..\..\miniinit.c" />
     <ClCompile Include="..\..\..\miniprelude.c" />
     <ClCompile Include="..\..\..\missing\acosh.c" />
-    <ClCompile Include="..\..\..\missing\cbrt.c" />
     <ClCompile Include="..\..\..\missing\crypt.c" />
-    <ClCompile Include="..\..\..\missing\erf.c" />
     <ClCompile Include="..\..\..\missing\ffs.c" />
     <ClCompile Include="..\..\..\missing\lgamma_r.c" />
     <ClCompile Include="..\..\..\missing\setproctitle.c" />
     <ClCompile Include="..\..\..\missing\strlcat.c" />
     <ClCompile Include="..\..\..\missing\strlcpy.c" />
-    <ClCompile Include="..\..\..\missing\tgamma.c" />
     <ClCompile Include="..\..\..\newline.c" />
     <ClCompile Include="..\..\..\node.c" />
     <ClCompile Include="..\..\..\numeric.c" />
@@ -279,12 +273,16 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)_win32</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\..\win32\win32.c" />
+    <ClCompile Include="..\..\src\block.cpp" />
+    <ClCompile Include="..\..\src\blockbuilder.cpp" />
+    <ClCompile Include="..\..\src\blockdebugprinter.cpp" />
     <ClCompile Include="..\..\src\cfgbuilder.cpp">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\cfgsanitychecker.cpp" />
     <ClCompile Include="..\..\src\codeduplicator.cpp" />
     <ClCompile Include="..\..\src\common.cpp" />
     <ClCompile Include="..\..\src\compilationinstance.cpp" />
@@ -304,7 +302,6 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
     <ClCompile Include="..\..\src\defusechain.cpp" />
-    <ClCompile Include="..\..\src\dominatorfinder.cpp" />
     <ClCompile Include="..\..\src\domtree.cpp" />
     <ClCompile Include="..\..\src\idstore.cpp" />
     <ClCompile Include="..\..\src\inliner.cpp" />
@@ -328,13 +325,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\..\src\opcodefactory.cpp">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)rbjit\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)rbjit\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
-    </ClCompile>
-    <ClCompile Include="..\..\src\opcodemultiplexer.cpp" />
+    <ClCompile Include="..\..\src\opcodedemux.cpp" />
     <ClCompile Include="..\..\src\primitive.cpp" />
     <ClCompile Include="..\..\src\primitivestore.cpp" />
     <ClCompile Include="..\..\src\recompilationmanager.cpp" />
@@ -359,6 +350,10 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)rbjit\</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)rbjit\</ObjectFileName>
     </ClCompile>
+    <ClInclude Include="..\..\include\rbjit\block.h" />
+    <ClInclude Include="..\..\include\rbjit\blockbuilder.h" />
+    <ClInclude Include="..\..\include\rbjit\blockdebugprinter.h" />
+    <ClInclude Include="..\..\include\rbjit\cfgsanitychecker.h" />
     <ClInclude Include="..\..\include\rbjit\codeduplicator.h" />
     <ClInclude Include="..\..\include\rbjit\compilationinstance.h" />
     <ClInclude Include="..\..\include\rbjit\defusechain.h" />
@@ -366,7 +361,7 @@
     <ClInclude Include="..\..\include\rbjit\idstore.h" />
     <ClInclude Include="..\..\include\rbjit\inliner.h" />
     <ClInclude Include="..\..\include\rbjit\mutatortester.h" />
-    <ClInclude Include="..\..\include\rbjit\opcodemultiplexer.h" />
+    <ClInclude Include="..\..\include\rbjit\opcodedemux.h" />
     <ClInclude Include="..\..\include\rbjit\primitive.h" />
     <ClInclude Include="..\..\include\rbjit\primitivestore.h" />
     <ClInclude Include="..\..\include\rbjit\recompilationmanager.h" />
@@ -395,7 +390,6 @@
     <ClInclude Include="..\..\include\rbjit\methodinfo.h" />
     <ClInclude Include="..\..\include\rbjit\nativecompiler.h" />
     <ClInclude Include="..\..\include\rbjit\opcode.h" />
-    <ClInclude Include="..\..\include\rbjit\opcodefactory.h" />
     <ClInclude Include="..\..\include\rbjit\rubymethod.h" />
     <ClInclude Include="..\..\include\rbjit\rubyobject.h" />
     <ClInclude Include="..\..\include\rbjit\ssatranslator.h" />

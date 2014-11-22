@@ -5,6 +5,7 @@
 #include <unordered_set>
 
 #include "rbjit/opcode.h"
+#include "rbjit/block.h"
 
 namespace llvm {
 class LLVMContext;
@@ -43,7 +44,6 @@ public:
   std::string debugPrint();
 
   // Compile opcode
-  bool visitOpcode(BlockHeader* op);
   bool visitOpcode(OpcodeCopy* op);
   bool visitOpcode(OpcodeJump* op);
   bool visitOpcode(OpcodeJumpIf* op);
@@ -110,8 +110,8 @@ private:
   llvm::Function* func_;
   std::vector<llvm::BasicBlock*> llvmBlocks_;
   std::vector<llvm::Value*> llvmValues_;
-  BlockHeader* block_;
-  Opcode* opcode_;
+  Block* block_;
+  Block::Iterator opcode_;
   std::deque<PendingOpcode*> opcodes_;
 
   class Phi {

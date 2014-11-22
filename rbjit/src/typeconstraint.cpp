@@ -1,13 +1,15 @@
 #include <algorithm>
 #include <utility> // std::move
 #include <cassert>
-#include <memory> // std::unique_ptr
+#include <memory>
 #include "rbjit/typeconstraint.h"
 #include "rbjit/opcode.h"
 #include "rbjit/variable.h"
 #include "rbjit/typecontext.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/debugprint.h"
+#include "rbjit/methodinfo.h"
+#include "rbjit/mutatortester.h"
 
 RBJIT_NAMESPACE_BEGIN
 

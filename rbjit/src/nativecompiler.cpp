@@ -43,12 +43,12 @@ RBJIT_NAMESPACE_BEGIN
 
 struct PendingOpcode {
   Variable* variable_;
-  BlockHeader* block_;
-  Opcode* opcode_;
+  Block* block_;
+  Block::Iterator opcode_;
   llvm::BasicBlock* llvmBlock_;
   llvm::BasicBlock::iterator iter_;
 
-  PendingOpcode(Variable* variable, BlockHeader* block, Opcode* opcode, llvm::BasicBlock* llvmBlock, llvm::BasicBlock::iterator iter)
+  PendingOpcode(Variable* variable, Block* block, Block::Iterator opcode, llvm::BasicBlock* llvmBlock, llvm::BasicBlock::iterator iter)
     : variable_(variable), block_(block), opcode_(opcode), llvmBlock_(llvmBlock), iter_(iter)
   {}
 };
@@ -198,12 +198,12 @@ void
 NativeCompiler::translateToBitcode()
 {
   // Set up a value vector
-  size_t varCount = cfg_->variables()->size();
+  size_t varCount = cfg_->variableCount();
   llvmValues_.assign(varCount, 0);
 
   // Define a function object
   std::vector<llvm::Type*> argTypes;
-  for (auto i = cfg_->inputs()->cbegin(), end = cfg_->inputs()->cend(); i != end; ++i) {
+  for (auto i = cfg_->constInputBegin(), end = cfg_->constInputEnd(); i != end; ++i) {
     argTypes.push_back(valueType_);
   }
   llvm::FunctionType *ft = llvm::FunctionType::get(valueType_, argTypes, false);
@@ -212,14 +212,13 @@ NativeCompiler::translateToBitcode()
   func_ = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, name, module_);
 
   // Initialize arguments
-  std::vector<Variable*>* inputs = cfg_->inputs();
   int count = 0;
   for (auto i = func_->arg_begin(), end = func_->arg_end(); i != end; ++i, ++count) {
-    llvmValues_[(*inputs)[count]->index()] = &*i;
+    llvmValues_[cfg_->input(count)->index()] = &*i;
   }
 
   // Create basic blocks in advance
-  size_t blockCount = cfg_->blocks()->size();
+  size_t blockCount = cfg_->blockCount();
   llvmBlocks_.assign(blockCount, 0);
   for (size_t i = 0; i < blockCount; ++i) {
 #ifdef RBJIT_DEBUG
@@ -241,14 +240,14 @@ NativeCompiler::translateToBitcode()
   if (false) { // IsDebuggerPresent()) {
     // declare void @llvm.debugtrap() nounwind
     llvm::Function* debugtrapFunc = llvm::Intrinsic::getDeclaration(module_, llvm::Intrinsic::debugtrap, llvm::None);
-    llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
+    llvm::BasicBlock* bb = llvmBlocks_[cfg_->entryBlock()->index()];
     builder_->SetInsertPoint(bb);
     builder_->CreateCall(debugtrapFunc);
   }
 #endif
 
   // Declare runtime functions in the entry block
-  llvm::BasicBlock* bb = llvmBlocks_[cfg_->entry()->index()];
+  llvm::BasicBlock* bb = llvmBlocks_[cfg_->entryBlock()->index()];
   builder_->SetInsertPoint(bb);
   declareRuntimeFunctions();
 
@@ -258,13 +257,12 @@ NativeCompiler::translateToBitcode()
   // Fill arguments in phi nodes
   for (auto i = phis_.cbegin(), end = phis_.cend(); i != end; ++i) {
     const Phi& phi = *i;
-    BlockHeader::Backedge* e = phi.opcode_->block()->backedge();
-    for (Variable*const* i = phi.opcode_->rhsBegin(); i < phi.opcode_->rhsEnd(); ++i) {
-      assert(e && e->block());
-      phi.bitcode_->addIncoming(getValue(*i), llvmBlocks_[e->block()->index()]);
-      e = e->next();
+    auto e = phi.opcode_->block()->backedgeBegin();
+    for (Variable*const* i = phi.opcode_->begin(); i < phi.opcode_->end(); ++i, ++e) {
+      assert(*e);
+      phi.bitcode_->addIncoming(getValue(*i), llvmBlocks_[(*e)->index()]);
     }
-  };
+  }
 
 #ifdef RBJIT_DEBUG
   RBJIT_DPRINT(debugPrint());
@@ -307,15 +305,16 @@ NativeCompiler::declareRuntimeFunctions()
 void
 NativeCompiler::translateBlocks()
 {
-  std::vector<BlockHeader*> blocks;
-  std::vector<bool> done(cfg_->blocks()->size(), false);
+  std::vector<Block*> blocks;
+  std::vector<bool> done(cfg_->blockCount(), false);
 
-  blocks.push_back(cfg_->entry());
+  blocks.push_back(cfg_->entryBlock());
 
   while (!blocks.empty() || !opcodes_.empty()) {
     if (!blocks.empty()) {
-      opcode_ = block_ = blocks.back();
+      block_ = blocks.back();
       blocks.pop_back();
+      opcode_ = block_->begin();
 
       llvm::BasicBlock* bb = llvmBlocks_[block_->index()];
       builder_->SetInsertPoint(bb);
@@ -340,27 +339,25 @@ NativeCompiler::translateBlocks()
       delete p;
     }
 
-    Opcode* footer = block_->footer();
     bool pending = false;
-    do {
+    for (; opcode_ != block_->end(); ++opcode_) {
       RBJIT_DPRINTF(("compiling block %Ix opcode %Ix\n", block_, opcode_));
-      if (!opcode_->accept(this)) {
-        pending = true;
-        break;
+      if (!(*opcode_)->accept(this)) {
+	pending = true;
+	break;
       }
-      if (opcode_ == footer) {
-        break;
+      if (opcode_ == block_->end()) {
+	break;
       }
-      opcode_ = opcode_->next();
-    } while (opcode_);
+    }
 
     if (!pending) {
-      BlockHeader* n;
-      if ((n = footer->nextAltBlock()) && !done[n->index()]) {
+      Block* n;
+      if ((n = block_->nextAltBlock()) && !done[n->index()]) {
         blocks.push_back(n);
         done[n->index()] = true;
       }
-      if ((n = footer->nextBlock()) && !done[n->index()]) {
+      if ((n = block_->nextBlock()) && !done[n->index()]) {
         blocks.push_back(n);
         done[n->index()] = true;
       }
@@ -370,12 +367,6 @@ NativeCompiler::translateBlocks()
 
 ////////////////////////////////////////////////////////////
 // Translating opcodes
-
-bool
-NativeCompiler::visitOpcode(BlockHeader* block)
-{
-  return true;
-}
 
 bool
 NativeCompiler::visitOpcode(OpcodeCopy* op)
@@ -392,7 +383,7 @@ NativeCompiler::visitOpcode(OpcodeCopy* op)
 bool
 NativeCompiler::visitOpcode(OpcodeJump* op)
 {
-  llvm::BasicBlock* dest = llvmBlocks_[op->dest()->index()];
+  llvm::BasicBlock* dest = llvmBlocks_[op->nextBlock()->index()];
   builder_->CreateBr(dest);
   return true;
 }
@@ -411,8 +402,8 @@ NativeCompiler::visitOpcode(OpcodeJumpIf* op)
   llvm::Value* rtest = builder_->CreateAnd(cond, getInt(~mri::Object::nilObject()));
   llvm::Value* cmp = builder_->CreateICmpNE(rtest, getInt(0));
   builder_->CreateCondBr(cmp,
-    llvmBlocks_[op->ifTrue()->index()],
-    llvmBlocks_[op->ifFalse()->index()]);
+    llvmBlocks_[op->nextBlock()->index()],
+    llvmBlocks_[op->nextAltBlock()->index()]);
   return true;
 }
 
@@ -481,9 +472,7 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 
   // arguments
    bool complete = true;
-   Variable*const* i = op->rhsBegin();
-   Variable*const* rhsEnd = op->rhsEnd();
-   for (; i < rhsEnd; ++i) {
+   for (auto i = op->begin(), end = op->end(); i != end; ++i) {
     llvm::Value* arg = getValue(*i);
     args[count++] = arg;
     if (!arg) {

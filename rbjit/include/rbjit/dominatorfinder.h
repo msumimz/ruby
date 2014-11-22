@@ -6,24 +6,13 @@
 RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
-class BlockHeader;
+class Block;
 
 class DominatorFinder {
 public:
 
-  DominatorFinder(ControlFlowGraph* cfg);
-
   virtual ~DominatorFinder() {}
-
-  virtual std::vector<BlockHeader*> dominators() = 0;
-  virtual void setDominatorsToCfg();
-
-protected:
-
-  void findDominators();
-
-  ControlFlowGraph* cfg_;
-  std::vector<BlockHeader*>* blocks_;
+  virtual std::vector<Block*> dominators() = 0;
 
 };
 

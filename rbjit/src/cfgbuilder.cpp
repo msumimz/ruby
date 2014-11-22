@@ -12,6 +12,8 @@
 #include "rbjit/rubytypes.h"
 #include "rbjit/rubyidtable.h"
 #include "rbjit/scope.h"
+#include "rbjit/block.h"
+#include "rbjit/blockbuilder.h"
 
 #include "ruby.h"
 #include "node.h"
@@ -30,25 +32,40 @@ UnsupportedSyntaxException::UnsupportedSyntaxException(std::string what)
 {}
 
 ////////////////////////////////////////////////////////////
-// CfgBuilder
+// Helper methods
 
 Variable*
-CfgBuilder::buildNamedVariable(OpcodeFactory* factory, ID name, bool belongsToScope)
+CfgBuilder::createNamedVariable(BlockBuilder* builder, ID name)
 {
-  std::unordered_map<ID, Variable*>::const_iterator i = namedVariables_.find(name);
+  auto i = namedVariables_.find(name);
   if (i != namedVariables_.end()) {
-    Variable* v = i->second;
-    if (v->defBlock() != factory->lastBlock()) {
-      v->setLocal(false);
-    }
-    return v;
+    return i->second;
   }
 
-  Variable* v = factory->createNamedVariable(name, belongsToScope);
-  namedVariables_[name] = v;
+  NamedVariable* nv = scope_->find(name);
+  assert(nv);
+
+  Variable* v  = new Variable(name, nv);
+  namedVariables_.insert(std::make_pair(name, v));
 
   return v;
 }
+
+void
+CfgBuilder::buildJumpToReturnBlock(BlockBuilder* builder, Variable* returnValue)
+{
+  if (returnValue) {
+    Variable* output = builder->add(new OpcodeCopy(loc_, cfg_->output(), returnValue));
+    cfg_->setOutput(output);
+  }
+
+  builder->add(new OpcodeJump(loc_, cfg_->exitBlock()));
+
+  builder->halt();
+}
+
+////////////////////////////////////////////////////////////
+// Builder methods
 
 ControlFlowGraph*
 CfgBuilder::buildMethod(const RNode* rootNode, ID name)
@@ -56,18 +73,45 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
   cfg_ = new ControlFlowGraph;
   scope_ = new Scope(rootNode->nd_tbl, nullptr);
   name_ = name;
+  defInfoMap_ = new DefInfoMap;
 
-  OpcodeFactory factory(cfg_, scope_);
-  factory.createEntryExitBlocks();
-  cfg_->entry()->setDebugName("entry");
-  cfg_->exit()->setDebugName("exit");
+  // Start the entry block
+  Block* entry = new Block;
+  entry->setDebugName("entry");
+  BlockBuilder builder(cfg_, scope_, defInfoMap_, entry);
+  cfg_->setEntryBlock(entry);
 
+  // undefined
+  Variable* undefined = builder.add(new OpcodeImmediate(nullptr, nullptr, mri::Object::nilObject()));
+  cfg_->setUndefined(undefined);
+
+  // env
+  Variable* env = builder.add(new OpcodeEnv(loc_, nullptr));
+  cfg_->setEntryEnv(env);
+  cfg_->setExitEnv(env);
+
+  // scope
+  builder.add(new OpcodeEnter(nullptr, scope_));
+
+  // Create the exit block
+  Block* exit = new Block;
+  exit->setDebugName("exit");
+  BlockBuilder exitBuilder(&builder, exit);
+  cfg_->setExitBlock(exit);
+
+  // Exit env
+  exitBuilder.add(new OpcodeCopy(loc_, env, env));
+
+  // Exit
+  exitBuilder.add(new OpcodeExit(loc_));
   try {
-    buildArguments(&factory, rootNode);
-    buildProcedureBody(&factory, rootNode, true);
+    buildArguments(&builder, rootNode);
+    buildProcedureBody(&builder, rootNode, true);
   }
   catch (std::exception& e) {
     delete cfg_;
+    delete scope_;
+    delete defInfoMap_;
     throw;
   };
 
@@ -75,181 +119,171 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
 }
 
 void
-CfgBuilder::buildProcedureBody(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildProcedureBody(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_SCOPE);
 
-  Variable* v = buildNode(factory, node->nd_body, useResult);
-  if (factory->continues()) {
-    factory->addJumpToReturnBlock(v);
+  Variable* v = buildNode(builder, node->nd_body, useResult);
+  if (builder->continues()) {
+    buildJumpToReturnBlock(builder, v);
   }
 }
 
 void
-CfgBuilder::buildArguments(OpcodeFactory* factory, const RNode* node)
+CfgBuilder::buildArguments(BlockBuilder* builder, const RNode* node)
 {
   assert(nd_type(node) == NODE_SCOPE);
 
   // self
-  Variable* self = buildNamedVariable(factory, IdStore::get(ID_self), false);
-  self->setDefOpcode(0);
-  self->defInfo()->addDefSite(factory->lastBlock()); // entry block
-  cfg_->inputs()->push_back(self);
+  Variable* self = createNamedVariable(builder, IdStore::get(ID_self));
+  defInfoMap_->updateDefSite(self, cfg_->entryBlock(), nullptr);
+  cfg_->addInput(self);
 
   RNode* argNode = node->nd_args;
+
   int requiredArgCount = argNode->nd_ainfo->pre_args_num;
   bool hasOptionalArg = !!argNode->nd_ainfo->opt_args;
   bool hasRestArg = !!argNode->nd_ainfo->rest_arg;
-
+/*
   cfg_->setRequiredArgCount(requiredArgCount);
   cfg_->setHasOptionalArg(hasOptionalArg);
   cfg_->setHasRestArg(hasRestArg);
-
+*/
   if (!hasOptionalArg && !hasRestArg) {
     // Method has the fixed number of arguments
     mri::IdTable idTable(node->nd_tbl);
     for (int i = 0; i < requiredArgCount; ++i) {
-      Variable* v = buildNamedVariable(factory, idTable.idAt(i), true);
-      v->setDefOpcode(0);
-      v->defInfo()->addDefSite(factory->lastBlock()); // entry block
-      cfg_->inputs()->push_back(v);
+      Variable* v = createNamedVariable(builder, idTable.idAt(i));
+      defInfoMap_->updateDefSite(v, cfg_->entryBlock(), nullptr);
+      cfg_->addInput(v);
     }
   }
   else {
     std::string what = stringFormat("Method %s uses vardiac arguments, which is not implemented yet", mri::Id(name_).name());
     throw UnsupportedSyntaxException(what);
-#if 0
-    // Vardiac arguments
-    Variable* argc = buildNamedVariable(factory, IdStore::get(ID_argc));
-    Variable* argv = buildNamedVariable(factory, IdStore::get(ID_argv));
-    argc->setDefOpcode(0);
-    argv->setDefOpcode(0);
-    cfg_->inputs()->push_back(argc);
-    cfg_->inputs()->push_back(argv);
-#endif
   }
 }
 
 Variable*
-CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildNode(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   Variable* v;
 
-  if (!factory->continues()) {
-    return 0;
+  if (!builder->continues()) {
+    return nullptr;
   }
 
   enum node_type type = (enum node_type)nd_type(node);
   switch (type) {
   case NODE_BLOCK:
     for (; node->nd_next; node = node->nd_next) {
-      buildNode(factory, node->nd_head, false);
-      if (!factory->continues()) {
-        return 0;
+      buildNode(builder, node->nd_head, false);
+      if (!builder->continues()) {
+        return nullptr;
       }
     }
-    v = buildNode(factory, node->nd_head, useResult);
+    v = buildNode(builder, node->nd_head, useResult);
     break;
 
   case NODE_DASGN_CURR:
   case NODE_LASGN:
-    v = buildAssignment(factory, node, useResult);
+    v = buildAssignment(builder, node, useResult);
     break;
 
   case NODE_LVAR:
-    v = buildLocalVariable(factory, node, useResult);
+    v = buildLocalVariable(builder, node, useResult);
     break;
 
   case NODE_LIT:
-    v = buildImmediate(factory, node, useResult);
+    v = buildImmediate(builder, node, useResult);
     break;
 
   case NODE_SELF:
-    v = buildSelf(factory, node, useResult);
+    v = buildSelf(builder, node, useResult);
     break;
 
   case NODE_TRUE:
-    v = buildTrue(factory, node, useResult);
+    v = buildTrue(builder, node, useResult);
     break;
 
   case NODE_FALSE:
-    v = buildFalse(factory, node, useResult);
+    v = buildFalse(builder, node, useResult);
     break;
 
   case NODE_NIL:
-    v = buildNil(factory, node, useResult);
+    v = buildNil(builder, node, useResult);
     break;
 
   case NODE_ARRAY:
   case NODE_ZARRAY:
-    v = buildArray(factory, node, useResult);
+    v = buildArray(builder, node, useResult);
     break;
 
   case NODE_ARGSPUSH:
-    v = buildArrayPush(factory, node, useResult);
+    v = buildArrayPush(builder, node, useResult);
     break;
 
   case NODE_ARGSCAT:
-    v = buildArrayConcat(factory, node, useResult);
+    v = buildArrayConcat(builder, node, useResult);
     break;
 
   case NODE_SPLAT:
-    v = buildArraySplat(factory, node, useResult);
+    v = buildArraySplat(builder, node, useResult);
     break;
 
   case NODE_DOT2:
   case NODE_DOT3:
-    v = buildRange(factory, node, useResult);
+    v = buildRange(builder, node, useResult);
     break;
 
   case NODE_STR:
-    v = buildString(factory, node, useResult);
+    v = buildString(builder, node, useResult);
     break;
 
   case NODE_DSTR:
-    v = buildStringInterpolation(factory, node, useResult);
+    v = buildStringInterpolation(builder, node, useResult);
     break;
 
   case NODE_HASH:
-    v = buildHash(factory, node, useResult);
+    v = buildHash(builder, node, useResult);
     break;
 
   case NODE_AND:
   case NODE_OR:
-    v = buildAndOr(factory, node, useResult);
+    v = buildAndOr(builder, node, useResult);
     break;
 
   case NODE_IF:
-    v = buildIf(factory, node, useResult);
+    v = buildIf(builder, node, useResult);
     break;
 
   case NODE_WHILE:
-    v = buildWhile(factory, node, useResult);
+    v = buildWhile(builder, node, useResult);
     break;
 
   case NODE_RETURN:
-    v = buildReturn(factory, node, useResult);
+    v = buildReturn(builder, node, useResult);
     break;
 
   case NODE_CALL:
-    v = buildCall(factory, node, useResult);
+    v = buildCall(builder, node, useResult);
     break;
 
   case NODE_FCALL:
   case NODE_VCALL:
-    v = buildFuncall(factory, node, useResult);
+    v = buildFuncall(builder, node, useResult);
     break;
 
   case NODE_CONST:
-    v = buildConstant(factory, node, useResult);
+    v = buildConstant(builder, node, useResult);
     break;
 
   case NODE_COLON2:
-    v = buildRelativeConstant(factory, node, useResult);
+    v = buildRelativeConstant(builder, node, useResult);
     break;
 
   case NODE_COLON3:
-    v = buildToplevelConstant(factory, node, useResult);
+    v = buildToplevelConstant(builder, node, useResult);
     break;
 
   default:
@@ -262,140 +296,158 @@ CfgBuilder::buildNode(OpcodeFactory* factory, const RNode* node, bool useResult)
 }
 
 Variable*
-CfgBuilder::buildAssignment(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildAssignment(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_DASGN_CURR || nd_type(node) == NODE_LASGN);
 
-  Variable* rhs = buildNode(factory, node->nd_value, true);
-  Variable* lhs = buildNamedVariable(factory, node->nd_vid, true);
+  Variable* rhs = buildNode(builder, node->nd_value, true);
+  Variable* lhs = createNamedVariable(builder, node->nd_vid);
 
-  Variable* value = factory->addCopy(lhs, rhs, useResult);
+  builder->add(new OpcodeCopy(loc_, lhs, rhs));
 
-  return value;
+  return lhs;
 }
 
 Variable*
-CfgBuilder::buildLocalVariable(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildLocalVariable(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_LVAR);
-  return buildNamedVariable(factory, node->nd_vid, true);
+  return createNamedVariable(builder, node->nd_vid);
 }
 
 Variable*
-CfgBuilder::buildImmediate(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildImmediate(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_LIT);
-  return factory->addImmediate((VALUE)node->nd_lit, useResult);
+  if (!useResult) {
+    return nullptr;
+  }
+
+  return builder->add(new OpcodeImmediate(loc_, nullptr, (VALUE)node->nd_lit));
 }
 
 Variable*
-CfgBuilder::buildSelf(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildSelf(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   if (!useResult) {
     return nullptr;
   }
 
-  return buildNamedVariable(factory, IdStore::get(ID_self), false);
+  return createNamedVariable(builder, IdStore::get(ID_self));
 }
 
 Variable*
-CfgBuilder::buildTrue(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildTrue(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  return factory->addImmediate(Qtrue, useResult);
+  if (!useResult) {
+    return nullptr;
+  }
+
+  return builder->add(new OpcodeImmediate(loc_, nullptr, Qtrue));
 }
 
 Variable*
-CfgBuilder::buildFalse(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildFalse(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  return factory->addImmediate(Qfalse, useResult);
+  if (!useResult) { return nullptr; }
+
+  return builder->add(new OpcodeImmediate(loc_, nullptr, Qfalse));
 }
 
 Variable*
-CfgBuilder::buildNil(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildNil(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  return factory->addImmediate(Qnil, useResult);
+  if (!useResult) { return nullptr; }
+
+  return builder->add(new OpcodeImmediate(loc_, nullptr, Qnil));
 }
 
 Variable*
-CfgBuilder::buildArray(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildArray(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   if (nd_type(node) == NODE_ZARRAY) {
-    return factory->addArray(nullptr, nullptr, useResult);
+    if (!useResult) { return nullptr; }
+    return builder->add(new OpcodeArray(loc_, nullptr, 0));
+  }
+
+  if (!useResult) {
+    for (const RNode* n = node; n; n = n->nd_next) {
+      buildNode(builder, n->nd_head, false);
+    }
   }
 
   int count = node->nd_alen;
-  Variable** elems = (Variable**)_alloca(count * sizeof(Variable*));
-  Variable** e = elems;
+  OpcodeArray* array = new OpcodeArray(loc_, nullptr, count);
+  Variable** e = array->begin();
   for (const RNode* n = node; n; n = n->nd_next) {
-    *e++ = buildNode(factory, n->nd_head, useResult);
+    *e++ = buildNode(builder, n->nd_head, true);
   }
-
-  return factory->addArray(elems, elems + count, useResult);
+  return builder->add(array);
 }
 
 Variable*
-CfgBuilder::buildArrayPush(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildArrayPush(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  Variable* array = buildNode(factory, node->nd_head, useResult);
-  Variable* obj = buildNode(factory, node->nd_body, useResult);
+  Variable* array = buildNode(builder, node->nd_head, useResult);
+  Variable* obj = buildNode(builder, node->nd_body, useResult);
 
   Variable* result = nullptr;
   if (useResult) {
-    result = factory->addPrimitive(IdStore::get(ID_rbjit__push_to_array), 2, array, obj);
+    result = builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__push_to_array), 2, array, obj));
   }
 
   return result;
 }
 
 Variable*
-CfgBuilder::buildArrayConcat(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildArrayConcat(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  Variable* a1 = buildNode(factory, node->nd_head, useResult);
-  Variable* a2 = buildNode(factory, node->nd_body, useResult);
+  Variable* a1 = buildNode(builder, node->nd_head, useResult);
+  Variable* a2 = buildNode(builder, node->nd_body, useResult);
 
   Variable* result = nullptr;
   if (useResult) {
-    result = factory->addPrimitive(IdStore::get(ID_rbjit__concat_arrays), 2, a1, a2);
+    result = builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__concat_arrays), 2, a1, a2));
   }
 
   return result;
 }
 
 Variable*
-CfgBuilder::buildArraySplat(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildArraySplat(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  Variable* obj = buildNode(factory, node->nd_head, useResult);
+  Variable* obj = buildNode(builder, node->nd_head, useResult);
 
   Variable* result = nullptr;
   if (useResult) {
-    result = factory->addPrimitive(IdStore::get(ID_rbjit__convert_to_array), 1, obj);
+    result = builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__convert_to_array), 1, obj));
   }
 
   return result;
 }
 
 Variable*
-CfgBuilder::buildRange(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildRange(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  Variable* low = buildNode(factory, node->nd_beg, useResult);
-  Variable* high = buildNode(factory, node->nd_end, useResult);
-  return factory->addRange(low, high, nd_type(node) == NODE_DOT3, useResult);
+  Variable* low = buildNode(builder, node->nd_beg, useResult);
+  Variable* high = buildNode(builder, node->nd_end, useResult);
+  return builder->add(new OpcodeRange(loc_, nullptr, low, high, nd_type(node) == NODE_DOT3));
 }
 
 Variable*
-CfgBuilder::buildString(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildString(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  return factory->addString(node->nd_lit, useResult);
+  return builder->add(new OpcodeString(loc_, nullptr, node->nd_lit));
 }
 
 Variable*
-CfgBuilder::buildStringInterpolation(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildStringInterpolation(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   std::vector<Variable*> elems(1, nullptr);
 
   Variable* v;
   if (useResult && !NIL_P(node->nd_lit)) {
-    v = factory->addString(node->nd_lit, true);
+    v = builder->add(new OpcodeString(loc_, nullptr, node->nd_lit));
     elems.push_back(v);
   }
 
@@ -404,14 +456,14 @@ CfgBuilder::buildStringInterpolation(OpcodeFactory* factory, const RNode* node, 
     switch (nd_type(n)) {
     case NODE_STR:
       if (useResult) {
-        v = factory->addString(n->nd_lit, true);
+        v = builder->add(new OpcodeString(loc_, nullptr, n->nd_lit));
         elems.push_back(v);
       }
       break;
 
     case NODE_EVSTR:
-      v = buildNode(factory, n->nd_body, useResult);
-      v = factory->addPrimitive(IdStore::get(ID_rbjit__convert_to_string), 1, v);
+      v = buildNode(builder, n->nd_body, useResult);
+      v = builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__convert_to_string), 1, v));
       if (useResult) {
         elems.push_back(v);
       }
@@ -423,137 +475,150 @@ CfgBuilder::buildStringInterpolation(OpcodeFactory* factory, const RNode* node, 
   }
 
   if (useResult) {
-    Variable* count = factory->addImmediate(elems.size() - 1, true);
+    Variable* count = builder->add(new OpcodeImmediate(loc_, nullptr, elems.size() - 1));
     elems[0] = count;
-    return factory->addPrimitive(IdStore::get(ID_rbjit__concat_strings), elems, true);
+    return builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__concat_strings), &*elems.begin(), &*elems.end()));
   }
   return nullptr;
 }
 
 Variable*
-CfgBuilder::buildHash(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildHash(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   const RNode* n = node->nd_head;
   if (!n) {
-    return factory->addHash(nullptr, nullptr, useResult);
+    return builder->add(new OpcodeHash(loc_, nullptr, 0));
+  }
+
+  if (!useResult) {
+    for (; n; n = n->nd_next) {
+      buildNode(builder, n->nd_head, false);
+      return nullptr;
+    }
   }
 
   int count = n->nd_alen;
-  Variable** elems = (Variable**)_alloca(count * sizeof(Variable*));
-  Variable** e = elems;
+  OpcodeHash* hash = new OpcodeHash(loc_, nullptr, count);
+  Variable** e = hash->begin();
   for (; n; n = n->nd_next) {
-    *e++ = buildNode(factory, n->nd_head, useResult);
+    *e++ = buildNode(builder, n->nd_head, true);
   }
 
-  return factory->addHash(elems, elems + count, useResult);
+  return builder->add(hash);
 }
 
 Variable*
-CfgBuilder::buildIf(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildIf(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_IF);
 
   // condition
-  Variable* cond = buildNode(factory, node->nd_cond, true);
+  Variable* cond = buildNode(builder, node->nd_cond, true);
 
   // true block
-  OpcodeFactory trueFactory(*factory);
-  BlockHeader* trueBlock = trueFactory.lastBlock();
-  Variable* trueValue;
+  Block* trueBlock = new Block;
+  BlockBuilder trueBuilder(builder, trueBlock);
+  Variable* trueValue = nullptr;
   if (node->nd_body) {
-    trueValue = buildNode(&trueFactory, node->nd_body, useResult);
+    trueValue = buildNode(&trueBuilder, node->nd_body, useResult);
   }
   else {
-    trueValue = trueFactory.addImmediate(mri::Object::nilObject(), useResult);
+    if (useResult) {
+      trueValue = trueBuilder.add(new OpcodeImmediate(loc_, nullptr, mri::Object::nilObject()));
+    }
   }
 
   // false block
-  OpcodeFactory falseFactory(*factory);
-  BlockHeader* falseBlock = falseFactory.lastBlock();
-  Variable* falseValue;
+  Block* falseBlock = new Block;
+  BlockBuilder falseBuilder(builder, falseBlock);
+  Variable* falseValue = nullptr;
   if (node->nd_else) {
-    falseValue = buildNode(&falseFactory, node->nd_else, useResult);
+    falseValue = buildNode(&falseBuilder, node->nd_else, useResult);
   }
   else {
-    falseValue = falseFactory.addImmediate(mri::Object::nilObject(), useResult);
+    if (useResult) {
+      falseValue = falseBuilder.add(new OpcodeImmediate(loc_, nullptr, mri::Object::nilObject()));
+    }
   }
 
   // branch
-  factory->addJumpIf(cond, trueBlock, falseBlock);
+  builder->add(new OpcodeJumpIf(loc_, cond, trueBlock, falseBlock));
 
   // join block
-  if (trueFactory.continues()) {
-    if (falseFactory.continues()) {
-      BlockHeader* join = factory->addFreeBlockHeader(0);
-      Variable* value = factory->createTemporary(useResult);
+  if (trueBuilder.continues()) {
+    if (falseBuilder.continues()) {
+      Block* join = new Block;
+      builder->setBlock(join);
+      Variable* value = nullptr;
       if (useResult) {
-        trueFactory.addCopy(value, trueValue, useResult);
-        falseFactory.addCopy(value, falseValue, useResult);
+        value = new Variable;
+        trueBuilder.add(new OpcodeCopy(loc_, value, trueValue));
+        falseBuilder.add(new OpcodeCopy(loc_, value, falseValue));
       }
-      trueFactory.addJump(join);
-      falseFactory.addJump(join);
+      trueBuilder.add(new OpcodeJump(loc_, join));
+      falseBuilder.add(new OpcodeJump(loc_, join));
       return value;
     }
 
-    *factory = trueFactory;
+    builder->setBlock(trueBuilder.block());
     return trueValue;
   }
   else {
-    if (falseFactory.continues()) {
-      *factory = falseFactory;
+    if (falseBuilder.continues()) {
+      builder->setBlock(falseBuilder.block());
       return falseValue;
     }
   }
 
   // Both route have been stopped
-  factory->halt();
-  return 0;
+  builder->halt();
+  return nullptr;
 }
 
 Variable*
-CfgBuilder::buildAndOr(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildAndOr(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_AND || nd_type(node) == NODE_OR);
 
   // left-side hand value
-  Variable* first = buildNode(factory, node->nd_1st, true);
+  Variable* first = buildNode(builder, node->nd_1st, true);
 
-  if (!factory->continues()) {
-    return 0;
+  if (!builder->continues()) {
+    return nullptr;
   }
 
   // join block
-  OpcodeFactory joinFactory(*factory);
-  BlockHeader* joinBlock = joinFactory.lastBlock();
+  Block* joinBlock = new Block;
+  BlockBuilder joinBuilder(builder, joinBlock);
 
   // cushion block to avoid a critical edge
-  OpcodeFactory cushionFactory(*factory);
-  BlockHeader* cushionBlock = cushionFactory.lastBlock();
-  cushionFactory.addJump(joinBlock);
+  Block* cushionBlock = new Block;
+  BlockBuilder cushionBuilder(builder, cushionBlock);
+  cushionBuilder.addJump(loc_, joinBlock);
 
   // right-side hand value
-  OpcodeFactory secondFactory(*factory);
-  BlockHeader* secondBlock = secondFactory.lastBlock();
-  Variable* second = buildNode(&secondFactory, node->nd_2nd, useResult);
+  Block* secondBlock = new Block;
+  BlockBuilder secondBuilder(builder, secondBlock);
+  Variable* second = buildNode(&secondBuilder, node->nd_2nd, useResult);
   if (useResult) {
-    secondFactory.addCopy(first, second, useResult);
+    secondBuilder.add(new OpcodeCopy(loc_, first, second));
   }
-  secondFactory.addJump(joinBlock);
+  secondBuilder.addJump(loc_, joinBlock);
 
   // branch
   if (nd_type(node) == NODE_AND) {
-    factory->addJumpIf(first, secondBlock, cushionBlock);
+    builder->addJumpIf(loc_, first, secondBlock, cushionBlock);
   }
   else {
-    factory->addJumpIf(first, cushionBlock, secondBlock);
+    builder->addJumpIf(loc_, first, cushionBlock, secondBlock);
   }
 
-  *factory = joinFactory;
+  builder->setBlock(joinBuilder.block());
   return first;
 }
 
 Variable*
-CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildWhile(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   //     <while>         <begin-while>
   //  +-----------+      +-----------+
@@ -591,98 +656,96 @@ CfgBuilder::buildWhile(OpcodeFactory* factory, const RNode* node, bool useResult
   assert(nd_type(node) == NODE_WHILE || nd_type(node) == NODE_UNTIL);
 
   // Result value
-  Variable* value = factory->createTemporary(useResult);
+  Variable* value = useResult ? new Variable : nullptr;
 
   // Create blocks
-  OpcodeFactory preheaderFactory(*factory);
-  preheaderFactory.lastBlock()->setDebugName("while_preheader");
-  OpcodeFactory condFactory(*factory);
-  condFactory.lastBlock()->setDebugName("while_cond");
-  OpcodeFactory bodyFactory(*factory);
-  bodyFactory.lastBlock()->setDebugName("while_body");
-  OpcodeFactory preexitFactory(*factory);
-  preexitFactory.lastBlock()->setDebugName("while_preexit");
-  OpcodeFactory exitFactory(*factory);
-  exitFactory.lastBlock()->setDebugName("while_exit");
+  BlockBuilder preheaderBuilder(builder, new Block("while_preheader"));
+  BlockBuilder condBuilder(builder, new Block("while_cond"));
+  BlockBuilder bodyBuilder(builder, new Block("while_body"));
+  BlockBuilder preexitBuilder(builder, new Block("while_preexit"));
+  BlockBuilder exitBuilder(builder, new Block("while_exit"));
 
   // Preheader block
-  factory->addJump(preheaderFactory.lastBlock());
+  builder->addJump(loc_, preheaderBuilder.block());
 
   if (node->nd_state == 0) {
     // begin-end-while
-    preheaderFactory.addJump(bodyFactory.lastBlock());
+    preheaderBuilder.addJump(loc_, bodyBuilder.block());
   }
   else {
     // while
-    preheaderFactory.addJump(condFactory.lastBlock());
+    preheaderBuilder.addJump(loc_, condBuilder.block());
   }
 
   // Condition block
-  BlockHeader* condBlock = condFactory.lastBlock();
-  Variable* cond = buildNode(&condFactory, node->nd_cond, true);
-  condFactory.addJumpIf(cond, bodyFactory.lastBlock(), preexitFactory.lastBlock());
+  Block* condBlock = condBuilder.block();
+  Variable* cond = buildNode(&condBuilder, node->nd_cond, true);
+  condBuilder.addJumpIf(loc_, cond, bodyBuilder.block(), preexitBuilder.block());
 
   // Preexit block
-  Variable* nil = preexitFactory.addImmediate(mri::Object::nilObject(), useResult);
   if (useResult) {
-    preexitFactory.addCopy(value, nil, useResult);
+    Variable* nil = preexitBuilder.add(new OpcodeImmediate(loc_, nullptr, mri::Object::nilObject()));
+    preexitBuilder.add(new OpcodeCopy(loc_, value, nil));
   }
-  preexitFactory.addJump(exitFactory.lastBlock());
+  preexitBuilder.addJump(loc_, exitBuilder.block());
 
   // Body blcok
-  exits_.push_back(ExitPoint(&condFactory, &bodyFactory, &exitFactory, value));
-  buildNode(&bodyFactory, node->nd_body, false);
-  bodyFactory.addJump(condBlock);
+  exits_.push_back(ExitPoint(&condBuilder, &bodyBuilder, &exitBuilder, value));
+  buildNode(&bodyBuilder, node->nd_body, false);
+  bodyBuilder.addJump(loc_, condBlock);
   exits_.pop_back();
 
-  *factory = exitFactory;
+  builder->setBlock(exitBuilder.block());
 
   return value;
 }
+
 Variable*
-CfgBuilder::buildReturn(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildReturn(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   Variable* ret;
   if (node->nd_stts) {
-    ret = buildNode(factory, node->nd_stts, true);
+    ret = buildNode(builder, node->nd_stts, true);
   }
   else {
-    ret = factory->addImmediate(mri::Object::nilObject(), true);
+    ret = builder->add(new OpcodeImmediate(loc_, nullptr, mri::Object::nilObject()));
   }
-  factory->addJumpToReturnBlock(ret);
+  buildJumpToReturnBlock(builder, ret);
 
   return ret;
 }
 
 Variable*
-CfgBuilder::buildCall(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  // Receiver
-  Variable* receiver = buildNode(factory, node->nd_recv, true);
-
-  // Arguments
+  // Count the number of arguments
   int argCount = 1;
   if (node->nd_args) {
     argCount = node->nd_args->nd_alen + 1; // includes receiver
   }
-  Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
-  Variable** a = args;
-  *a++ = receiver;
+
+  Variable* receiver = buildNode(builder, node->nd_recv, true);
+
+  // Create a Lookup opcode
+  OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
+
+  // Create a Call opcode
+  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->exitEnv());
+
+  // Arguments
+  Variable** args = op->begin();
+  *args++ = receiver; // Receiver
   for (RNode* n = node->nd_args; n; n = n->nd_next) {
-    *a++ = buildNode(factory, n->nd_head, true);
+    *args++ = buildNode(builder, n->nd_head, true);
   }
 
-  // Find a method
-  Variable* lookup = factory->addLookup(receiver, node->nd_mid);
-
-  // Call a method
-  Variable* value = factory->addCall(lookup, args, args + argCount, useResult);
-
-  return value;
+  Variable* lookup = builder->add(lookupOp);
+  op->setLookup(lookup);
+  return builder->add(useResult, op);
 }
 
 Variable*
-CfgBuilder::buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_FCALL || nd_type(node) == NODE_VCALL);
 
@@ -697,54 +760,58 @@ CfgBuilder::buildFuncall(OpcodeFactory* factory, const RNode* node, bool useResu
     argCount += 1; // count up for the implicit receiver
   }
 
-  Variable** args = (Variable**)_alloca(argCount * sizeof(Variable*));
-  Variable** a = args;
-  if (!isPrimitive) {
-    *a++ = buildSelf(factory, 0, true);
-  }
-  for (RNode* n = node->nd_args; n; n = n->nd_next) {
-    *a++ = buildNode(factory, n->nd_head, true);
-  }
-
-  Variable* value;
+  // Create an appropriate opcode
   if (isPrimitive) {
     // Primitive
-    value = factory->addPrimitive(node->nd_mid, args, args + argCount, useResult);
-  }
-  else {
-    // Find a method
-    Variable* lookup = factory->addLookup(*args, node->nd_mid);
-
-    // Call a method
-    value = factory->addCall(lookup, args, args + argCount, useResult);
+    OpcodePrimitive* op = new OpcodePrimitive(loc_, nullptr, node->nd_mid, argCount);
+    Variable** args = op->begin();
+    for (RNode* n = node->nd_args; n; n = n->nd_next) {
+      *args++ = buildNode(builder, n->nd_head, true);
+    }
+    return builder->add(useResult, op);
   }
 
-  return value;
+  // Call a method
+
+  Variable* receiver = buildSelf(builder, 0, true);
+  OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
+  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->exitEnv());
+
+  // Arguments
+  Variable** args = op->begin();
+  *args++ = receiver;
+  for (RNode* n = node->nd_args; n; n = n->nd_next) {
+    *args++ = buildNode(builder, n->nd_head, true);
+  }
+
+  Variable* lookup = builder->add(lookupOp);
+  op->setLookup(lookup);
+  return builder->add(useResult, op);
 }
 
 Variable*
-CfgBuilder::buildConstant(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildConstant(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_CONST);
 
-  return factory->addConstant(node->nd_vid, nullptr, useResult);
+  return builder->add(useResult, new OpcodeConstant(loc_, nullptr, cfg_->undefined(), node->nd_vid, false, cfg_->entryEnv(), cfg_->exitEnv()));
 }
 
 Variable*
-CfgBuilder::buildRelativeConstant(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildRelativeConstant(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_COLON2);
 
-  Variable* base = buildNode(factory, node->nd_head, true);
-  return factory->addConstant(node->nd_mid, base, useResult);
+  Variable* base = buildNode(builder, node->nd_head, true);
+  return builder->add(useResult, new OpcodeConstant(loc_, nullptr, base, node->nd_mid, false, cfg_->entryEnv(), cfg_->exitEnv()));
 }
 
 Variable*
-CfgBuilder::buildToplevelConstant(OpcodeFactory* factory, const RNode* node, bool useResult)
+CfgBuilder::buildToplevelConstant(BlockBuilder* builder, const RNode* node, bool useResult)
 {
   assert(nd_type(node) == NODE_COLON3);
 
-  return factory->addToplevelConstant(node->nd_mid, useResult);
+  return builder->add(useResult, new OpcodeConstant(loc_, nullptr, cfg_->undefined(), node->nd_mid, true, cfg_->entryEnv(), cfg_->exitEnv()));
 }
 
 RBJIT_NAMESPACE_END

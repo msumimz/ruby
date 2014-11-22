@@ -40,6 +40,7 @@ public:
   Scope(ID* tbl, Scope* parent);
 
   NamedVariable* find(ID name) const;
+  NamedVariable* self() const;
 
   std::vector<ID> activeVariableList() const;
 

@@ -15,10 +15,7 @@
 #include "rbjit/inliner.h"
 #include "rbjit/codeduplicator.h"
 #include "rbjit/recompilationmanager.h"
-
-#ifdef RBJIT_DEBUG
 #include "rbjit/domtree.h"
-#endif
 
 RBJIT_NAMESPACE_BEGIN
 
@@ -137,10 +134,9 @@ CompilationInstance::buildCfg()
   RBJIT_DPRINT(debugPrintBanner("AST"));
   RBJIT_DPRINT(debugPrintAst());
 
-  {
-    CfgBuilder builder;
-    cfg_ = builder.buildMethod(source_, name_);
-  }
+  CfgBuilder builder;
+  cfg_ = builder.buildMethod(source_, name_);
+  DefInfoMap* defInfoMap = builder.defInfoMap();
 
   RBJIT_DPRINT(debugPrintBanner("CFG building"));
   RBJIT_DPRINT(cfg_->debugPrint());
@@ -149,18 +145,14 @@ CompilationInstance::buildCfg()
   RBJIT_DPRINT(cfg_->debugPrintVariables());
   assert(cfg_->checkSanityAndPrintErrors());
 
-  {
-    LTDominatorFinder domFinder(cfg_);
-    domFinder.setDominatorsToCfg();
-  }
+  LTDominatorFinder domFinder(cfg_);
+  DomTree domTree(cfg_, domFinder.dominators());
 
   RBJIT_DPRINT(debugPrintBanner("SSA translation"));
-  RBJIT_DPRINT(cfg_->domTree()->debugPrint());
+  RBJIT_DPRINT(domTree.debugPrint());
 
-  SsaTranslator ssa(cfg_, true);
+  SsaTranslator ssa(cfg_, defInfoMap, &domTree, true);
   ssa.translate();
-
-  cfg_->clearDefInfo();
 
   RBJIT_DPRINT(cfg_->debugPrint());
   RBJIT_DPRINT(cfg_->debugPrintDotHeader());

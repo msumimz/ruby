@@ -2,16 +2,17 @@
 #include "rbjit/cooperdominatorfinder.h"
 #include "rbjit/controlflowgraph.h"
 #include "rbjit/opcode.h"
+#include "rbjit/block.h"
 
 RBJIT_NAMESPACE_BEGIN
 
-CooperDominatorFinder::CooperDominatorFinder(ControlFlowGraph* cfg)
-  : DominatorFinder(cfg),
-    idoms_(blocks_->size(), 0),
-    dfnums_(blocks_->size(), 0)
+CooperDominatorFinder::CooperDominatorFinder(const ControlFlowGraph* cfg)
+  : cfg_(cfg),
+    idoms_(cfg->blockCount(), 0),
+    dfnums_(cfg->blockCount(), 0)
 {}
 
-std::vector<BlockHeader*>
+std::vector<Block*>
 CooperDominatorFinder::dominators()
 {
   findDominators();
@@ -24,20 +25,20 @@ CooperDominatorFinder::findDominators()
   computeDfsOrder();
 
   bool changed;
-  BlockHeader* entry = cfg_->entry();
+  Block* entry = cfg_->entryBlock();
   do {
     changed = false;
     // loop by reverse postorder
     for (auto i = postorders_.rbegin(), end = postorders_.rend(); i != end; ++i) {
-      BlockHeader* b = *i;
-      if (b == cfg_->entry()) {
+      Block* b = *i;
+      if (b == cfg_->entryBlock()) {
         continue;
       }
-      BlockHeader::Backedge* e = b->backedge();
-      BlockHeader* newIdom = e->block();
-      for (; e; e = e->next()) {
-        if (idoms_[e->block()->index()]) {
-          newIdom = findIntersect(e->block(), newIdom);
+      assert(b->backedgeCount() > 0);
+      Block* newIdom = *b->backedgeBegin();
+      for (auto j = b->backedgeBegin(), jend = b->backedgeEnd(); j != jend; ++j) {
+        if (idoms_[(*j)->index()]) {
+          newIdom = findIntersect(*j, newIdom);
         }
       }
       if (idoms_[b->index()] != newIdom) {
@@ -51,12 +52,12 @@ CooperDominatorFinder::findDominators()
 void
 CooperDominatorFinder::computeDfsOrder()
 {
-  postorders_.reserve(cfg_->blocks()->size());
-  computeDfsOrderInternal(cfg_->entry(), 0);
+  postorders_.reserve(cfg_->blockCount());
+  computeDfsOrderInternal(cfg_->entryBlock(), 0);
 }
 
 int
-CooperDominatorFinder::computeDfsOrderInternal(BlockHeader* b, int count)
+CooperDominatorFinder::computeDfsOrderInternal(Block* b, int count)
 {
   if (dfnums_[b->index()] > 0) {
     return count;
@@ -64,7 +65,7 @@ CooperDominatorFinder::computeDfsOrderInternal(BlockHeader* b, int count)
 
   dfnums_[b->index()] = count++;
 
-  BlockHeader* n = b->nextBlock();
+  Block* n = b->nextBlock();
   if (n) {
     count = computeDfsOrderInternal(n, count);
   }
@@ -78,8 +79,8 @@ CooperDominatorFinder::computeDfsOrderInternal(BlockHeader* b, int count)
   return count;
 }
 
-BlockHeader*
-CooperDominatorFinder::findIntersect(BlockHeader* b1, BlockHeader* b2)
+Block*
+CooperDominatorFinder::findIntersect(Block* b1, Block* b2)
 {
   while (b1 != b2) {
     assert(dfnums_[b1->index()] != dfnums_[b2->index()]);

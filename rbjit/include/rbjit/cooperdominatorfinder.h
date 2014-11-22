@@ -7,20 +7,21 @@ RBJIT_NAMESPACE_BEGIN
 class CooperDominatorFinder : public DominatorFinder {
 public:
 
-  CooperDominatorFinder(ControlFlowGraph* cfg);
+  CooperDominatorFinder(const ControlFlowGraph* cfg);
 
-  std::vector<BlockHeader*> dominators();
+  std::vector<Block*> dominators();
 
 private:
 
   void findDominators();
   void computeDfsOrder();
-  int computeDfsOrderInternal(BlockHeader* b, int count);
-  BlockHeader* findIntersect(BlockHeader* b1, BlockHeader* b2);
+  int computeDfsOrderInternal(Block* b, int count);
+  Block* findIntersect(Block* b1, Block* b2);
 
-  std::vector<BlockHeader*> idoms_;
+  const ControlFlowGraph* cfg_;
+  std::vector<Block*> idoms_;
   std::vector<int> dfnums_;
-  std::vector<BlockHeader*> postorders_;
+  std::vector<Block*> postorders_;
 
 };
 

@@ -21,13 +21,12 @@ public:
   // Duplicate a CFG
   ControlFlowGraph* duplicate(ControlFlowGraph* cfg);
 
-  BlockHeader* entry() { return blockOf(src_->entry()); }
-  BlockHeader* exit() { return blockOf(src_->exit()); }
+  Block* entry() { return blockOf(src_->entryBlock()); }
+  Block* exit() { return blockOf(src_->exitBlock()); }
 
-  BlockHeader* duplicatedBlockOf(BlockHeader* block) { return blockOf(block); }
+  Block* duplicatedBlockOf(Block* block) { return blockOf(block); }
   Variable* duplicatedVariableOf(Variable* v) { return variableOf(v); }
 
-  bool visitOpcode(BlockHeader* op);
   bool visitOpcode(OpcodeCopy* op);
   bool visitOpcode(OpcodeJump* op);
   bool visitOpcode(OpcodeJumpIf* op);
@@ -49,19 +48,18 @@ public:
 
 private:
 
-  BlockHeader* blockOf(BlockHeader* srcBlock);
+  Block* blockOf(Block* srcBlock);
   Variable* variableOf(Variable* srcVariable);
-  void setDefSite(Variable* v);
+  void setDefSite(Variable* v, Opcode* defOpcode);
   void copyRhs(OpcodeVa* dest, OpcodeVa* src);
 
   void duplicateOpcodes();
   void duplicateTypeContext(TypeContext* srcTypes, TypeContext* destTypes);
 
-  BlockHeader* lastBlock_;
-  Opcode* lastOpcode_;
-
   ControlFlowGraph* src_;
   ControlFlowGraph* dest_;
+
+  Block* lastBlock_;
 
   size_t blockIndexOffset_;
   size_t variableIndexOffset_;

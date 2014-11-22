@@ -5,7 +5,7 @@
 RBJIT_NAMESPACE_BEGIN
 
 TypeContext::TypeContext(ControlFlowGraph* cfg)
-  : cfg_(cfg), types_(cfg->variables()->size(), 0)
+  : cfg_(cfg), types_(cfg->variableCount(), 0)
 {}
 
 TypeContext::~TypeContext()
@@ -20,7 +20,7 @@ TypeContext::~TypeContext()
 void
 TypeContext::fitSizeToCfg()
 {
-  types_.resize(cfg_->variables()->size(), 0);
+  types_.resize(cfg_->variableCount(), 0);
 }
 
 void
@@ -93,12 +93,12 @@ std::string
 TypeContext::debugPrint() const
 {
   std::string out = "[Type Constraints]\n";
-  for (auto i = cfg_->variables()->cbegin(), end = cfg_->variables()->cend(); i != end; ++i) {
+  for (auto i = cfg_->variableBegin(), end = cfg_->variableEnd(); i != end; ++i) {
     Variable* v = *i;
     out += stringFormat("%Ix: ", v);
     if (types_[v->index()]) {
       out += types_[v->index()]->debugPrint();
-      if (std::find(cfg_->inputs()->cbegin(), cfg_->inputs()->cend(), v) != cfg_->inputs()->cend()) {
+      if (std::find(cfg_->inputBegin(), cfg_->inputEnd(), v) != cfg_->inputEnd()) {
         out += "  +";
       }
       if (cfg_->output() == v) {

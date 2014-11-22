@@ -1,16 +1,15 @@
 #pragma once
-
 #include <cassert>
-#ifdef RBJIT_DEBUG // used in BlockHeader
-#include <string>
-#endif
 #include "rbjit/common.h"
 #include "rbjit/rubymethod.h"
+
+#define RBJIT_DEFINE_ACCEPT \
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 RBJIT_NAMESPACE_BEGIN
 
 class Variable;
-class BlockHeader;
+class Block;
 class Scope;
 
 class OpcodeCopy;
@@ -37,7 +36,6 @@ class OpcodeCheckArg;
 
 class OpcodeVisitor {
 public:
-  virtual bool visitOpcode(BlockHeader* op) = 0;
   virtual bool visitOpcode(OpcodeCopy* op) = 0;
   virtual bool visitOpcode(OpcodeJump* op) = 0;
   virtual bool visitOpcode(OpcodeJumpIf* op) = 0;
@@ -59,84 +57,83 @@ public:
 };
 
 ////////////////////////////////////////////////////////////
+// Source location
+
+class SourceLocation {
+  // TODO
+};
+
+////////////////////////////////////////////////////////////
 // Base abstract class
 
 class Opcode {
 public:
 
-  Opcode(int file, int line, Opcode* prev)
-    : file_(file), line_(line), prev_(prev), next_(0)
-  {
-    if (prev) {
-      next_ = prev->next_;
-      prev->next_ = this;
-    }
-  }
+  Opcode(SourceLocation* loc)
+    : sourceLocation_(loc)
+  {}
 
-  // To be overridden by subclasses.
-  // Even when overridden, contained variables are NOT released.
   virtual ~Opcode() {}
 
-  virtual Opcode* clone(Opcode* prev) const
-  { assert(!"clone() is not implemented"); return 0; }
+  typedef Variable** Iterator;
+  typedef Variable*const* ConstIterator;
 
-  Opcode* next() const { return next_; }
-  Opcode* prev() const { return prev_; }
+  SourceLocation* sourceLocation() const { return sourceLocation_;  }
 
-  void
-  linkToNext(Opcode* next)
-  {
-    next_ = next;
-    next->prev_ = this;
-  }
+  ////////////////////////////////////////////////////////////
+  // Left-hand side value
 
-  void
-  insertAfter(Opcode* prev)
-  {
-    prev_ = prev;
-    next_ = prev->next_;
-    prev->next_->prev_ = this;
-    prev->next_ = this;
-  }
+  virtual Variable* lhs() const { return nullptr; }
 
-  void
-  unlink()
-  {
-    if (prev_) { prev_->next_ = next_; }
-    if (next_) { next_->prev_ = prev_; }
-  }
+  ////////////////////////////////////////////////////////////
+  // Right-hand side values
 
-  // Obtain variables
-  virtual Variable* lhs() const { return 0; }
-  virtual Variable*const* rhsBegin() const { return 0; }
-  virtual Variable*const* rhsEnd() const { return 0; }
-  virtual Variable** rhsBegin() { return 0; }
-  virtual Variable** rhsEnd() { return 0; }
-  virtual BlockHeader* nextBlock() const { return 0; }
-  virtual BlockHeader* nextAltBlock() const { return 0; }
+  virtual Variable** begin() { return nullptr; }
+  virtual Variable** end() { return nullptr; }
+  virtual Variable*const* begin() const { return nullptr; }
+  virtual Variable*const* end() const { return nullptr; }
+  virtual Variable*const* cbegin() const { return begin(); }
+  virtual Variable*const* cend() const { return end(); }
 
-  int rhsCount() const { return rhsEnd() - rhsBegin(); }
+  int rhsCount() const { return end() - begin(); }
   bool hasRhs() const { return rhsCount() > 0; }
 
-  virtual int file() const { return 0; }
-  virtual int line() const { return 0; }
+  ////////////////////////////////////////////////////////////
+  // Env
 
-  virtual bool accept(OpcodeVisitor* visitor) = 0;
+  virtual Variable* outEnv() { return nullptr; }
+  virtual void setOutEnv(Variable* e) { assert(!"Unimplemented"); }
+
+  ////////////////////////////////////////////////////////////
+  // Terminator
 
   virtual bool isTerminator() const { return false; }
+
+  ////////////////////////////////////////////////////////////
+  // Type name
 
   const char* typeName() const;
   const char* shortTypeName() const;
 
-  virtual Variable* outEnv() { return 0; }
-  virtual void setOutEnv(Variable* e) {}
+  ////////////////////////////////////////////////////////////
+  // Visitor
+
+  virtual bool accept(OpcodeVisitor* visitor) = 0;
 
 protected:
 
-  int file_ : 8;
-  int line_ : 16;
-  Opcode* prev_;
-  Opcode* next_;
+  SourceLocation* sourceLocation_;
+};
+
+////////////////////////////////////////////////////////////
+// OpcodeTerminator
+
+class OpcodeTerminator {
+public:
+  virtual Block* nextBlock() const = 0;
+  virtual void setNextBlock(Block* block) {}
+  virtual Block* nextAltBlock() const = 0;
+  virtual void setNextAltBlock(Block* block) {}
 };
 
 ////////////////////////////////////////////////////////////
@@ -146,8 +143,8 @@ protected:
 class OpcodeL : public Opcode {
 public:
 
-  OpcodeL(int file, int line, Opcode* prev, Variable* lhs)
-    : Opcode(file, line, prev), lhs_(lhs)
+  OpcodeL(SourceLocation* loc, Variable* lhs)
+    : Opcode(loc), lhs_(lhs)
   {}
 
   Variable* lhs() const { return lhs_; }
@@ -163,15 +160,15 @@ template <int N>
 class OpcodeR : public Opcode {
 public:
 
-  OpcodeR(int file, int line, Opcode* prev)
-    : Opcode(file, line, prev)
+  OpcodeR(SourceLocation* loc)
+    : Opcode(loc)
   {}
 
   Variable* rhs() const { return rhs_[0]; }
-  Variable*const* rhsBegin() const { return rhs_; }
-  Variable*const* rhsEnd() const { return rhs_ + N; }
-  Variable** rhsBegin() { return rhs_; }
-  Variable** rhsEnd() { return rhs_ + N; }
+  Variable** begin() { return rhs_; }
+  Variable** end() { return rhs_ + N; }
+  Variable*const* begin() const { return rhs_; }
+  Variable*const* end() const { return rhs_ + N; }
 
   void setRhs(int i, Variable* v) { rhs_[i] = v; }
 
@@ -185,17 +182,17 @@ template <int N>
 class OpcodeLR : public OpcodeL {
 public:
 
-  OpcodeLR(int file, int line, Opcode* prev, Variable* lhs)
-    : OpcodeL(file, line, prev, lhs)
+  OpcodeLR(SourceLocation* loc, Variable* lhs)
+    : OpcodeL(loc, lhs)
   {}
 
   Variable* rhs() const { return rhs_[0]; }
   Variable* rhs(int i) const { return rhs_[i]; }
 
-  Variable*const* rhsBegin() const { return rhs_; }
-  Variable*const* rhsEnd() const { return rhs_ + N; }
-  Variable** rhsBegin() { return rhs_; }
-  Variable** rhsEnd() { return rhs_ + N; }
+  Variable** begin() { return rhs_; }
+  Variable** end() { return rhs_ + N; }
+  Variable*const* begin() const { return rhs_; }
+  Variable*const* end() const { return rhs_ + N; }
 
   void setRhs(int i, Variable* v) { rhs_[i] = v; }
 
@@ -208,8 +205,8 @@ protected:
 class OpcodeVa : public OpcodeL {
 public:
 
-  OpcodeVa(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
-    : OpcodeL(file, line, prev, lhs), rhsSize_(rhsSize), rhs_(new Variable*[rhsSize])
+  OpcodeVa(SourceLocation* loc, Variable* lhs, int rhsCount)
+    : OpcodeL(loc, lhs), rhsCount_(rhsCount), rhs_(new Variable*[rhsCount])
   {}
 
   ~OpcodeVa() { delete rhs_; }
@@ -219,199 +216,84 @@ public:
 
   void setRhs(int i, Variable* v) { rhs_[i] = v; }
 
-  int rhsSize() const { return rhsSize_;  }
-  Variable*const* rhsBegin() const { return rhs_; }
-  Variable*const* rhsEnd() const { return rhs_ + rhsSize_; }
-  Variable** rhsBegin() { return rhs_; }
-  Variable** rhsEnd() { return rhs_ + rhsSize_; }
+  int rhsCount() const { return rhsCount_;  }
+  Variable** begin() { return rhs_; }
+  Variable** end() { return rhs_ + rhsCount_; }
+  Variable*const* begin() const { return rhs_; }
+  Variable*const* end() const { return rhs_ + rhsCount_; }
 
 protected:
 
-  int rhsSize_;
+  int rhsCount_;
   Variable** rhs_;
 };
 
 ////////////////////////////////////////////////////////////
 // Opcodes
 
-class BlockHeader : public Opcode {
-public:
-
-  BlockHeader(int file, int line, Opcode* prev, BlockHeader* backedge, int index, int depth, BlockHeader* idom)
-    : Opcode(file, line, prev), backedge_(backedge, 0), footer_(0),
-      index_(index), depth_(depth), idom_(idom), rescueBlock_(0)
-  {}
-
-  ~BlockHeader();
-
-  BlockHeader* clone(int baseDepth)
-  { return new BlockHeader(file_, line_, 0, 0, index_, depth_ + baseDepth, 0); }
-
-  int index() const { return index_; }
-  int depth() const { return depth_; }
-  BlockHeader* idom() const { return idom_; }
-  void setIdom(BlockHeader* idom) { idom_ = idom; }
-
-  Opcode* footer() const { return footer_; }
-  void setFooter(Opcode* footer) { footer_ = footer; }
-
-  BlockHeader* nextBlock() const { assert(footer()); return footer()->nextBlock(); }
-  BlockHeader* nextAltBlock() const { assert(footer()); return footer()->nextAltBlock(); }
-
-  void updateJumpDestination(BlockHeader* block);
-  void updateJumpAltDestination(BlockHeader* block);
-
-  bool containsOpcode(const Opcode* op);
-
-  // backedges
-
-  class Backedge {
-  public:
-
-    Backedge(BlockHeader* block, Backedge* next)
-      : block_(block), next_(next)
-    {}
-
-    BlockHeader* block() const { return block_; }
-    Backedge* next() const { return next_; }
-
-  private:
-
-    friend class BlockHeader;
-    BlockHeader* block_;
-    Backedge* next_;
-  };
-
-  Backedge* backedge() { return &backedge_; }
-  const Backedge* backedge() const { return &backedge_; }
-
-  void addBackedge(BlockHeader* block);
-  void removeBackedge(BlockHeader* block);
-  void updateBackedge(BlockHeader* oldBlock, BlockHeader* newBlock);
-  bool hasBackedge() const { return backedge_.block_ != 0; }
-  bool hasMultipleBackedges() const { return backedge_.next_ != 0; }
-  bool containsBackedge(BlockHeader* block);
-  int backedgeIndexOf(BlockHeader* block);
-  int backedgeSize() const;
-  const Backedge* backedgeAt(int n) const;
-
-  // visitor
-  bool visitEachOpcode(OpcodeVisitor* visitor);
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
-
-  // intrinsic iterator
-  template <class T> void
-  forEachOpcode(T func)
-  {
-    Opcode* op = this;
-    do {
-      func()(op);
-      if (!result || op == footer_) {
-        break;
-      }
-      op = op->next();
-    } while (op);
-  }
-
-  // debug tools
-#ifdef RBJIT_DEBUG
-  void setDebugName(const char* name)
-  { debugName_ = std::string(name); }
-  const char* debugName() const { return debugName_.c_str(); }
-#else
-  void setDebugName(const char* name) {}
-  const char* debugName() const { return ""; }
-#endif
-
-private:
-
-  Backedge backedge_;
-  Opcode* footer_;
-
-  int index_;
-  int depth_;
-
-  BlockHeader* idom_;
-  BlockHeader* rescueBlock_;
-
-#ifdef RBJIT_DEBUG
-  std::string debugName_;
-#endif
-};
-
 class OpcodeCopy : public OpcodeLR<1> {
 public:
 
-  OpcodeCopy(int file, int line, Opcode* prev, Variable* lhs, Variable* rhs)
-    : OpcodeLR<1>(file, line, prev, lhs)
+  OpcodeCopy(SourceLocation* loc, Variable* lhs, Variable* rhs)
+    : OpcodeLR<1>(loc, lhs)
   { setRhs(0, rhs); }
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  RBJIT_DEFINE_ACCEPT
 
 };
 
-class OpcodeJump : public Opcode {
+class OpcodeJump : public Opcode, public OpcodeTerminator {
 public:
 
-  OpcodeJump(int file, int line, Opcode* prev, BlockHeader* dest)
-    : Opcode(file, line, prev)
-  { next_ = dest; }
+  OpcodeJump(SourceLocation* loc, Block* dest)
+    : Opcode(loc), dest_(dest)
+  {}
 
-  BlockHeader* dest() const { return static_cast<BlockHeader*>(next()); }
-  BlockHeader* nextBlock() const { return dest(); }
+  RBJIT_DEFINE_ACCEPT
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
-
-  bool isTerminator() const { return true; }
-
-protected:
-
-  // Allows BlockHeader to call setNextBlock(), which is used in updateJumpDestination()
-  friend class BlockHeader;
-  void setNextBlock(BlockHeader* dest) { next_ = dest; }
-
-};
-
-class OpcodeJumpIf : public OpcodeR<1> {
-public:
-
-  OpcodeJumpIf(int file, int line, Opcode* prev, Variable* cond, BlockHeader* ifTrue, BlockHeader* ifFalse)
-    : OpcodeR<1>(file, line, prev), ifFalse_(ifFalse)
-  {
-    next_ = ifTrue;
-    setRhs(0, cond);
-  }
-
-  Variable* cond() const { return rhs(); }
-  BlockHeader* ifTrue() const { return static_cast<BlockHeader*>(next()); }
-  BlockHeader* ifFalse() const { return ifFalse_; }
-
-  BlockHeader* nextBlock() const { return ifTrue(); }
-  BlockHeader* nextAltBlock() const { return ifFalse(); }
-
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
-
+  Block* nextBlock() const { return dest_; }
+  void setNextBlock(Block* block) { dest_ = block; }
+  Block* nextAltBlock() const { return nullptr;  }
   bool isTerminator() const { return true; }
 
 private:
 
-  // Allows BlockHeader to call setNextBlock(), which is used in updateJumpDestination()
-  friend class BlockHeader;
-  void setNextBlock(BlockHeader* dest) { next_ = dest; }
-  void setNextAltBlock(BlockHeader* dest) { ifFalse_ = dest; }
+  Block* dest_;
 
-  BlockHeader* ifFalse_;
+};
+
+class OpcodeJumpIf : public OpcodeR<1>, public OpcodeTerminator {
+public:
+
+  OpcodeJumpIf(SourceLocation* loc, Variable* cond, Block* ifTrue, Block* ifFalse)
+    : OpcodeR<1>(loc), ifTrue_(ifTrue), ifFalse_(ifFalse)
+  { setRhs(0, cond); }
+
+  RBJIT_DEFINE_ACCEPT
+
+  Variable* cond() const { return rhs(); }
+
+  Block* nextBlock() const { return ifTrue_; }
+  void setNextBlock(Block* block) { ifTrue_ = block; }
+  Block* nextAltBlock() const { return ifFalse_; }
+  void setNextAltBlock(Block* block) { ifFalse_ = block; }
+  bool isTerminator() const { return true; }
+
+private:
+
+  Block* ifTrue_;
+  Block* ifFalse_;
 };
 
 class OpcodeImmediate : public OpcodeL {
 public:
 
-  OpcodeImmediate(int file, int line, Opcode* prev, Variable* lhs, VALUE value)
-    : OpcodeL(file, line, prev, lhs), value_(value) {}
+  OpcodeImmediate(SourceLocation* loc, Variable* lhs, VALUE value)
+    : OpcodeL(loc, lhs), value_(value) {}
+
+  RBJIT_DEFINE_ACCEPT
 
   VALUE value() const { return value_; }
-
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 protected:
 
@@ -421,10 +303,10 @@ protected:
 class OpcodeEnv : public OpcodeL {
 public:
 
-  OpcodeEnv(int file, int line, Opcode* prev, Variable* lhs)
-    : OpcodeL(file, line, prev, lhs) {}
+  OpcodeEnv(SourceLocation* loc, Variable* lhs)
+    : OpcodeL(loc, lhs) {}
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  RBJIT_DEFINE_ACCEPT
 
   // Helper methods
   static ID envName();
@@ -439,15 +321,15 @@ private:
 class OpcodeLookup : public OpcodeLR<2> {
 public:
 
-  OpcodeLookup(int file, int line, Opcode* prev, Variable* lhs, Variable* receiver, ID methodName, Variable* env)
-    : OpcodeLR<2>(file, line, prev, lhs), methodName_(methodName)
+  OpcodeLookup(SourceLocation* loc, Variable* lhs, Variable* receiver, ID methodName, Variable* env)
+    : OpcodeLR<2>(loc, lhs), methodName_(methodName)
   {
     setRhs(0, receiver);
     setRhs(1, env);
   }
 
-  OpcodeLookup(int file, int line, Opcode* prev, Variable* lhs, Variable* receiver, ID methodName, Variable* env, mri::MethodEntry me)
-    : OpcodeLR<2>(file, line, prev, lhs), methodName_(methodName), me_(me)
+  OpcodeLookup(SourceLocation* loc, Variable* lhs, Variable* receiver, ID methodName, Variable* env, mri::MethodEntry me)
+    : OpcodeLR<2>(loc, lhs), methodName_(methodName), me_(me)
   {
     setRhs(0, receiver);
     setRhs(1, env);
@@ -470,13 +352,14 @@ private:
 class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodeCall(int file, int line, Opcode* prev, Variable* lhs, Variable* lookup, int rhsSize, Variable* env)
-    : OpcodeVa(file, line, prev, lhs, rhsSize),
+  OpcodeCall(SourceLocation* loc, Variable* lhs, Variable* lookup, int rhsSize, Variable* env)
+    : OpcodeVa(loc, lhs, rhsSize),
       lookup_(lookup), env_(env) {}
 
-  OpcodeCall* clone(Opcode* prev, Variable* methodEntry) const;
+  OpcodeCall* clone(Variable* methodEntry) const;
 
   Variable* lookup() const { return lookup_; }
+  void setLookup(Variable* lookup) { lookup_ = lookup; }
   OpcodeLookup* lookupOpcode() const;
 
   Variable* receiver() const { return rhs(0); }
@@ -497,12 +380,14 @@ private:
 class OpcodeConstant : public OpcodeLR<2> {
 public:
 
-  OpcodeConstant(int file, int line, Opcode* prev, Variable* lhs, Variable* base, ID name, bool toplevel, Variable* inEnv, Variable* outEnv)
-    : OpcodeLR(file, line, prev, lhs), name_(name), toplevel_(toplevel), outEnv_(outEnv)
+  OpcodeConstant(SourceLocation* loc, Variable* lhs, Variable* base, ID name, bool toplevel, Variable* inEnv, Variable* outEnv)
+    : OpcodeLR(loc, lhs), name_(name), toplevel_(toplevel), outEnv_(outEnv)
   {
     setRhs(0, base);
     setRhs(1, inEnv);
   }
+
+  RBJIT_DEFINE_ACCEPT
 
   ID name() const { return name_; }
   Variable* base() const { return rhs(0); }
@@ -513,8 +398,6 @@ public:
 
   Variable* outEnv() { return outEnv_; }
   void setOutEnv(Variable* e) { outEnv_ = e; }
-
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
 
@@ -528,13 +411,16 @@ private:
 class OpcodePrimitive : public OpcodeVa {
 public:
 
-  OpcodePrimitive(int file, int line, Opcode* prev, Variable* lhs, ID name, int rhsSize)
-    : OpcodeVa(file, line, prev, lhs, rhsSize),
+  OpcodePrimitive(SourceLocation* loc, Variable* lhs, ID name, int rhsCount)
+    : OpcodeVa(loc, lhs, rhsCount),
       name_(name) {}
 
-  ID name() const { return name_; }
+  RBJIT_DEFINE_ACCEPT
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  static OpcodePrimitive* create(SourceLocation* loc, Variable* lhs, ID name, Variable*const* argsBegin, Variable*const* argsEnd);
+  static OpcodePrimitive* create(SourceLocation* loc, Variable* lhs, ID name, int argCount, ...);
+
+  ID name() const { return name_; }
 
 private:
 
@@ -544,57 +430,55 @@ private:
 class OpcodePhi : public OpcodeVa {
 public:
 
-  OpcodePhi(int file, int line, Opcode* prev, Variable* lhs, int rhsSize, BlockHeader* block)
-    : OpcodeVa(file, line, prev, lhs, rhsSize), block_(block) {}
+  OpcodePhi(SourceLocation* loc, Variable* lhs, int rhsCount, Block* block)
+    : OpcodeVa(loc, lhs, rhsCount), block_(block) {}
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  RBJIT_DEFINE_ACCEPT
 
-  BlockHeader* block() const { return block_; }
+  Block* block() const { return block_; }
 
 private:
 
   // Block where the phi opcode is located
   // (The LLVM phi nodes need the backedge information)
-  BlockHeader* block_;
+  Block* block_;
 };
 
 class OpcodeExit : public Opcode {
 public:
 
-  OpcodeExit(int file, int line, Opcode* prev)
-    : Opcode(file, line, prev) {}
+  OpcodeExit(SourceLocation* loc)
+    : Opcode(loc) {}
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  RBJIT_DEFINE_ACCEPT
 
   bool isTerminator() const { return true; }
-
 };
 
 class OpcodeArray : public OpcodeVa {
 public:
 
-  OpcodeArray(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
-    : OpcodeVa(file, line, prev, lhs, rhsSize)
+  OpcodeArray(SourceLocation* loc, Variable* lhs, int rhsCount)
+    : OpcodeVa(loc, lhs, rhsCount)
   {}
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
-
+  RBJIT_DEFINE_ACCEPT
 };
 
 class OpcodeRange : public OpcodeLR<2> {
 public:
 
-  OpcodeRange(int file, int line, Opcode* prev, Variable* lhs, Variable* low, Variable* high, bool exclusive)
-    : OpcodeLR(file, line, prev, lhs), exclusive_(exclusive)
+  OpcodeRange(SourceLocation* loc, Variable* lhs, Variable* low, Variable* high, bool exclusive)
+    : OpcodeLR(loc, lhs), exclusive_(exclusive)
   {
     setRhs(0, low);
     setRhs(1, high);
   }
 
+  RBJIT_DEFINE_ACCEPT
+
   Variable* low() const { return rhs(0); }
   Variable* high() const { return rhs(1); }
-
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
   bool exclusive() const { return exclusive_; }
 
@@ -606,41 +490,39 @@ private:
 class OpcodeString : public OpcodeL {
 public:
 
-  OpcodeString(int file, int line, Opcode* prev, Variable* lhs, VALUE string)
-    : OpcodeL(file, line, prev, lhs), string_(string)
+  OpcodeString(SourceLocation* loc, Variable* lhs, VALUE string)
+    : OpcodeL(loc, lhs), string_(string)
   {}
 
-  VALUE string() const { return string_;  }
+  RBJIT_DEFINE_ACCEPT
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  VALUE string() const { return string_;  }
 
 private:
 
   VALUE string_;
-
 };
 
 class OpcodeHash : public OpcodeVa {
 public:
 
-  OpcodeHash(int file, int line, Opcode* prev, Variable* lhs, int rhsSize)
-    : OpcodeVa(file, line, prev, lhs, rhsSize)
-  { assert(rhsSize % 2 == 0); }
+  OpcodeHash(SourceLocation* loc, Variable* lhs, int rhsCount)
+    : OpcodeVa(loc, lhs, rhsCount)
+  { assert(rhsCount % 2 == 0); }
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
-
+  RBJIT_DEFINE_ACCEPT
 };
 
 class OpcodeEnter : public Opcode {
 public:
 
-  OpcodeEnter(int file, int line, Opcode* prev, Scope* scope)
-    : Opcode(file, line, prev), scope_(scope)
+  OpcodeEnter(SourceLocation* loc, Scope* scope)
+    : Opcode(loc), scope_(scope)
   {}
 
-  Scope* scope() const { return scope_; }
+  RBJIT_DEFINE_ACCEPT
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  Scope* scope() const { return scope_; }
 
 private:
 
@@ -650,21 +532,23 @@ private:
 class OpcodeLeave : public Opcode {
 public:
 
-  OpcodeLeave(int file, int line, Opcode* prev)
-    : Opcode(file, line, prev)
+  OpcodeLeave(SourceLocation* loc)
+    : Opcode(loc)
   {}
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  RBJIT_DEFINE_ACCEPT
 };
 
 class OpcodeCheckArg : public Opcode {
 public:
 
-  OpcodeCheckArg(int file, int line, Opcode* prev)
-    : Opcode(file, line, prev)
+  OpcodeCheckArg(SourceLocation* loc)
+    : Opcode(loc)
   {}
 
-  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+  RBJIT_DEFINE_ACCEPT
 };
+
+#undef RBJIT_DEFINE_ACCEPT
 
 RBJIT_NAMESPACE_END

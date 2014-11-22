@@ -2,15 +2,14 @@
 
 #include <vector>
 #include <utility> // std::pair
-
 #include "rbjit/rubymethod.h"
+#include "rbjit/block.h"
 
 RBJIT_NAMESPACE_BEGIN
 
 class PrecompiledMethodInfo;
 class ControlFlowGraph;
 class TypeContext;
-class BlockHeader;
 class Opcode;
 class OpcodeCall;
 class Variable;
@@ -25,17 +24,18 @@ public:
 
 private:
 
-  bool inlineCallSite(BlockHeader* block, OpcodeCall* op);
-  std::pair<Variable*, Variable*> replaceCallWithMethodBody(MethodInfo* methodInfo, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op, Variable* result, Variable* exitEnv);
-  std::pair<Variable*, Variable*> insertCall(mri::MethodEntry me, BlockHeader* entry, BlockHeader* exit, OpcodeCall* op);
-  void removeOpcodeCall(OpcodeCall* op);
+  bool inlineCallSite(Block* block, Block::Iterator i);
+  std::pair<Variable*, Variable*> replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* exit, OpcodeCall* op, Variable* result, Variable* exitEnv);
+  std::pair<Variable*, Variable*> insertCall(mri::MethodEntry me, Block* entry, Block* exit, OpcodeCall* op);
+
+  OpcodeCall* duplicateCall(OpcodeCall* op, Variable* lookup, Block* defBlock);
 
   PrecompiledMethodInfo* mi_;
   ControlFlowGraph* cfg_;
   Scope* scope_;
   TypeContext* typeContext_;
 
-  std::vector<BlockHeader*> work_;
+  std::vector<Block*> work_;
   std::vector<char> visited_;
 };
 

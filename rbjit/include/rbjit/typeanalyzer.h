@@ -11,17 +11,17 @@ RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
 class TypeConstraint;
-class BlockHeader;
+class Block;
 class TypeContext;
 
 RBJIT_NAMESPACE_END
 
 namespace std {
   template <>
-  class hash<std::pair<rbjit::BlockHeader*, rbjit::BlockHeader*>> {
+  class hash<std::pair<rbjit::Block*, rbjit::Block*>> {
   public:
     size_t
-    operator()(const std::pair<rbjit::BlockHeader*, rbjit::BlockHeader*>& value) const
+    operator()(const std::pair<rbjit::Block*, rbjit::Block*>& value) const
     {
       return (reinterpret_cast<size_t>(value.first) ^ reinterpret_cast<size_t>(value.second)) >> 2;
     }
@@ -40,7 +40,6 @@ public:
   std::tuple<TypeContext*, bool, bool> analyze();
 
   // Evaluate expressions
-  bool visitOpcode(BlockHeader* op);
   bool visitOpcode(OpcodeCopy* op);
   bool visitOpcode(OpcodeJump* op);
   bool visitOpcode(OpcodeJumpIf* op);
@@ -63,21 +62,21 @@ public:
 protected:
 
   void updateTypeConstraint(Variable* v, const TypeConstraint& newType);
-  void makeEdgeReachable(BlockHeader* from, BlockHeader* to);
-  void makeEdgeUnreachable(BlockHeader* from, BlockHeader* to);
+  void makeEdgeReachable(Block* from, Block* to);
+  void makeEdgeUnreachable(Block* from, Block* to);
   void evaluateExpressionsUsing(Variable* v);
 
   ControlFlowGraph* cfg_;
-  BlockHeader* block_;
+  Block* block_;
 
   // Working vectors
-  std::vector<BlockHeader*> blocks_;
+  std::vector<Block*> blocks_;
   std::vector<Variable*> variables_;
 
   // Reachability of blocks and edges
   enum { UNKNOWN = 0, REACHABLE, UNREACHABLE };
   std::vector<char> reachBlocks_;
-  std::unordered_map<std::pair<BlockHeader*, BlockHeader*>, char> reachEdges_;
+  std::unordered_map<std::pair<Block*, Block*>, char> reachEdges_;
 
   DefUseChain defUseChain_;
 

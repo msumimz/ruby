@@ -5,6 +5,7 @@
 RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
+class DefInfoMap;
 class Variable;
 class DomTree;
 class Opcode;
@@ -13,7 +14,7 @@ class OpcodeL;
 class SsaTranslator {
 public:
 
-  SsaTranslator(ControlFlowGraph* cfg, bool doCopyFolding);
+  SsaTranslator(ControlFlowGraph* cfg, DefInfoMap* defInfoMap, DomTree* domTree, bool doCopyFolding);
   ~SsaTranslator();
 
   void translate();
@@ -26,18 +27,19 @@ private:
 
   void insertPhiFunctions();
   void insertPhiFunctionsForSingleDefSite(int blockIndex, Variable* v);
-  void insertSinglePhiFunction(BlockHeader* block, Variable* v);
+  void insertSinglePhiFunction(Block* block, Variable* v);
 
   void renameVariables();
-  void renameVariablesForSingleBlock(BlockHeader* b);
-  void renameVariablesInLhs(BlockHeader* block, OpcodeL* op, Variable* lhs);
-  void renameEnvInLhs(BlockHeader* block, Opcode* op);
+  void renameVariablesForSingleBlock(Block* b);
+  void renameVariablesInLhs(Block* block, OpcodeL* op, Variable* lhs);
+  void renameEnvInLhs(Block* block, Opcode* op);
   void renameVariablesInRhs(Opcode* op);
-  void renameRhsOfPhiFunctions(BlockHeader* parent, BlockHeader* b);
+  void renameRhsOfPhiFunctions(Block* parent, Block* b);
 
   ControlFlowGraph* cfg_;
-  bool doCopyFolding_;
+  DefInfoMap* defInfoMap_;
   DomTree* domTree_;
+  bool doCopyFolding_;
 
   // Dominance frontier
   std::vector<std::vector<bool> > df_;

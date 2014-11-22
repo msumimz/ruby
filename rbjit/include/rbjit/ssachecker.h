@@ -9,12 +9,12 @@ RBJIT_NAMESPACE_BEGIN
 
 class ControlFlowGraph;
 class Variable;
-class BlockHeader;
+class Block;
 
 class SsaChecker {
 public:
 
-  SsaChecker(ControlFlowGraph* cfg);
+  SsaChecker(const ControlFlowGraph* cfg);
 
   void check();
 
@@ -22,10 +22,10 @@ public:
 
 private:
 
-  void checkBlock(BlockHeader* block);
-  void checkPhiNodeOfSucceedingBlock(BlockHeader* block, BlockHeader* succ);
+  void checkBlock(Block* block);
+  void checkPhiNodeOfSucceedingBlock(Block* block, Block* succ);
 
-  ControlFlowGraph* cfg_;
+  const ControlFlowGraph* cfg_;
   std::vector<std::string> errors_;
   std::unordered_set<Variable*> variables_;
 

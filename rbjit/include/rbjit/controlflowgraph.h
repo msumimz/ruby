@@ -1,150 +1,264 @@
 #pragma once
-#include <vector>
+
+#include <cassert>
+#include <algorithm> // std::find
+#ifdef RBJIT_DEBUG // used in BlockHeader
 #include <string>
-#include <algorithm>
+#endif
 #include "rbjit/common.h"
-#include "rbjit/rubytypes.h"
+#include "rbjit/rubymethod.h"
+#include "rbjit/block.h"
+#include "rbjit/variable.h"
 
 RBJIT_NAMESPACE_BEGIN
 
-class Opcode;
-class OpcodeCall;
-class BlockHeader;
 class Variable;
-class BlockVisitor;
-class DomTree;
-class NamedVariable;
+class Block;
+class Scope;
+class Opcode;
 
-// Single-entry and single-exit control flow graph
+////////////////////////////////////////////////////////////
+// ControlFlowGraph
+
 class ControlFlowGraph {
 public:
 
-  ControlFlowGraph();
+  ControlFlowGraph()
+    : output_(nullptr), entryBlock_(nullptr), exitBlock_(nullptr),
+      entryEnv_(nullptr), exitEnv_(nullptr), undefined_(nullptr)
+  {}
+
   ~ControlFlowGraph();
 
-  // Accessors
+  ////////////////////////////////////////////////////////////
+  // Basic blocks
 
-  BlockHeader* entry() const { return entry_; }
-  BlockHeader* exit() const { return exit_; }
+  void
+  addBlock(Block* b)
+  {
+    assert(b);
+    assert(std::find(blocks_.begin(), blocks_.end(), b) == blocks_.end());
+    b->setIndex(blocks_.size());
+    blocks_.push_back(b);
+  }
 
-  Variable* output() const {  return output_; }
-  Variable* undefined() const { return undefined_; }
+  void removeBlock(Block* b)
+  {
+    auto i = std::find(blocks_.begin(), blocks_.end(), b);
+    assert(i != blocks_.end());
+    i = blocks_.erase(i);
+    for (auto end = blocks_.end(); i != end; ++i) {
+      b->setIndex(b->index() - 1);
+    }
+  }
 
-  Variable* entryEnv() const { return entryEnv_; }
-  void setEntryEnv(Variable* env) { entryEnv_ = env; }
-  Variable* exitEnv() const { return exitEnv_; }
-  void setExitEnv(Variable* env) { exitEnv_ = env; }
+  bool containsBlock(Block* b) const
+  {
+    return std::find(blocks_.begin(), blocks_.end(), b) != blocks_.end();
+  }
 
-  DomTree* domTree();
+  Block* splitBlock(Block* b, Block::Iterator i, bool deleteOpcode)
+  {
+    Block* newBlock = b->splitAt(i, deleteOpcode);
+    addBlock(newBlock);
+    return newBlock;
+  }
 
-  // Blocks
+  Block* insertEmptyBlockAfter(Block* b)
+  {
+    Block* newBlock = new Block;
+    addBlock(newBlock);
 
-  const std::vector<BlockHeader*>* blocks() const { return &blocks_; }
-  std::vector<BlockHeader*>* blocks() { return &blocks_; }
+    newBlock->setNextBlock(b->nextBlock());
+    if (b->nextBlock()) {
+      b->nextBlock()->updateBackedge(b, newBlock);
+    }
+    b->setNextBlock(newBlock);
 
-  bool containsBlock(const BlockHeader* block) const
-  { return std::find(blocks_.cbegin(), blocks_.cend(), block) != blocks_.cend(); }
+    return newBlock;
+  }
 
+  size_t blockCount() const { return blocks_.size(); }
+  Block* block(size_t i) const { return blocks_[i]; }
+
+  typedef std::vector<Block*>::iterator Iterator;
+  typedef std::vector<Block*>::const_iterator ConstIterator;
+
+  Iterator begin() { return blocks_.begin(); }
+  Iterator end() { return blocks_.end(); }
+  ConstIterator begin() const { return blocks_.begin(); }
+  ConstIterator end() const { return blocks_.end(); }
+  ConstIterator cbegin() const { return blocks_.cbegin(); }
+  ConstIterator cend() const { return blocks_.cend(); }
+
+  ////////////////////////////////////////////////////////////
   // Variables
 
-  // Readers
-  const std::vector<Variable*>* variables() const { return &variables_; }
-  std::vector<Variable*>* variables() { return &variables_; }
+  void addVariable(Variable* v)
+  {
+    assert(v);
+    assert(std::find(variables_.begin(), variables_.end(), v) == variables_.end());
+    v->setIndex(variables_.size());
+    variables_.push_back(v);
+  }
 
-  // Factory methods
-  Variable* createVariable(ID name, BlockHeader* defBlock, Opcode* defOpcode);
-  Variable* createVariableSsa(ID name, NamedVariable* nameRef, BlockHeader* defBlock, Opcode* defOpcode);
-  Variable* copyVariable(BlockHeader* defBlock, Opcode* defOpcode, Variable* source);
+  void removeVariable(Variable* v)
+  {
+    auto i = std::find(variables_.begin(), variables_.end(), v);
+    assert(i != variables_.end());
+    i = variables_.erase(i);
+    for (auto end = variables_.end(); i != end; ++i) {
+      v->setIndex(v->index() - 1);
+    }
+  }
 
-  // Mutators
-  void removeVariables(const std::vector<Variable*>* toBeRemoved);
-  void clearDefInfo();
+  void removeVariables(const std::vector<Variable*>& toBeRemoved) {
+    // Delete and zero-clear the elements that should be removed
+    for (auto i = toBeRemoved.cbegin(), end = toBeRemoved.cend(); i != end; ++i) {
+      variables_[(*i)->index()] = nullptr;
+      delete (*i);
+    };
+
+    // Remove zero-cleared elements
+    variables_.erase(std::remove_if(variables_.begin(), variables_.end(),
+          [](Variable* v) { return !v; }), variables_.end());
+
+    // Reset indexes
+    for (int i = 0; i < variables_.size(); ++i) {
+      variables_[i]->setIndex(i);
+    }
+  }
 
   bool containsVariable(const Variable* v) const
-  { return std::find(variables_.cbegin(), variables_.cend(), v) != variables_.cend(); }
+  { return std::find(variables_.begin(), variables_.end(), v) != variables_.end(); }
 
-  bool containsInInputs(const Variable* v) const
-  { return std::find(inputs_.cbegin(), inputs_.cend(), v) != inputs_.cend(); }
+  size_t variableCount() const { return variables_.size(); }
+  Variable* variable(size_t i) { return variables_[i]; }
 
-  // Method arguments
+  typedef std::vector<Variable*>::iterator VariableIterator;
+  typedef std::vector<Variable*>::const_iterator ConstVariableIterator;
 
-  const std::vector<Variable*>* inputs() const { return &inputs_; }
-  std::vector<Variable*>* inputs() { return &inputs_; }
+  VariableIterator variableBegin() { return variables_.begin(); }
+  VariableIterator variableEnd() { return variables_.end(); }
+  ConstVariableIterator variableBegin() const { return variables_.begin(); }
+  ConstVariableIterator variableEnd() const { return variables_.end(); }
+  ConstVariableIterator constVariableBegin() const { return variables_.cbegin(); }
+  ConstVariableIterator constVariableEnd() const { return variables_.cend(); }
 
-  int requiredArgCount() const { return requiredArgCount_; }
-  void setRequiredArgCount(int requiredArgCount) { requiredArgCount_ = requiredArgCount; }
+  ////////////////////////////////////////////////////////////
+  // Arguments
 
-  bool hasOptionalArg() const { return hasOptionalArg_; }
-  void setHasOptionalArg(bool hasOptionalArg) { hasOptionalArg_ = hasOptionalArg; }
+  typedef std::vector<Variable*>::iterator InputIterator;
+  typedef std::vector<Variable*>::const_iterator ConstInputIterator;
 
-  bool hasRestArg() const { return hasRestArg_; }
-  void setHasRestArg(bool hasRestArg) { hasRestArg_ = hasRestArg; }
+  InputIterator inputBegin() { return inputs_.begin(); }
+  InputIterator inputEnd() { return inputs_.end(); }
+  ConstInputIterator inputBegin() const { return inputs_.begin(); }
+  ConstInputIterator inputEnd() const { return inputs_.end(); }
+  ConstInputIterator constInputBegin() const { return inputs_.cbegin(); }
+  ConstInputIterator constInputEnd() const { return inputs_.cend(); }
 
-  // Modifiers
+  void addInput(Variable* v) { inputs_.push_back(v); }
+  void removeInput(InputIterator i) { inputs_.erase(i); }
+  bool containsInput(Variable* v) const
+  { return std::find(inputs_.begin(), inputs_.end(), v) != inputs_.end(); }
 
-  void removeOpcodeAfter(Opcode* prev);
-  void removeOpcode(Opcode* op);
-  BlockHeader* splitBlock(BlockHeader* block, Opcode* op, bool discardOpcode, bool addJump);
-  BlockHeader* insertEmptyBlockAfter(BlockHeader* block);
+  size_t inputCount() { return inputs_.size(); }
+  Variable* input(size_t i) { return inputs_[i]; }
 
-  // Sanity check for debugging
+  ////////////////////////////////////////////////////////////
+  // Return value
+
+  Variable* output() const {  return output_; }
+  void setOutput(Variable* output) {  output_ = output; }
+
+  ////////////////////////////////////////////////////////////
+  // Entry blocks
+
+  Block* entryBlock() const
+  { assert(entryBlock_); return entryBlock_; }
+
+  void setEntryBlock(Block* block)
+  {
+    assert(std::find(blocks_.begin(), blocks_.end(), block) != blocks_.end());
+    entryBlock_ = block;
+  }
+
+  ////////////////////////////////////////////////////////////
+  // Exit blocks
+
+  Block* exitBlock() const
+  { assert(exitBlock_); return exitBlock_; }
+
+  void setExitBlock(Block* block)
+  {
+    assert(std::find(blocks_.begin(), blocks_.end(), block) != blocks_.end());
+    exitBlock_ = block;
+  }
+
+  ////////////////////////////////////////////////////////////
+  // Entry and exit environments
+
+  Variable* entryEnv() const
+  { assert(entryEnv_); return entryEnv_; }
+
+  void setEntryEnv(Variable* env)
+  {
+    assert(std::find(variables_.cbegin(), variables_.cend(), env) != variables_.cend());
+    entryEnv_ = env;
+  }
+
+  Variable* exitEnv() const
+  { assert(exitEnv_); return exitEnv_; }
+
+  void setExitEnv(Variable* env)
+  {
+    assert(std::find(variables_.cbegin(), variables_.cend(), env) != variables_.cend());
+    exitEnv_ = env;
+  }
+
+  ////////////////////////////////////////////////////////////
+  // Undefined value
+
+  Variable* undefined() const
+  { assert(undefined_); return undefined_; }
+
+  void setUndefined(Variable* undefined)
+  {
+    assert(std::find(variables_.cbegin(), variables_.cend(), undefined) != variables_.cend());
+    undefined_ = undefined;
+  }
+
+  ////////////////////////////////////////////////////////////
+  // Debugging tools
+
+  std::string debugPrint() const;
+  std::string debugPrintDotHeader() const;
+  std::string debugPrintAsDot() const;
+  std::string debugPrintBlock(Block* block) const;
+  std::string debugPrintVariables() const;
 
   bool checkSanity() const;
   bool checkSanityAndPrintErrors() const;
-  bool checkSsaAndPrintErrors();
-
-  // debug print
-
-  std::string debugPrint() const;
-  std::string debugPrintBlock(BlockHeader* block) const;
-  std::string debugPrintVariables() const;
-  std::string debugPrintTypeConstraints() const;
-
-  std::string debugPrintDotHeader();
-  std::string debugPrintAsDot() const;
+  bool checkSsaAndPrintErrors() const;
 
 private:
 
-  friend class OpcodeFactory;
   friend class CodeDuplicator;
 
-  BlockHeader* entry_;
-  BlockHeader* exit_;
-
-  // Basic blocks
-  std::vector<BlockHeader*> blocks_;
-
-  // Loop preheaders
-  std::vector<BlockHeader*> loops_;
-
-  // Variables used in the CFG, including inputs_ and output_
+  std::vector<Block*> blocks_;
   std::vector<Variable*> variables_;
 
-  // Method arguments
   std::vector<Variable*> inputs_;
-  int requiredArgCount_;
-  bool hasOptionalArg_;
-  bool hasRestArg_;
-
-  // Return value
   Variable* output_;
 
-  // Undefined value that is used in the process of SSA translating
-  Variable* undefined_;
+  Block* entryBlock_;
+  Block* exitBlock_;
 
-  // Environment
-  // When two environments are equal, two method lookups with the same receiver
-  // class and method name result in the same method entry.
   Variable* entryEnv_;
   Variable* exitEnv_;
 
-  // Dominance tree
-  DomTree* domTree_;
-};
-
-// Block visitor interface
-class BlockVisitor {
-  virtual void visitBlock(BlockHeader* block) = 0;
+  Variable* undefined_;
 };
 
 RBJIT_NAMESPACE_END

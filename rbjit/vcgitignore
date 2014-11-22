@@ -20,3 +20,4 @@ rbjit/temp/
 *.rc
 !primitives/*.rc
 *-fake.rb
+tags

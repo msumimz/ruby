@@ -60,6 +60,7 @@ class TypeInteger;
 class TypeConstant;
 class TypeEnv;
 class TypeLookup;
+class TypeCall;
 class TypeSameAs;
 class TypeExactClass;
 class TypeClassOrSubclass;
@@ -75,6 +76,7 @@ public:
   virtual bool visitType(TypeConstant* type) = 0;
   virtual bool visitType(TypeEnv* type) = 0;
   virtual bool visitType(TypeLookup* type) = 0;
+  virtual bool visitType(TypeCall* type) = 0;
   virtual bool visitType(TypeSameAs* type) = 0;
   virtual bool visitType(TypeExactClass* type) = 0;
   virtual bool visitType(TypeClassOrSubclass* type) = 0;
@@ -453,7 +455,7 @@ public:
   TypeSelection* clone() const;
   TypeSelection* independantClone() const;
 
-  // The add method adds the clone of the argument
+  // The add() method adds the clone of the argument
   void add(const TypeConstraint& type);
   void clear();
 
