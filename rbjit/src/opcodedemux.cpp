@@ -62,7 +62,7 @@ OpcodeDemux::demultiplex(Block* block, Block::Iterator iter, Variable* selector,
     cfg_->addBlock(trueBlock);
     Block* nextBlock = new Block("demux_cond");
     cfg_->addBlock(nextBlock);
-    builder.add(new OpcodeJumpIf(opcode->sourceLocation(), cond, trueBlock, nextBlock));
+    builder.addJumpIf(opcode->sourceLocation(), cond, trueBlock, nextBlock);
 
     segments_.push_back(trueBlock);
     builder.setBlock(nextBlock);

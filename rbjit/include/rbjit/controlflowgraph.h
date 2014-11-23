@@ -64,19 +64,6 @@ public:
     return newBlock;
   }
 
-  Block* insertEmptyBlockAfter(Block* b)
-  {
-    Block* newBlock = new Block;
-    addBlock(newBlock);
-
-    if (b->nextBlock()) {
-      b->nextBlock()->updateBackedge(b, newBlock);
-    }
-    b->setNextBlock(newBlock);
-
-    return newBlock;
-  }
-
   size_t blockCount() const { return blocks_.size(); }
   Block* block(size_t i) const { return blocks_[i]; }
 

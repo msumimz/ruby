@@ -25,8 +25,8 @@ public:
 private:
 
   bool inlineCallSite(Block* block, Block::Iterator i);
-  std::pair<Variable*, Variable*> replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* exit, OpcodeCall* op, Variable* result, Variable* exitEnv);
-  std::pair<Variable*, Variable*> insertCall(mri::MethodEntry me, Block* entry, Block* exit, OpcodeCall* op);
+  std::tuple<Variable*, Variable*, Block*> replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, OpcodeCall* op, Variable* result, Variable* exitEnv);
+  std::tuple<Variable*, Variable*, Block*> insertCall(mri::MethodEntry me, Block* entry, OpcodeCall* op);
 
   OpcodeCall* duplicateCall(OpcodeCall* op, Variable* lookup, Block* defBlock);
 

@@ -25,10 +25,7 @@ Opcode::typeName() const
 const char*
 Opcode::shortTypeName() const
 {
-  if (typeid(*this) == typeid(Block)) {
-    return "Block";
-  }
-  else if (typeid(*this) == typeid(OpcodeImmediate)) {
+ if (typeid(*this) == typeid(OpcodeImmediate)) {
     return "Imm";
   }
   else if (typeid(*this) == typeid(OpcodeConstant)) {

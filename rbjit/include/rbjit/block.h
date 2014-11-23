@@ -46,7 +46,10 @@ public:
 
   bool containsOpcode(Opcode* op)
   { return std::find(opcodes_.begin(), opcodes_.end(), op) != opcodes_.end(); }
+
   Block* splitAt(Iterator i, bool deleteOpcode);
+
+  void addJumpTo(SourceLocation* loc, Block* dest);
 
   Iterator begin() { return opcodes_.begin(); }
   Iterator end() { return opcodes_.end(); }
@@ -54,6 +57,8 @@ public:
   ConstIterator end() const { return opcodes_.end(); }
   ConstIterator cbegin() const { return opcodes_.cbegin(); }
   ConstIterator cend() const { return opcodes_.cend(); }
+
+  size_t opcodeCount() const { return opcodes_.size(); }
 
   OpcodeTerminator* footer() const { return dynamic_cast<OpcodeTerminator*>(opcodes_.back()); }
 

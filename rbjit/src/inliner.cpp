@@ -106,13 +106,8 @@ Inliner::inlineCallSite(Block* block, Block::Iterator callIter)
     Block* join = cfg_->splitBlock(block, callIter, true);
     join->setDebugName("inliner_join");
 
-    Block* initBlock = new Block;
-    initBlock->setDebugName("inliner_arguments");
-    cfg_->addBlock(initBlock);
-    block->footer()->setNextBlock(initBlock);
-    initBlock->addBackedge(block);
-
-    replaceCallWithMethodBody(methodInfos[0], initBlock, join, op, op->lhs(), op->outEnv());
+    std::tuple<Variable*, Variable*, Block*> result = replaceCallWithMethodBody(methodInfos[0], block, op, op->lhs(), op->outEnv());
+    std::get<2>(result)->addJumpTo(nullptr, join);
   }
   else {
     OpcodeDemux mul(cfg_, scope_, typeContext_);
@@ -124,34 +119,33 @@ Inliner::inlineCallSite(Block* block, Block::Iterator callIter)
     int otherwiseIndex = size - 1;
     for (int i = 0; i < size; ++i) {
       Block* block = mul.segments()[i];
-      Block* join = new Block;
-      join->setDebugName("inliner_join"); /**********************************/
 
-      std::pair<Variable*, Variable*> result;
+      std::tuple<Variable*, Variable*, Block*> result;
       if (i == otherwiseIndex) {
         // Otherwise branch
-        result = insertCall(mri::MethodEntry(), block, join, op);
+        result = insertCall(mri::MethodEntry(), block, op);
       }
       else if (inlinable[i]) {
-        result = replaceCallWithMethodBody(methodInfos[i], block, join, op, 0, 0);
+        result = replaceCallWithMethodBody(methodInfos[i], block, op, 0, 0);
       }
       else {
-        result = insertCall(methodInfos[i]->methodEntry(), block, join, op);
+        result = insertCall(methodInfos[i]->methodEntry(), block, op);
       }
+      std::get<2>(result)->addJumpTo(nullptr, exitBlock);
 
       int index = -1;
-      if (result.first && phi) {
-        index = exitBlock->backedgeIndexOf(join);
+      if (std::get<0>(result) && phi) {
+        index = exitBlock->backedgeIndexOf(std::get<2>(result));
         assert(0 <= index && index < size);
-        phi->setRhs(index, result.first);
+        phi->setRhs(index, std::get<0>(result));
       }
       if (envPhi) {
-        assert(result.second);
+        assert(std::get<1>(result));
         if (index == -1) {
-          index = exitBlock->backedgeIndexOf(join);
+          index = exitBlock->backedgeIndexOf(std::get<2>(result));
           assert(0 <= index && index < size);
         }
-        envPhi->setRhs(index, result.second);
+        envPhi->setRhs(index, std::get<1>(result));
       }
     }
   }
@@ -177,11 +171,11 @@ Inliner::inlineCallSite(Block* block, Block::Iterator callIter)
   return true;
 }
 
-std::pair<Variable*, Variable*>
-Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* exit, OpcodeCall* op, Variable* result, Variable* exitEnv)
+std::tuple<Variable*, Variable*, Block*>
+Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, OpcodeCall* op, Variable* result, Variable* exitEnv)
 {
   // entry should not be terminated
-  assert(!entry->footer());
+  assert(entry->opcodeCount() == 0 || !entry->footer());
 
   assert(typeid(*methodInfo) == typeid(PrecompiledMethodInfo));
   PrecompiledMethodInfo* mi = static_cast<PrecompiledMethodInfo*>(methodInfo);
@@ -208,7 +202,7 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* 
   typeContext_->updateTypeConstraint(entryEnv, TypeSameAs(typeContext_, curEnv));
 
   // Jump to the duplicated method's entry block
-  entryBuilder.add(new OpcodeJump(nullptr, dup.entry()));
+  entryBuilder.addJump(nullptr, dup.entry());
 
   // Begin at the duplicated method's exit block
   BlockBuilder exitBuilder(cfg_, scope_, nullptr, dup.exit());
@@ -218,9 +212,9 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* 
     OpcodeCopy* copy = new OpcodeCopy(nullptr, result, dup.duplicatedVariableOf(inlinedCfg->output()));
     if (!result) {
       result = op->lhs()->copy(exitBuilder.block(), copy);
+      cfg_->addVariable(result);
       typeContext_->addNewTypeConstraint(result, typeContext_->typeConstraintOf(op->lhs())->clone());
       copy->setLhs(result);
-      cfg_->addVariable(result);
     }
     exitBuilder.add(copy);
   }
@@ -232,15 +226,13 @@ Inliner::replaceCallWithMethodBody(MethodInfo* methodInfo, Block* entry, Block* 
     env = exitEnv;
   }
 
-  exitBuilder.add(new OpcodeJump(nullptr, exit));
-
   work_.push_back(dup.entry());
 
-  return std::make_pair(result, env);
+  return std::make_tuple(result, env, exitBuilder.block());
 }
 
-std::pair<Variable*, Variable*>
-Inliner::insertCall(mri::MethodEntry me, Block* entry, Block* exit, OpcodeCall* op)
+std::tuple<Variable*, Variable*, Block*>
+Inliner::insertCall(mri::MethodEntry me, Block* entry, OpcodeCall* op)
 {
   // OpcodeLookup
   OpcodeLookup* lookup = op->lookupOpcode();
@@ -257,9 +249,7 @@ Inliner::insertCall(mri::MethodEntry me, Block* entry, Block* exit, OpcodeCall* 
   Opcode* call = duplicateCall(op, newLookup, builder.block());
   builder.addWithoutLhsAssigned(call);
 
-  builder.addJump(nullptr, exit);
-
-  return std::make_pair(call->lhs(), call->outEnv());
+  return std::make_tuple(call->lhs(), call->outEnv(), builder.block());
 }
 
 OpcodeCall*
