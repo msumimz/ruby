@@ -44,8 +44,7 @@ CfgBuilder::createNamedVariable(BlockBuilder* builder, ID name)
   NamedVariable* nv = scope_->find(name);
   assert(nv);
 
-  Variable* v  = new Variable(name, nv);
-  cfg_->addVariable(v);
+  Variable* v  = cfg_->createVariable(name, nv);
   namedVariables_.insert(std::make_pair(name, v));
 
   return v;
@@ -552,8 +551,7 @@ CfgBuilder::buildIf(BlockBuilder* builder, const RNode* node, bool useResult)
       builder->setBlock(join);
       Variable* value = nullptr;
       if (useResult) {
-        value = new Variable;
-	cfg_->addVariable(value);
+	value = cfg_->createVariable();
         trueBuilder.add(new OpcodeCopy(loc_, value, trueValue));
         falseBuilder.add(new OpcodeCopy(loc_, value, falseValue));
       }
@@ -660,8 +658,7 @@ CfgBuilder::buildWhile(BlockBuilder* builder, const RNode* node, bool useResult)
   // Result value
   Variable* value = nullptr;
   if (useResult) {
-    value = new Variable;
-    cfg_->addVariable(value);
+    value = cfg_->createVariable();
   }
 
   // Create blocks

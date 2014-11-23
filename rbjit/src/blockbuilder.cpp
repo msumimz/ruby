@@ -9,19 +9,11 @@ RBJIT_NAMESPACE_BEGIN
 
 BlockBuilder::BlockBuilder(ControlFlowGraph* cfg, Scope* scope, DefInfoMap* defInfoMap, Block* block)
   : cfg_(cfg), scope_(scope), defInfoMap_(defInfoMap), block_(block), halted_(false)
-{
-  if (!cfg_->containsBlock(block)) {
-    cfg_->addBlock(block);
-  }
-}
+{}
 
 BlockBuilder::BlockBuilder(const BlockBuilder* builder, Block* block)
   : cfg_(builder->cfg_), scope_(builder->scope_), defInfoMap_(builder->defInfoMap_), block_(block), halted_(false)
-{
-  if (!cfg_->containsBlock(block)) {
-    cfg_->addBlock(block);
-  }
-}
+{}
 
 void
 BlockBuilder::updateDefSite(Variable* v, Block* b, Opcode* op)
@@ -44,9 +36,8 @@ BlockBuilder::add(ID name, bool belongsToScope, OpcodeL* op)
     assert(nameRef);
   }
 
-  Variable* v = new Variable(name, nameRef);
+  Variable* v = cfg_->createVariable(name, nameRef);
   op->setLhs(v);
-  cfg_->addVariable(v);
   block_->addOpcode(op);
   updateDefSite(v, block_, op);
 
@@ -58,9 +49,8 @@ BlockBuilder::add(OpcodeL* op)
 {
   Variable* v = op->lhs();
   if (!v) {
-    v = new Variable();
+    v = cfg_->createVariable();
     op->setLhs(v);
-    cfg_->addVariable(v);
   }
   block_->addOpcode(op);
   updateDefSite(v, block_, op);
