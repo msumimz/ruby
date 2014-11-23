@@ -101,6 +101,7 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
   exitBuilder.add(new OpcodeCopy(loc_, env, env));
 
   // Exit
+  exitBuilder.add(new OpcodeLeave(loc_));
   exitBuilder.add(new OpcodeExit(loc_));
   try {
     buildArguments(&builder, rootNode);
