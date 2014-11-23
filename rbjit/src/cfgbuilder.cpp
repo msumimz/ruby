@@ -478,7 +478,9 @@ CfgBuilder::buildStringInterpolation(BlockBuilder* builder, const RNode* node, b
   if (useResult) {
     Variable* count = builder->add(new OpcodeImmediate(loc_, nullptr, elems.size() - 1));
     elems[0] = count;
-    return builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__concat_strings), elems.data(), elems.data() + elems.size()));
+    return builder->add(
+      OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__concat_strings),
+        elems.data(), elems.data() + elems.size()));
   }
   return nullptr;
 }
