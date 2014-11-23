@@ -49,6 +49,14 @@ public:
     return b;
   }
 
+  Block* createBlock(const char* debugName)
+  {
+    Block* b = new Block;
+    b->setDebugName(debugName);
+    addBlock(b);
+    return b;
+  }
+
   void removeBlock(Block* b)
   {
     auto i = std::find(blocks_.begin(), blocks_.end(), b);

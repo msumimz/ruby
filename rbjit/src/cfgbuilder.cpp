@@ -76,8 +76,7 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
   defInfoMap_ = new DefInfoMap;
 
   // Start the entry block
-  Block* entry = new Block;
-  entry->setDebugName("entry");
+  Block* entry = cfg_->createBlock("entry");
   BlockBuilder builder(cfg_, scope_, defInfoMap_, entry);
   cfg_->setEntryBlock(entry);
 
@@ -95,8 +94,7 @@ CfgBuilder::buildMethod(const RNode* rootNode, ID name)
   builder.add(new OpcodeEnter(nullptr, scope_));
 
   // Create the exit block
-  Block* exit = new Block;
-  exit->setDebugName("exit");
+  Block* exit = cfg_->createBlock("exit");
   BlockBuilder exitBuilder(&builder, exit);
   cfg_->setExitBlock(exit);
 
@@ -519,7 +517,7 @@ CfgBuilder::buildIf(BlockBuilder* builder, const RNode* node, bool useResult)
   Variable* cond = buildNode(builder, node->nd_cond, true);
 
   // true block
-  Block* trueBlock = new Block;
+  Block* trueBlock = cfg_->createBlock("if_true");
   BlockBuilder trueBuilder(builder, trueBlock);
   Variable* trueValue = nullptr;
   if (node->nd_body) {
@@ -532,7 +530,7 @@ CfgBuilder::buildIf(BlockBuilder* builder, const RNode* node, bool useResult)
   }
 
   // false block
-  Block* falseBlock = new Block;
+  Block* falseBlock = cfg_->createBlock("if_false");
   BlockBuilder falseBuilder(builder, falseBlock);
   Variable* falseValue = nullptr;
   if (node->nd_else) {
@@ -550,8 +548,7 @@ CfgBuilder::buildIf(BlockBuilder* builder, const RNode* node, bool useResult)
   // join block
   if (trueBuilder.continues()) {
     if (falseBuilder.continues()) {
-      Block* join = new Block;
-      cfg_->addBlock(join);
+      Block* join = cfg_->createBlock("if_join");
       builder->setBlock(join);
       Variable* value = nullptr;
       if (useResult) {
@@ -593,16 +590,16 @@ CfgBuilder::buildAndOr(BlockBuilder* builder, const RNode* node, bool useResult)
   }
 
   // join block
-  Block* joinBlock = new Block;
+  Block* joinBlock = cfg_->createBlock("andor_join");
   BlockBuilder joinBuilder(builder, joinBlock);
 
   // cushion block to avoid a critical edge
-  Block* cushionBlock = new Block;
+  Block* cushionBlock = cfg_->createBlock("andor_cushion");
   BlockBuilder cushionBuilder(builder, cushionBlock);
   cushionBuilder.addJump(loc_, joinBlock);
 
   // right-side hand value
-  Block* secondBlock = new Block;
+  Block* secondBlock = cfg_->createBlock("andor_rhs");
   BlockBuilder secondBuilder(builder, secondBlock);
   Variable* second = buildNode(&secondBuilder, node->nd_2nd, useResult);
   if (useResult) {
@@ -668,11 +665,11 @@ CfgBuilder::buildWhile(BlockBuilder* builder, const RNode* node, bool useResult)
   }
 
   // Create blocks
-  BlockBuilder preheaderBuilder(builder, new Block("while_preheader"));
-  BlockBuilder condBuilder(builder, new Block("while_cond"));
-  BlockBuilder bodyBuilder(builder, new Block("while_body"));
-  BlockBuilder preexitBuilder(builder, new Block("while_preexit"));
-  BlockBuilder exitBuilder(builder, new Block("while_exit"));
+  BlockBuilder preheaderBuilder(builder, cfg_->createBlock("while_preheader"));
+  BlockBuilder condBuilder(builder, cfg_->createBlock("while_cond"));
+  BlockBuilder bodyBuilder(builder, cfg_->createBlock("while_body"));
+  BlockBuilder preexitBuilder(builder, cfg_->createBlock("while_preexit"));
+  BlockBuilder exitBuilder(builder, cfg_->createBlock("while_exit"));
 
   // Preheader block
   builder->addJump(loc_, preheaderBuilder.block());
