@@ -5,6 +5,9 @@
 
 RBJIT_NAMESPACE_BEGIN
 
+// NOTE:
+// This method won't delete *op (Opcode*) even when deleteOpcode is true.
+// The caller should dispose *op appropriciately.
 Block*
 Block::splitAt(Iterator op, bool deleteOpcode)
 {
