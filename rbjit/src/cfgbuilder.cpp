@@ -478,7 +478,7 @@ CfgBuilder::buildStringInterpolation(BlockBuilder* builder, const RNode* node, b
   if (useResult) {
     Variable* count = builder->add(new OpcodeImmediate(loc_, nullptr, elems.size() - 1));
     elems[0] = count;
-    return builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__concat_strings), &*elems.begin(), &*elems.end()));
+    return builder->add(OpcodePrimitive::create(loc_, nullptr, IdStore::get(ID_rbjit__concat_strings), elems.data(), elems.data() + elems.size()));
   }
   return nullptr;
 }
@@ -543,21 +543,23 @@ CfgBuilder::buildIf(BlockBuilder* builder, const RNode* node, bool useResult)
   }
 
   // branch
-  builder->add(new OpcodeJumpIf(loc_, cond, trueBlock, falseBlock));
+  builder->addJumpIf(loc_, cond, trueBlock, falseBlock);
 
   // join block
   if (trueBuilder.continues()) {
     if (falseBuilder.continues()) {
       Block* join = new Block;
+      cfg_->addBlock(join);
       builder->setBlock(join);
       Variable* value = nullptr;
       if (useResult) {
         value = new Variable;
+	cfg_->addVariable(value);
         trueBuilder.add(new OpcodeCopy(loc_, value, trueValue));
         falseBuilder.add(new OpcodeCopy(loc_, value, falseValue));
       }
-      trueBuilder.add(new OpcodeJump(loc_, join));
-      falseBuilder.add(new OpcodeJump(loc_, join));
+      trueBuilder.addJump(loc_, join);
+      falseBuilder.addJump(loc_, join);
       return value;
     }
 
@@ -657,7 +659,11 @@ CfgBuilder::buildWhile(BlockBuilder* builder, const RNode* node, bool useResult)
   assert(nd_type(node) == NODE_WHILE || nd_type(node) == NODE_UNTIL);
 
   // Result value
-  Variable* value = useResult ? new Variable : nullptr;
+  Variable* value = nullptr;
+  if (useResult) {
+    value = new Variable;
+    cfg_->addVariable(value);
+  }
 
   // Create blocks
   BlockBuilder preheaderBuilder(builder, new Block("while_preheader"));

@@ -191,16 +191,12 @@ loop_head:
       renameVariablesInRhs(op);
     }
 
-    // Rename lhs (including phi functions)
+    // Copy propagation optimization
     Variable* lhs = op->lhs();
-    if (!lhs) {
-      continue;
-    }
     OpcodeCopy* copy;
-    if (doCopyFolding_ && (copy = dynamic_cast<OpcodeCopy*>(op)) &&
+    if (lhs && doCopyFolding_ && (copy = dynamic_cast<OpcodeCopy*>(op)) &&
         lhs != cfg_->output() && !OpcodeEnv::isEnv(lhs) &&
         lhs->nameRef() == copy->rhs()->nameRef()) {
-      // Copy propagation
       renameStack_[lhs->index()].push_back(copy->rhs());
       DefInfo* di = defInfoMap_->find(lhs);
       if (di->defCount() == 1) {
@@ -213,10 +209,17 @@ loop_head:
       end = b->end();
       goto loop_head;
     }
-    else {
+
+    // Rename lhs (including phi functions)
+    if (lhs) {
       assert(dynamic_cast<OpcodeL*>(op)); // op should be an OpcodeL if lhs isn't null
       renameVariablesInLhs(b, static_cast<OpcodeL*>(op), lhs);
-      renameEnvInLhs(b, static_cast<OpcodeL*>(op));
+    }
+
+    // Rename env
+    Variable* env = op->outEnv();
+    if (env) {
+      renameEnvInLhs(b, op, env);
     }
   }
 
@@ -248,9 +251,7 @@ loop_head:
 void
 SsaTranslator::renameVariablesInLhs(Block* b, OpcodeL* opl, Variable* lhs)
 {
-  if (!lhs) {
-    return;
-  }
+  assert(lhs);
 
   DefInfo* di = defInfoMap_->find(lhs);
   if (di->defCount() > 1) {
@@ -279,12 +280,9 @@ SsaTranslator::renameVariablesInLhs(Block* b, OpcodeL* opl, Variable* lhs)
 }
 
 void
-SsaTranslator::renameEnvInLhs(Block* b, Opcode* op)
+SsaTranslator::renameEnvInLhs(Block* b, Opcode* op, Variable* env)
 {
-  Variable* env = op->outEnv();
-  if (!env) {
-    return;
-  }
+  assert(env);
 
   DefInfo* di = defInfoMap_->find(env);
   if (di->defCount() > 1) {
@@ -306,8 +304,7 @@ SsaTranslator::renameEnvInLhs(Block* b, Opcode* op)
 void
 SsaTranslator::renameVariablesInRhs(Opcode* op)
 {
-  Variable** rhsEnd = op->end();
-  for (Variable** i = op->begin(); i < rhsEnd; ++i) {
+  for (auto i = op->begin(), end = op->end(); i != end; ++i) {
     std::vector<Variable*>& stack = renameStack_[(*i)->index()];
     if (stack.empty()) {
       *i = cfg_->undefined();

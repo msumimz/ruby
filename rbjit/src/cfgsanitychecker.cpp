@@ -137,6 +137,38 @@ CfgSanityChecker::check()
       continue;
     }
 
+    // Check an env
+
+    if (OpcodeEnv::isEnv(v)) {
+      Opcode* op = v->defOpcode();
+      if (!op) {
+	addError("variable %d(%Ix)'s defOpcode is null", index, v);
+	continue;
+      }
+      if (typeid(*op) == typeid(OpcodeEnv)) {
+	continue;
+      }
+      if (typeid(*op) == typeid(OpcodeCall)) {
+	OpcodeCall* call = static_cast<OpcodeCall*>(op);
+	if (call->outEnv() != v) {
+	  addError("variable %d(%Ix)'s defOpcode is %Ix, which outEnv is %Ix", index, v, op, call->outEnv());
+	}
+	continue;
+      }
+      if (typeid(*op) == typeid(OpcodeCopy)) {
+	OpcodeCopy* copy = static_cast<OpcodeCopy*>(op);
+	if (!copy->rhs()) {
+	  addError("variable %d(%Ix)'s rhs is null", index, v);
+	  continue;
+	}
+	if (!OpcodeEnv::isEnv(copy->rhs())) {
+	  addError("variable %d(%Ix) is copied from variable %d(%Ix), which is not an env", index, v, copy->rhs()->index(), copy->rhs());
+	  continue;
+	}
+      }
+      continue;
+    }
+
     // Check defOpcode
 
     if (!v->defOpcode()) {
