@@ -42,6 +42,13 @@ public:
     blocks_.push_back(b);
   }
 
+  Block* createBlock()
+  {
+    Block* b = new Block;
+    addBlock(b);
+    return b;
+  }
+
   void removeBlock(Block* b)
   {
     auto i = std::find(blocks_.begin(), blocks_.end(), b);
@@ -86,6 +93,13 @@ public:
     assert(std::find(variables_.begin(), variables_.end(), v) == variables_.end());
     v->setIndex(variables_.size());
     variables_.push_back(v);
+  }
+
+  Variable* createVariable(ID name = 0, NamedVariable* nameRef = nullptr, Variable* original = nullptr, Block* defBlock = nullptr, Opcode* defOpcode = nullptr)
+  {
+    Variable* v = new Variable(name, nameRef, original, defBlock, defOpcode);
+    addVariable(v);
+    return v;
   }
 
   void removeVariable(Variable* v)
