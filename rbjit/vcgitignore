@@ -10,6 +10,7 @@
 *.opensdf
 *.suo
 *.vcxproj.user
+*.vsp
 *.bc
 Debug/
 Release/

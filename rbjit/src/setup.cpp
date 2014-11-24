@@ -59,7 +59,8 @@ Init_rbjitSetup()
     NativeCompiler::setup();
   }
   catch (std::exception& e) {
-    // This is a build/setup error, and the message should be shown in the GUI environment (rubyw).
+    // This is not a user error, but a build/setup error, so the message should
+    // be shown in the GUI environment (rubyw).
     ::MessageBoxA(nullptr, e.what(), "rbjit initialization error", MB_OK);
     exit(1);
   }

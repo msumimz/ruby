@@ -162,6 +162,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>LLVMipo.lib;LLVMBitReader.lib;LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -185,6 +186,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>LLVMX86Disassembler.lib;LLVMX86AsmParser.lib;LLVMX86CodeGen.lib;LLVMSelectionDAG.lib;LLVMAsmPrinter.lib;LLVMMCParser.lib;LLVMX86Desc.lib;LLVMX86Info.lib;LLVMX86AsmPrinter.lib;LLVMX86Utils.lib;LLVMJIT.lib;LLVMRuntimeDyld.lib;LLVMExecutionEngine.lib;LLVMCodeGen.lib;LLVMObjCARCOpts.lib;LLVMScalarOpts.lib;LLVMInstCombine.lib;LLVMTransformUtils.lib;LLVMipa.lib;LLVMAnalysis.lib;LLVMTarget.lib;LLVMMC.lib;LLVMObject.lib;LLVMCore.lib;LLVMSupport.lib;oldnames.lib;user32.lib;advapi32.lib;shell32.lib;ws2_32.lib;iphlpapi.lib;imagehlp.lib;shlwapi.lib</AdditionalDependencies>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
