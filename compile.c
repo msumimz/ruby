@@ -463,7 +463,9 @@ rb_iseq_compile_node(VALUE self, NODE *node)
     INIT_ANCHOR(ret);
     GetISeqPtr(self, iseq);
 
+    // Added by rbjit
     iseq->node = node;
+
     if (node == 0) {
 	COMPILE(ret, "nil", node);
 	iseq_set_local_table(iseq, 0);

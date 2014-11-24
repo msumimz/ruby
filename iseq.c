@@ -449,6 +449,10 @@ rb_iseq_new_with_bopt_and_opt(NODE *node, VALUE name, VALUE path, VALUE absolute
     prepare_iseq_build(iseq, name, path, absolute_path, first_lineno, parent, type, bopt, option);
     rb_iseq_compile_node(self, node);
     cleanup_iseq_build(iseq);
+
+    // Added by rbjit
+    iseq->node = node;
+
     return self;
 }
 
