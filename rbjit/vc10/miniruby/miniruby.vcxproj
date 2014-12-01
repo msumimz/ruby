@@ -331,6 +331,7 @@
     <ClCompile Include="..\..\src\primitive.cpp" />
     <ClCompile Include="..\..\src\primitivestore.cpp" />
     <ClCompile Include="..\..\src\recompilationmanager.cpp" />
+    <ClCompile Include="..\..\src\rubycore.cpp" />
     <ClCompile Include="..\..\src\rubymethod.cpp" />
     <ClCompile Include="..\..\src\rubyobject.cpp" />
     <ClCompile Include="..\..\src\runtimefunctions.cpp" />
@@ -367,6 +368,7 @@
     <ClInclude Include="..\..\include\rbjit\primitive.h" />
     <ClInclude Include="..\..\include\rbjit\primitivestore.h" />
     <ClInclude Include="..\..\include\rbjit\recompilationmanager.h" />
+    <ClInclude Include="..\..\include\rbjit\rubycore.h" />
     <ClInclude Include="..\..\include\rbjit\rubyidtable.h" />
     <ClInclude Include="..\..\include\rbjit\runtimefunctions.h" />
     <ClInclude Include="..\..\include\rbjit\scope.h" />

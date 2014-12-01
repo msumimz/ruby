@@ -364,6 +364,9 @@
     <ClCompile Include="..\..\src\blockdebugprinter.cpp">
       <Filter>rbjit\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\rubycore.cpp">
+      <Filter>rbjit\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\insns.def">
@@ -495,6 +498,9 @@
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\rbjit\blockdebugprinter.h">
+      <Filter>rbjit\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\rbjit\rubycore.h">
       <Filter>rbjit\Header Files</Filter>
     </ClInclude>
   </ItemGroup>
