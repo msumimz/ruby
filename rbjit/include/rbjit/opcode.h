@@ -354,20 +354,31 @@ private:
 class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodeCall(SourceLocation* loc, Variable* lhs, Variable* lookup, int rhsCount, Variable* codeBlock, Variable* env)
-    : OpcodeVa(loc, lhs, rhsCount),
-      lookup_(lookup), codeBlock_(codeBlock), env_(env) {}
+  OpcodeCall(SourceLocation* loc, Variable* lhs, Variable* lookup, int argCount, Variable* codeBlock, Variable* env)
+    : OpcodeVa(loc, lhs, argCount + 2), env_(env)
+  {
+    setLookup(lookup);
+    setCodeBlock(codeBlock);
+  }
 
   OpcodeCall* clone(Variable* methodEntry) const;
 
-  Variable* lookup() const { return lookup_; }
-  void setLookup(Variable* lookup) { lookup_ = lookup; }
-  OpcodeLookup* lookupOpcode() const;
-
   Variable* receiver() const { return rhs(0); }
 
-  Variable* codeBlock() const { return codeBlock_; }
-  void setCodeBlock(Variable* codeBlock) { codeBlock_ = codeBlock; }
+  int argCount() const { return rhsCount() - 2; }
+  Iterator argBegin() { return begin(); }
+  Iterator argEnd() { return end() - 2; }
+  ConstIterator argBegin() const { return cbegin(); }
+  ConstIterator argEnd() const { return cend() - 2; }
+  ConstIterator constArgBegin() const { return cbegin(); }
+  ConstIterator constArgEnd() const { return cend() - 2; }
+
+  Variable* lookup() const { return rhs(rhsCount() - 2); }
+  void setLookup(Variable* lookup) { setRhs(rhsCount() - 2, lookup); }
+  OpcodeLookup* lookupOpcode() const;
+
+  Variable* codeBlock() const { return rhs(rhsCount() - 1); }
+  void setCodeBlock(Variable* codeBlock) { setRhs(rhsCount() - 1, codeBlock); }
 
   Variable* outEnv() { return env_; }
   void setOutEnv(Variable* env) { env_ = env; }
@@ -375,10 +386,6 @@ public:
   bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
 
 private:
-
-  Variable* lookup_;
-
-  Variable* codeBlock_;
 
   // Should be treated as a left-side hand value
   Variable* env_;

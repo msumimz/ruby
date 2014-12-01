@@ -265,12 +265,12 @@ CfgBuilder::buildNode(BlockBuilder* builder, const RNode* node, bool useResult)
     break;
 
   case NODE_CALL:
-    v = buildCall(builder, node, useResult);
+    v = buildCall(builder, node, nullptr, useResult);
     break;
 
   case NODE_FCALL:
   case NODE_VCALL:
-    v = buildFuncall(builder, node, useResult);
+    v = buildFuncall(builder, node, nullptr, useResult);
     break;
 
   case NODE_ITER:
@@ -723,14 +723,32 @@ CfgBuilder::buildReturn(BlockBuilder* builder, const RNode* node, bool useResult
   return ret;
 }
 
-Variable*
-CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, bool useResult)
+int
+CfgBuilder::getArgumentCount(const RNode* callNode) const
 {
-  // Count the number of arguments
-  int argCount = 1;
-  if (node->nd_args) {
-    argCount = node->nd_args->nd_alen + 1; // includes receiver
+  int count = 1;
+  if (callNode->nd_args) {
+    count = callNode->nd_args->nd_alen + 1; // includes an implicit receiver
   }
+  return count;
+}
+
+void
+CfgBuilder::buildAndSetdArguments(BlockBuilder* builder, const RNode* callNode, OpcodeVa* op, Variable* receiver)
+{
+  Variable** args = op->begin();
+  if (receiver) {
+    *args++ = receiver;
+  }
+  for (RNode* n = callNode->nd_args; n; n = n->nd_next) {
+    *args++ = buildNode(builder, n->nd_head, true);
+  }
+}
+
+Variable*
+CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, const RNode* nodeIter, bool useResult)
+{
+  int argCount = getArgumentCount(node);
 
   Variable* receiver = buildNode(builder, node->nd_recv, true);
 
@@ -738,14 +756,16 @@ CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, bool useResult)
   OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
 
   // Create a Call opcode
-  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, nullptr, cfg_->exitEnv());
+  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->undefined(), cfg_->exitEnv());
   defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
 
   // Arguments
-  Variable** args = op->begin();
-  *args++ = receiver; // Receiver
-  for (RNode* n = node->nd_args; n; n = n->nd_next) {
-    *args++ = buildNode(builder, n->nd_head, true);
+  buildAndSetdArguments(builder, node, op, receiver);
+
+  // Code block
+  if (nodeIter) {
+    Variable* codeBlock = builder->add(new OpcodeCodeBlock(loc_, nullptr, nodeIter));
+    op->setCodeBlock(codeBlock);
   }
 
   Variable* lookup = builder->add(lookupOp);
@@ -754,44 +774,38 @@ CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, bool useResult)
 }
 
 Variable*
-CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, bool useResult)
+CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, const RNode* nodeIter, bool useResult)
 {
   assert(nd_type(node) == NODE_FCALL || nd_type(node) == NODE_VCALL);
 
-  bool isPrimitive = PrimitiveStore::instance()->isPrimitive(node->nd_mid);
+  bool isPrimitive = !nodeIter && PrimitiveStore::instance()->isPrimitive(node->nd_mid);
 
   // Argument count
-  int argCount = 0;
-  if (nd_type(node) == NODE_FCALL) {
-    argCount = node->nd_args->nd_alen;
-  }
-  if (!isPrimitive) {
-    argCount += 1; // count up for the implicit receiver
-  }
+  int argCount = getArgumentCount(node);
 
   // Create an appropriate opcode
   if (isPrimitive) {
     // Primitive
+    --argCount; // it has not receiver
     OpcodePrimitive* op = new OpcodePrimitive(loc_, nullptr, node->nd_mid, argCount);
-    Variable** args = op->begin();
-    for (RNode* n = node->nd_args; n; n = n->nd_next) {
-      *args++ = buildNode(builder, n->nd_head, true);
-    }
+    buildAndSetdArguments(builder, node, op, nullptr);
     return builder->add(useResult, op);
   }
 
-  // Call a method
+  // Method call
 
   Variable* receiver = buildSelf(builder, 0, true);
   OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
-  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, nullptr, cfg_->exitEnv());
+  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->undefined(), cfg_->exitEnv());
   defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
 
   // Arguments
-  Variable** args = op->begin();
-  *args++ = receiver;
-  for (RNode* n = node->nd_args; n; n = n->nd_next) {
-    *args++ = buildNode(builder, n->nd_head, true);
+  buildAndSetdArguments(builder, node, op, receiver);
+
+  // Code block
+  if (nodeIter) {
+    Variable* codeBlock = builder->add(new OpcodeCodeBlock(loc_, nullptr, nodeIter));
+    op->setCodeBlock(codeBlock);
   }
 
   Variable* lookup = builder->add(lookupOp);
@@ -802,8 +816,22 @@ CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, bool useResul
 Variable*
 CfgBuilder::buildCallWithBlock(BlockBuilder* builder, const RNode* node, bool useResult)
 {
-  // TODO
-  return nullptr;
+  assert(nd_type(node) == NODE_ITER);
+
+  const RNode* nodeIter = node->nd_body;
+  Variable* result;
+  switch (nd_type(node->nd_iter)) {
+  case NODE_CALL:
+    result = buildCall(builder, node->nd_iter, nodeIter, useResult);
+    break;
+  case NODE_FCALL:
+  case NODE_VCALL:
+    result = buildFuncall(builder, node->nd_iter, nodeIter, useResult);
+  default:
+    RBJIT_UNREACHABLE;
+  }
+
+  return result;
 }
 
 Variable*

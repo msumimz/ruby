@@ -218,7 +218,9 @@ CodeDuplicator::visitOpcode(OpcodeLookup* op)
 {
   Variable* lhs = variableOf(op->lhs());
   RBJIT_ASSUME(lhs);
-  OpcodeLookup* newOp = new OpcodeLookup(op->sourceLocation(), lhs, variableOf(op->receiver()), op->methodName(), variableOf(op->env()));
+  Variable* receiver = variableOf(op->receiver());
+  Variable* env = variableOf(op->env());
+  OpcodeLookup* newOp = new OpcodeLookup(op->sourceLocation(), lhs, receiver, op->methodName(), env);
   setDefSite(lhs, newOp);
 
   lastBlock_->addOpcode(newOp);
@@ -230,13 +232,12 @@ bool
 CodeDuplicator::visitOpcode(OpcodeCall* op)
 {
   Variable* lhs = variableOf(op->lhs());
-  Variable* lookup = variableOf(op->lookup());
-  Variable* codeBlock = variableOf(op->codeBlock());
   Variable* outEnv = variableOf(op->outEnv());
-  OpcodeCall* newOp = new OpcodeCall(op->sourceLocation(), lhs, lookup, op->rhsCount(), codeBlock, outEnv);
+  OpcodeCall* newOp = new OpcodeCall(op->sourceLocation(), lhs, nullptr, op->argCount(), nullptr, outEnv);
   setDefSite(lhs, newOp);
-  setDefSite(codeBlock, newOp);
   setDefSite(outEnv, newOp);
+
+  // lookup and codeBlock are copied here
   copyRhs(newOp, op);
 
   lastBlock_->addOpcode(newOp);

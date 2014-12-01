@@ -45,15 +45,15 @@ Opcode::shortTypeName() const
 OpcodeLookup*
 OpcodeCall::lookupOpcode() const
 {
-  assert(typeid(*lookup_->defOpcode()) == typeid(OpcodeLookup));
-  return static_cast<OpcodeLookup*>(lookup_->defOpcode());
+  assert(typeid(*lookup()->defOpcode()) == typeid(OpcodeLookup));
+  return static_cast<OpcodeLookup*>(lookup()->defOpcode());
 }
 
 OpcodeCall*
 OpcodeCall::clone(Variable* methodEntry) const
 {
-  OpcodeCall* op = new OpcodeCall(sourceLocation(), lhs(), methodEntry, rhsCount(), codeBlock_, env_);
-  for (int i = 0; i <= rhsCount(); ++i) {
+  OpcodeCall* op = new OpcodeCall(sourceLocation(), lhs(), methodEntry, rhsCount() - 2, codeBlock(), env_);
+  for (int i = 0; i <= argCount(); ++i) {
     op->setRhs(i, rhs(i));
   }
   return op;

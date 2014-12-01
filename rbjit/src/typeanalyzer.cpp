@@ -216,12 +216,8 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
 {
   auto lookup = static_cast<TypeLookup*>(typeContext_->typeConstraintOf(op->lookup()));
   assert(typeid(*lookup) == typeid(TypeLookup));
-  int count = lookup->candidates().size();
 
-  if (count == 0) {
-    updateTypeConstraint(op->lhs(), TypeAny());
-  }
-  else {
+  if (lookup->candidates().size() > 0) {
     TypeSelection sel;
     for (auto i = lookup->candidates().cbegin(), end = lookup->candidates().cend(); i != end; ++i) {
       assert(!i->isNull());

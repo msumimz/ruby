@@ -463,16 +463,16 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
   // The env will produce no code anyway
   setBogusValue(op->outEnv());
 
-  std::vector<llvm::Value*> args(op->rhsCount() + 2);
+  std::vector<llvm::Value*> args(op->argCount() + 2); // +2 means methodEntry and argc
   int count = 0;
 
   llvm::Value* lookup = getValue(op->lookup());
   args[count++] = lookup;                      // methoEntry
-  args[count++] = getInt(op->rhsCount() - 1);  // argc
+  args[count++] = getInt(op->argCount() - 1);  // argc
 
   // arguments
    bool complete = true;
-   for (auto i = op->begin(), end = op->end(); i != end; ++i) {
+   for (auto i = op->constArgBegin(), end = op->constArgEnd(); i != end; ++i) {
     llvm::Value* arg = getValue(*i);
     args[count++] = arg;
     if (!arg) {

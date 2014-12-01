@@ -10,6 +10,7 @@ RBJIT_NAMESPACE_BEGIN
 
 class Variable;
 class Opcode;
+class OpcodeVa;
 class Block;
 class BlockBuilder;
 class MethodInfo;
@@ -45,6 +46,7 @@ private:
 
   void buildProcedureBody(BlockBuilder* builder, const RNode* node, bool useResult);
   void buildArguments(BlockBuilder* builder, const RNode* node);
+
   Variable* buildNode(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildAssignment(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildLocalVariable(BlockBuilder* builder, const RNode* node, bool useResult);
@@ -65,8 +67,12 @@ private:
   Variable* buildIf(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildWhile(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildReturn(BlockBuilder* builder, const RNode* node, bool useResult);
-  Variable* buildCall(BlockBuilder* builder, const RNode* node, bool useResult);
-  Variable* buildFuncall(BlockBuilder* builder, const RNode* node, bool useResult);
+
+  int getArgumentCount(const RNode* callNode) const;
+  void buildAndSetdArguments(BlockBuilder* builder, const RNode* callNode, OpcodeVa* op, Variable* receiver);
+
+  Variable* buildCall(BlockBuilder* builder, const RNode* node, const RNode* nodeIter, bool useResult);
+  Variable* buildFuncall(BlockBuilder* builder, const RNode* node, const RNode* nodeIter, bool useResult);
   Variable* buildCallWithBlock(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildConstant(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildRelativeConstant(BlockBuilder* builder, const RNode* node, bool useResult);

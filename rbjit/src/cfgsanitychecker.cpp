@@ -347,14 +347,20 @@ bool
 CfgSanityChecker::visitOpcode(OpcodeCall* op)
 {
   checkLhs(op, true);
-  checkRhs(op, false);
+
+  for (int i = 0; i < op->argCount(); ++i) {
+    checkRhs(op, i, false);
+  }
+  checkRhs(op, op->argCount(), false); // lookup
+  checkRhs(op, op->argCount() + 1, true); // codeBlock
+
   return true;
 }
 
 bool
 CfgSanityChecker::visitOpcode(OpcodeCodeBlock* op)
 {
-  checkLhs(op, true);
+  checkLhs(op, false);
   if (!op->nodeIter()) {
     addError(op, "opcode %Ix's nodeIter is null", op);
   }

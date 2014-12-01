@@ -255,7 +255,7 @@ Inliner::insertCall(mri::MethodEntry me, Block* entry, OpcodeCall* op)
 OpcodeCall*
 Inliner::duplicateCall(OpcodeCall* source, Variable* lookup, Block* defBlock)
 {
-  OpcodeCall* op = new OpcodeCall(source->sourceLocation(), nullptr, lookup, source->rhsCount(), nullptr, nullptr);
+  OpcodeCall* op = new OpcodeCall(source->sourceLocation(), nullptr, lookup, source->argCount(), source->codeBlock(), nullptr);
 
   if (source->lhs()) {
     Variable* lhs = source->lhs()->copy(defBlock, op);
@@ -264,19 +264,12 @@ Inliner::duplicateCall(OpcodeCall* source, Variable* lookup, Block* defBlock)
     op->setLhs(lhs);
   }
 
-  if (source->codeBlock()) {
-    Variable* codeBlock = source->codeBlock()->copy(defBlock, op);
-    cfg_->addVariable(codeBlock);
-    typeContext_->addNewTypeConstraint(codeBlock, TypeAny::create());
-    op->setCodeBlock(codeBlock);
-  }
-
   Variable* outEnv = source->outEnv()->copy(defBlock, op);
   cfg_->addVariable(outEnv);
   typeContext_->addNewTypeConstraint(outEnv, TypeEnv::create());
   op->setOutEnv(outEnv);
 
-  for (int i = 0; i < source->rhsCount(); ++i) {
+  for (int i = 0; i < source->argCount(); ++i) {
     op->setRhs(i, source->rhs(i));
   }
 

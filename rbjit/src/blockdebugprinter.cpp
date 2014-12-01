@@ -106,8 +106,8 @@ bool
 BlockDebugPrinter::visitOpcode(OpcodeCall* op)
 {
   put("%Ix (%d)",
-    op->lookup(), op->rhsCount());
-  for (Variable*const* i = op->begin(); i < op->end(); ++i) {
+    op->lookup(), op->argCount());
+  for (Variable*const* i = op->argBegin(); i < op->argEnd(); ++i) {
     put(" %Ix", *i);
   }
   put(" & %Ix [%Ix]", op->codeBlock(), op->outEnv());
