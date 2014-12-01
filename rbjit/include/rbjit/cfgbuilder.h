@@ -67,6 +67,7 @@ private:
   Variable* buildReturn(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildCall(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildFuncall(BlockBuilder* builder, const RNode* node, bool useResult);
+  Variable* buildCallWithBlock(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildConstant(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildRelativeConstant(BlockBuilder* builder, const RNode* node, bool useResult);
   Variable* buildToplevelConstant(BlockBuilder* builder, const RNode* node, bool useResult);

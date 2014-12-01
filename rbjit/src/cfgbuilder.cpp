@@ -273,6 +273,10 @@ CfgBuilder::buildNode(BlockBuilder* builder, const RNode* node, bool useResult)
     v = buildFuncall(builder, node, useResult);
     break;
 
+  case NODE_ITER:
+    v = buildCallWithBlock(builder, node, useResult);
+    break;
+
   case NODE_CONST:
     v = buildConstant(builder, node, useResult);
     break;
@@ -734,7 +738,7 @@ CfgBuilder::buildCall(BlockBuilder* builder, const RNode* node, bool useResult)
   OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
 
   // Create a Call opcode
-  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->exitEnv());
+  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, nullptr, cfg_->exitEnv());
   defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
 
   // Arguments
@@ -780,7 +784,7 @@ CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, bool useResul
 
   Variable* receiver = buildSelf(builder, 0, true);
   OpcodeLookup* lookupOp = new OpcodeLookup(loc_, nullptr, receiver, node->nd_mid, cfg_->entryEnv());
-  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, cfg_->exitEnv());
+  OpcodeCall* op = new OpcodeCall(loc_, nullptr, nullptr, argCount, nullptr, cfg_->exitEnv());
   defInfoMap_->updateDefSite(cfg_->exitEnv(), builder->block(), op);
 
   // Arguments
@@ -793,6 +797,13 @@ CfgBuilder::buildFuncall(BlockBuilder* builder, const RNode* node, bool useResul
   Variable* lookup = builder->add(lookupOp);
   op->setLookup(lookup);
   return builder->add(useResult, op);
+}
+
+Variable*
+CfgBuilder::buildCallWithBlock(BlockBuilder* builder, const RNode* node, bool useResult)
+{
+  // TODO
+  return nullptr;
 }
 
 Variable*

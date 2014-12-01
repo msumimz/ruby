@@ -352,6 +352,16 @@ CfgSanityChecker::visitOpcode(OpcodeCall* op)
 }
 
 bool
+CfgSanityChecker::visitOpcode(OpcodeCodeBlock* op)
+{
+  checkLhs(op, true);
+  if (!op->nodeIter()) {
+    addError(op, "opcode %Ix's nodeIter is null", op);
+  }
+  return true;
+}
+
+bool
 CfgSanityChecker::visitOpcode(OpcodeConstant* op)
 {
   checkLhs(op, true);

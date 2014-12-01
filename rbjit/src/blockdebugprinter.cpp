@@ -110,7 +110,14 @@ BlockDebugPrinter::visitOpcode(OpcodeCall* op)
   for (Variable*const* i = op->begin(); i < op->end(); ++i) {
     put(" %Ix", *i);
   }
-  put(" [%Ix]", op->outEnv());
+  put(" & %Ix [%Ix]", op->codeBlock(), op->outEnv());
+  return true;
+}
+
+bool
+BlockDebugPrinter::visitOpcode(OpcodeCodeBlock* op)
+{
+  put("%Ix", op->nodeIter());
   return true;
 }
 

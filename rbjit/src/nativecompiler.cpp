@@ -495,6 +495,14 @@ NativeCompiler::visitOpcode(OpcodeCall* op)
 }
 
 bool
+NativeCompiler::visitOpcode(OpcodeCodeBlock* op)
+{
+  // code blocks are processed at OpcodeCall
+  setBogusValue(op->lhs());
+  return true;
+}
+
+bool
 NativeCompiler::visitOpcode(OpcodeConstant* op)
 {
   setBogusValue(op->outEnv());

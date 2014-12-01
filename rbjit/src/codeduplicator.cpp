@@ -231,11 +231,25 @@ CodeDuplicator::visitOpcode(OpcodeCall* op)
 {
   Variable* lhs = variableOf(op->lhs());
   Variable* lookup = variableOf(op->lookup());
+  Variable* codeBlock = variableOf(op->codeBlock());
   Variable* outEnv = variableOf(op->outEnv());
-  OpcodeCall* newOp = new OpcodeCall(op->sourceLocation(), lhs, lookup, op->rhsCount(), outEnv);
+  OpcodeCall* newOp = new OpcodeCall(op->sourceLocation(), lhs, lookup, op->rhsCount(), codeBlock, outEnv);
   setDefSite(lhs, newOp);
+  setDefSite(codeBlock, newOp);
   setDefSite(outEnv, newOp);
   copyRhs(newOp, op);
+
+  lastBlock_->addOpcode(newOp);
+
+  return true;
+}
+
+bool
+CodeDuplicator::visitOpcode(OpcodeCodeBlock* op)
+{
+  Variable* lhs = variableOf(op->lhs());
+  OpcodeCodeBlock* newOp = new OpcodeCodeBlock(op->sourceLocation(), lhs, op->nodeIter());
+  setDefSite(lhs, newOp);
 
   lastBlock_->addOpcode(newOp);
 

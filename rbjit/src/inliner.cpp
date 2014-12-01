@@ -255,13 +255,20 @@ Inliner::insertCall(mri::MethodEntry me, Block* entry, OpcodeCall* op)
 OpcodeCall*
 Inliner::duplicateCall(OpcodeCall* source, Variable* lookup, Block* defBlock)
 {
-  OpcodeCall* op = new OpcodeCall(source->sourceLocation(), nullptr, lookup, source->rhsCount(), nullptr);
+  OpcodeCall* op = new OpcodeCall(source->sourceLocation(), nullptr, lookup, source->rhsCount(), nullptr, nullptr);
 
   if (source->lhs()) {
     Variable* lhs = source->lhs()->copy(defBlock, op);
     cfg_->addVariable(lhs);
     typeContext_->addNewTypeConstraint(lhs, TypeAny::create());
     op->setLhs(lhs);
+  }
+
+  if (source->codeBlock()) {
+    Variable* codeBlock = source->codeBlock()->copy(defBlock, op);
+    cfg_->addVariable(codeBlock);
+    typeContext_->addNewTypeConstraint(codeBlock, TypeAny::create());
+    op->setCodeBlock(codeBlock);
   }
 
   Variable* outEnv = source->outEnv()->copy(defBlock, op);

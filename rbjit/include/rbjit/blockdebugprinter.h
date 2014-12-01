@@ -23,6 +23,7 @@ public:
   bool visitOpcode(OpcodeEnv* op);
   bool visitOpcode(OpcodeLookup* op);
   bool visitOpcode(OpcodeCall* op);
+  bool visitOpcode(OpcodeCodeBlock* op);
   bool visitOpcode(OpcodeConstant* op);
   bool visitOpcode(OpcodePrimitive* op);
   bool visitOpcode(OpcodePhi* op);

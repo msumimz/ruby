@@ -19,6 +19,7 @@ class OpcodeImmediate;
 class OpcodeEnv;
 class OpcodeLookup;
 class OpcodeCall;
+class OpcodeCodeBlock;
 class OpcodeConstant;
 class OpcodePrimitive;
 class OpcodePhi;
@@ -43,6 +44,7 @@ public:
   virtual bool visitOpcode(OpcodeEnv* op) = 0;
   virtual bool visitOpcode(OpcodeLookup* op) = 0;
   virtual bool visitOpcode(OpcodeCall* op) = 0;
+  virtual bool visitOpcode(OpcodeCodeBlock* op) = 0;
   virtual bool visitOpcode(OpcodeConstant* op) = 0;
   virtual bool visitOpcode(OpcodePrimitive* op) = 0;
   virtual bool visitOpcode(OpcodePhi* op) = 0;
@@ -352,9 +354,9 @@ private:
 class OpcodeCall : public OpcodeVa {
 public:
 
-  OpcodeCall(SourceLocation* loc, Variable* lhs, Variable* lookup, int rhsSize, Variable* env)
-    : OpcodeVa(loc, lhs, rhsSize),
-      lookup_(lookup), env_(env) {}
+  OpcodeCall(SourceLocation* loc, Variable* lhs, Variable* lookup, int rhsCount, Variable* codeBlock, Variable* env)
+    : OpcodeVa(loc, lhs, rhsCount),
+      lookup_(lookup), codeBlock_(codeBlock), env_(env) {}
 
   OpcodeCall* clone(Variable* methodEntry) const;
 
@@ -363,6 +365,9 @@ public:
   OpcodeLookup* lookupOpcode() const;
 
   Variable* receiver() const { return rhs(0); }
+
+  Variable* codeBlock() const { return codeBlock_; }
+  void setCodeBlock(Variable* codeBlock) { codeBlock_ = codeBlock; }
 
   Variable* outEnv() { return env_; }
   void setOutEnv(Variable* env) { env_ = env; }
@@ -373,8 +378,26 @@ private:
 
   Variable* lookup_;
 
+  Variable* codeBlock_;
+
   // Should be treated as a left-side hand value
   Variable* env_;
+};
+
+class OpcodeCodeBlock : public OpcodeL {
+public:
+
+  OpcodeCodeBlock(SourceLocation* loc, Variable* lhs, const RNode* nodeIter)
+    : OpcodeL(loc, lhs), nodeIter_(nodeIter)
+  {}
+
+  const RNode* nodeIter() const { return nodeIter_; }
+
+  bool accept(OpcodeVisitor* visitor) { return visitor->visitOpcode(this); }
+
+private:
+
+  const RNode* nodeIter_;
 };
 
 class OpcodeConstant : public OpcodeLR<2> {

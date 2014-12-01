@@ -52,7 +52,7 @@ OpcodeCall::lookupOpcode() const
 OpcodeCall*
 OpcodeCall::clone(Variable* methodEntry) const
 {
-  OpcodeCall* op = new OpcodeCall(sourceLocation(), lhs(), methodEntry, rhsCount(), env_);
+  OpcodeCall* op = new OpcodeCall(sourceLocation(), lhs(), methodEntry, rhsCount(), codeBlock_, env_);
   for (int i = 0; i <= rhsCount(); ++i) {
     op->setRhs(i, rhs(i));
   }

@@ -274,6 +274,13 @@ TypeAnalyzer::visitOpcode(OpcodeCall* op)
 }
 
 bool
+TypeAnalyzer::visitOpcode(OpcodeCodeBlock* op)
+{
+  updateTypeConstraint(op->lhs(), TypeAny());
+  return true;
+}
+
+bool
 TypeAnalyzer::visitOpcode(OpcodeConstant* op)
 {
   if (!typeContext_->isSameValueAs(op->inEnv(), cfg_->entryEnv())) {

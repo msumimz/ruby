@@ -109,6 +109,12 @@ DefUseChain::visitOpcode(OpcodeCall* op)
 }
 
 bool
+DefUseChain::visitOpcode(OpcodeCodeBlock* op)
+{
+  return true;
+}
+
+bool
 DefUseChain::visitOpcode(OpcodeConstant* op)
 {
   if (!op->lhs()) {
